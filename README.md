@@ -63,5 +63,8 @@ through `.github/workflows/research-config.yml`. Configure both
 (Windows)` as required checks in the repository's target-branch protection rule
 to prevent a pull request with an invalid MCP configuration from merging.
 
+The separate jobs deliberately exercise the same PowerShell scripts on each
+runner rather than relying on one platform's result for the other.
+
 See `docs/operations.md` for the future source, staging, apply, check, and
 rollback lifecycle.

@@ -66,5 +66,9 @@ to prevent a pull request with an invalid MCP configuration from merging.
 The separate jobs deliberately exercise the same PowerShell scripts on each
 runner rather than relying on one platform's result for the other.
 
+Dependabot checks GitHub Actions weekly on Monday and opens update pull requests
+when an action version or its pinned SHA changes. Review each update's upstream
+release and keep the SHA pin before merging it through the same two-runner gate.
+
 See `docs/operations.md` for the future source, staging, apply, check, and
 rollback lifecycle.

@@ -75,3 +75,9 @@ source-safety verifiers on Ubuntu and Windows for every pull request. Repository
 branch protection must require both `Validate research MCP schema (Ubuntu)` and
 `Validate research MCP schema (Windows)` before merge; the workflow file does
 not change repository-level merge permissions by itself.
+
+## Action Update Cadence
+
+`.github/dependabot.yml` checks all GitHub Actions weekly on Monday. Review a
+Dependabot pull request against the upstream release, retain the full commit SHA
+pin, and require the same Ubuntu and Windows checks before merging it.

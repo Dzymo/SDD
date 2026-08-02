@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sdd.local/schemas/research-mcp.schema.json",
+  "title": "SDD research MCP source",
+  "description": "A non-secret OpenCode source fragment for the approved research MCPs. Authentication, environment variables, and unapproved servers are intentionally excluded.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "mcp"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://opencode.ai/config.json"
+    },
+    "mcp": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "context7",
+        "codegraph"
+      ],
+      "properties": {
+        "context7": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "url",
+            "enabled"
+          ],
+          "properties": {
+            "type": {
+              "const": "remote"
+            },
+            "url": {
+              "const": "https://mcp.context7.com/mcp/oauth"
+            },
+            "enabled": {
+              "const": true
+            }
+          }
+        },
+        "codegraph": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "command",
+            "enabled"
+          ],
+          "properties": {
+            "type": {
+              "const": "local"
+            },
+            "command": {
+              "const": [
+                "codegraph",
+                "serve",
+                "--mcp"
+              ]
+            },
+            "enabled": {
+              "const": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

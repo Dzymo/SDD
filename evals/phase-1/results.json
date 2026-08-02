@@ -1,0 +1,92 @@
+[
+  {
+    "condition": "m3-none",
+    "model": "minimax-coding-plan/MiniMax-M3",
+    "variant": "none",
+    "runtime": "OpenChamber managed OpenCode 1.18.11",
+    "sessionId": "ses_03f16cc20ffeTlbjcTILdGXTAP",
+    "status": "completed",
+    "durationMs": 2365,
+    "response": "{\"decision\":\"direct-execution\",\"delegate\":false,\"ask_user\":false,\"worktree\":false,\"verification\":\"rg -n \\\"recieve|receive\\\" README.md\",\"reason\":\"Single-file typo fix with known file, known replacement, and clear acceptance criteria; no delegation, worktree, planning, review, or user clarification needed.\"}",
+    "score": {
+      "contract": "pass",
+      "taskCorrectness": "pass",
+      "scopeDiscipline": "pass"
+    }
+  },
+  {
+    "condition": "m3-thinking",
+    "model": "minimax-coding-plan/MiniMax-M3",
+    "variant": "thinking",
+    "runtime": "OpenChamber managed OpenCode 1.18.11",
+    "sessionId": "ses_03f16cbb4ffeuAf0kyJpQgnWjU",
+    "status": "completed",
+    "durationMs": 2375,
+    "response": "{\"decision\":\"direct-execution\",\"delegate\":false,\"ask_user\":false,\"worktree\":false,\"verification\":\"rg -n \\\"recieve|receive\\\" README.md\",\"reason\":\"Bounded single-file edit with known file (README.md), known change ('recieve' -> 'receive'), and a precise verification command. No ambiguity, no cross-file impact, no planning or review needed.\"}",
+    "score": {
+      "contract": "pass",
+      "taskCorrectness": "pass",
+      "scopeDiscipline": "pass"
+    }
+  },
+  {
+    "condition": "terra-default",
+    "model": "cliproxy/gpt-5.6-terra",
+    "variant": "default",
+    "runtime": "OpenChamber managed OpenCode 1.18.11",
+    "sessionId": "ses_03eb65233ffeB5pivdakPLpopg",
+    "status": "completed",
+    "durationMs": 4901,
+    "response": "{\"decision\":\"direct-execution\",\"delegate\":false,\"ask_user\":false,\"worktree\":false,\"verification\":\"rg -n \\\"recieve|receive\\\" README.md\",\"reason\":\"The target file, exact replacement, and focused verification are all known, so this is a bounded direct edit with no need for planning, delegation, isolation, or clarification.\"}",
+    "score": {
+      "contract": "pass",
+      "taskCorrectness": "pass",
+      "scopeDiscipline": "pass"
+    }
+  },
+  {
+    "condition": "terra-high",
+    "model": "cliproxy/gpt-5.6-terra",
+    "variant": "high",
+    "runtime": "OpenChamber managed OpenCode 1.18.11",
+    "sessionId": "ses_03eb65222ffexMtgH7YCXKZ8vz",
+    "status": "completed",
+    "durationMs": 2934,
+    "response": "{\"decision\":\"direct-execution\",\"delegate\":false,\"ask_user\":false,\"worktree\":false,\"verification\":\"rg -n \\\"recieve|receive\\\" README.md\",\"reason\":\"The requested replacement is a bounded, unambiguous edit to one known file with a focused verification command.\"}",
+    "score": {
+      "contract": "pass",
+      "taskCorrectness": "pass",
+      "scopeDiscipline": "pass"
+    }
+  },
+  {
+    "condition": "sol-default",
+    "model": "cliproxy/gpt-5.6-sol",
+    "variant": "default",
+    "runtime": "OpenChamber managed OpenCode 1.18.11",
+    "sessionId": "ses_03eb5d654ffeBWzMSzY7jpT8YF",
+    "status": "completed",
+    "durationMs": 4382,
+    "response": "{\"decision\":\"direct-execution\",\"delegate\":false,\"ask_user\":false,\"worktree\":false,\"verification\":\"rg -n \\\"recieve|receive\\\" README.md\",\"reason\":\"The change is bounded to a known file with an explicit replacement and focused verification, so it should be executed directly without delegation, planning, a worktree, review, or clarification.\"}",
+    "score": {
+      "contract": "pass",
+      "taskCorrectness": "pass",
+      "scopeDiscipline": "pass"
+    }
+  },
+  {
+    "condition": "sol-high",
+    "model": "cliproxy/gpt-5.6-sol",
+    "variant": "high",
+    "runtime": "OpenChamber managed OpenCode 1.18.11",
+    "sessionId": "ses_03eb5d621ffetlcaQs39pI2qHI",
+    "status": "completed",
+    "durationMs": 3592,
+    "response": "{\"decision\":\"direct-execution\",\"delegate\":false,\"ask_user\":false,\"worktree\":false,\"verification\":\"rg -n \\\"recieve|receive\\\" README.md\",\"reason\":\"The task is a bounded, single-file typo correction with a known replacement and explicit focused verification, so it should be executed directly without delegation, planning, a worktree, review, or clarification.\"}",
+    "score": {
+      "contract": "pass",
+      "taskCorrectness": "pass",
+      "scopeDiscipline": "pass"
+    }
+  }
+]

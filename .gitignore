@@ -1,0 +1,18 @@
+# Private runtime state and credentials never belong in this source workspace.
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+/opencode.json
+/opencode.json.cpa-gui.state.json
+/settings.json
+/managed-opencode/
+/agent-tool/
+framework-backups/
+staging/
+
+# Local tool output.
+node_modules/
+*.log

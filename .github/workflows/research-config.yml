@@ -1,0 +1,39 @@
+name: Research Configuration
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-research-mcp-schema:
+    name: Validate research MCP schema (Ubuntu)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Validate research MCP schema
+        shell: pwsh
+        run: ./scripts/Test-ResearchConfigSchema.ps1
+
+      - name: Check framework source safety
+        shell: pwsh
+        run: ./scripts/Test-FrameworkSkeleton.ps1
+
+  validate-research-mcp-schema-windows:
+    name: Validate research MCP schema (Windows)
+    runs-on: windows-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Validate research MCP schema
+        shell: pwsh
+        run: ./scripts/Test-ResearchConfigSchema.ps1
+
+      - name: Check framework source safety
+        shell: pwsh
+        run: ./scripts/Test-FrameworkSkeleton.ps1

@@ -57,11 +57,18 @@ non-OAuth Context7 endpoint.
 ## Pull Request Gate
 
 GitHub Actions runs `Test-ResearchConfigSchema.ps1` and
-`Test-FrameworkSkeleton.ps1` on Ubuntu and Windows for every pull request
-through `.github/workflows/research-config.yml`. Configure both
-`Validate research MCP schema (Ubuntu)` and `Validate research MCP schema
-(Windows)` as required checks in the repository's target-branch protection rule
-to prevent a pull request with an invalid MCP configuration from merging.
+`Test-FrameworkSkeleton.ps1` on Windows for every pull request through
+`.github/workflows/research-config.yml`. Configure
+`Validate research MCP schema (Windows)` as a required check in the repository's
+target-branch protection rule to prevent a pull request with an invalid MCP
+configuration from merging.
+
+The workflow uses `windows-latest` so the checks run in the same PowerShell and
+path environment as the managed installation.
+
+Dependabot checks GitHub Actions weekly on Monday and opens update pull requests
+when an action version or its pinned SHA changes. Review each update's upstream
+release and keep the SHA pin before merging it through the Windows gate.
 
 See `docs/operations.md` for the future source, staging, apply, check, and
 rollback lifecycle.

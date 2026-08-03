@@ -1,0 +1,10 @@
+--- dist/index.js
++++ dist/index.js
+@@
+-function minimumExpectedToolCount(disabledTools = []) {
+-  const disabledBaselineTools = new Set(disabledTools.filter((toolName) => BASELINE_TOOL_NAMES.has(toolName)));
++function minimumExpectedToolCount(disabledTools = []) {
++  const safeDisabledTools = Array.isArray(disabledTools) ? disabledTools : [];
++  const disabledBaselineTools = new Set(safeDisabledTools.filter((toolName) => BASELINE_TOOL_NAMES.has(toolName)));
+   return HEALTH_CHECK.minTools - disabledBaselineTools.size;
+ }

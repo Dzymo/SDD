@@ -19,6 +19,41 @@ jobs:
         shell: pwsh
         run: ./scripts/Test-ResearchConfigSchema.ps1
 
+      - name: Validate agent layer source
+        shell: pwsh
+        run: ./scripts/Test-AgentLayer.ps1
+
+      - name: Validate Observer attachment regression source
+        shell: pwsh
+        run: ./scripts/Test-ObserverAttachmentRegression.ps1
+
+      - name: Validate Observer OCR preflight failures
+        shell: pwsh
+        run: ./scripts/Test-ObserverAttachmentPreflight.ps1
+
+      - name: Install required OpenSpec CLI
+        shell: pwsh
+        run: npm install --global @fission-ai/openspec@1.5.0
+
+      - name: Validate OpenSpec bootstrap preflight
+        shell: pwsh
+        run: |
+          $openSpecVersion = (& openspec --version).Trim()
+          if ($openSpecVersion -ne '1.5.0') {
+            throw "Expected OpenSpec 1.5.0, found $openSpecVersion."
+          }
+          $bootstrapRoot = Join-Path $env:RUNNER_TEMP "openspec-bootstrap-$([guid]::NewGuid())"
+          Copy-Item -LiteralPath ./templates/project -Destination $bootstrapRoot -Recurse
+          $preflightPath = Join-Path $bootstrapRoot 'Test-OpenSpecBootstrapPreflight.ps1'
+          & $preflightPath
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
+
+      - name: Validate Windows-only CI runner fixtures
+        shell: pwsh
+        run: ./scripts/Test-CiWindowsOnlyRegression.ps1
+
       - name: Check framework source safety
         shell: pwsh
         run: ./scripts/Test-FrameworkSkeleton.ps1

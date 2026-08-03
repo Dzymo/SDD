@@ -1,0 +1,10 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "references": {
+    "codegraph": {
+      "path": "D:\\Projects\\Docs\\codegraph",
+      "description": "Local CodeGraph source for exact implementation evidence.",
+      "hidden": true
+    }
+  }
+}

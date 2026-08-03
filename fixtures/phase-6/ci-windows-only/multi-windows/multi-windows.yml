@@ -1,0 +1,22 @@
+name: Valid multiple Windows jobs fixture
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - run: echo build
+
+  test:
+    runs-on: windows-latest
+    needs: build
+    steps:
+      - run: echo test
+
+  package:
+    runs-on: windows-latest
+    needs: test
+    steps:
+      - run: echo package

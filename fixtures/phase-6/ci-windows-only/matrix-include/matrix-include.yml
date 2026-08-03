@@ -1,0 +1,15 @@
+name: Matrix include fixture
+
+on:
+  workflow_dispatch:
+
+jobs:
+  matrix-include-check:
+    strategy:
+      matrix:
+        os: [windows-latest]
+        include:
+          - os: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - run: echo fixture

@@ -72,7 +72,13 @@ $validConfig = '{ "agent": { "orchestrator": { "prompt": "observer_attachment" }
 $validModels = '{ "id": "MiniMax-M3", "status": "active", "attachment": true, "input": { "image": true } }'
 $validCredentials = 'MiniMax Token Plan'
 $smoke = Join-Path $Root 'scripts\Test-ObserverAttachment.ps1'
-$PowerShell = Join-Path $PSHOME 'powershell.exe'
+$powerShellExecutable = if ($PSVersionTable.PSEdition -eq 'Core') {
+    'pwsh.exe'
+}
+else {
+    'powershell.exe'
+}
+$PowerShell = Join-Path $PSHOME $powerShellExecutable
 
 if (-not (Test-Path -LiteralPath $smoke)) {
     throw "Smoke script not found: $smoke"

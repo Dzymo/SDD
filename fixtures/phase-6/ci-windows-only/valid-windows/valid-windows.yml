@@ -1,0 +1,10 @@
+name: Valid Windows runner fixture
+
+on:
+  workflow_dispatch:
+
+jobs:
+  windows-check:
+    runs-on: windows-latest
+    steps:
+      - run: echo fixture

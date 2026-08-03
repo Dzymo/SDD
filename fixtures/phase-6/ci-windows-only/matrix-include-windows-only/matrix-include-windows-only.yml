@@ -1,0 +1,15 @@
+name: Valid Windows-only matrix include fixture
+
+on:
+  workflow_dispatch:
+
+jobs:
+  matrix-include-windows-check:
+    strategy:
+      matrix:
+        os: [windows-latest]
+        include:
+          - os: windows-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - run: echo fixture

@@ -1,0 +1,28 @@
+--- dist/index.js
++++ dist/index.js
+@@
++function createObserverAttachmentTool(options) {
++  // Creates a child session with parentID and prompts it synchronously so the
++  // visual result returns to the parent tool call.
++  // It accepts only PNG, JPEG, GIF, and WebP files below .opencode/images,
++  // reads at most 10 MiB each, and sends FilePart data URLs with agent: observer.
++  // Register the returned observer_attachment tool beside wait_for_user.
++}
+@@
++    if (msg.info.agent === "observer") continue;
++
+--- src/hooks/image-hook.ts
++++ src/hooks/image-hook.ts
+@@
++    // The parent needs stripping before the text-only route. An Observer child
++    // already receives a structured image part, so it must retain that part.
++    if (msg.info.agent === 'observer') continue;
+
+--- src/index.ts
++++ src/index.ts
+@@
++    observerAttachmentTools = createObserverAttachmentTool({
++      client: ctx.client,
++      resolveAgentName: (agent) => resolveRuntimeAgentName(config, agent),
++    });
++    tools = { ...cancelTaskTools, ...waitForUserTools, ...observerAttachmentTools, ... };

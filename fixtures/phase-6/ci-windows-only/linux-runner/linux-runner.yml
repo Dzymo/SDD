@@ -1,0 +1,10 @@
+name: Linux runner fixture
+
+on:
+  workflow_dispatch:
+
+jobs:
+  linux-check:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo fixture

@@ -1,0 +1,15 @@
+{
+  "version": "1.0.0",
+  "updatedAt": "2026-08-02T13:42:00.000Z",
+  "dependencies": [
+    {
+      "name": "oh-my-opencode-slim",
+      "resolvedVersion": "2.2.8",
+      "repoUrl": "https://github.com/alvinunreal/oh-my-opencode-slim.git",
+      "ref": "218836d6f94fb00943d43f3c64fc3cd835be0ae1",
+      "path": ".slim/clonedeps/repos/alvinunreal__oh-my-opencode-slim",
+      "packagePath": ".",
+      "reason": "Exact npm publish source used to diagnose and reproduce the Phase 5 Observer auto-routing initialization failure."
+    }
+  ]
+}

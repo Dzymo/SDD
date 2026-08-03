@@ -1,0 +1,9 @@
+name: Missing runner fixture
+
+on:
+  workflow_dispatch:
+
+jobs:
+  missing-runner:
+    steps:
+      - run: echo fixture

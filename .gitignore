@@ -12,7 +12,12 @@
 /agent-tool/
 framework-backups/
 staging/
+/.codegraph/
 
 # Local tool output.
 node_modules/
 *.log
+
+# BEGIN oh-my-opencode-slim clonedeps
+.slim/clonedeps/repos/
+# END oh-my-opencode-slim clonedeps

@@ -104,13 +104,15 @@ function Test-JsonSchemaValue {
 
 $schemaPath = Join-Path $Root 'config\opencode\research-mcp.schema.json'
 $validFixturePath = Join-Path $Root 'fixtures\phase-3\research-mcp.valid.json'
+$sourceConfigPath = Join-Path $Root 'config\opencode\research-mcp.json'
+$referenceSourcePath = Join-Path $Root 'config\opencode\research-references.json'
 $invalidFixturePaths = @(
     (Join-Path $Root 'fixtures\phase-3\research-mcp.invalid-auth.json'),
     (Join-Path $Root 'fixtures\phase-3\research-mcp.invalid-command.json'),
     (Join-Path $Root 'fixtures\phase-3\research-mcp.invalid-url.json')
 )
 
-foreach ($path in @($schemaPath, $validFixturePath) + $invalidFixturePaths) {
+foreach ($path in @($schemaPath, $validFixturePath, $sourceConfigPath, $referenceSourcePath) + $invalidFixturePaths) {
     if (-not (Test-Path -LiteralPath $path)) {
         throw "Required schema test input not found: $path"
     }
@@ -127,12 +129,27 @@ if ($schema.'$schema' -ne 'https://json-schema.org/draft/2020-12/schema') {
     throw 'Schema must declare JSON Schema draft 2020-12.'
 }
 
-$validFixture = Get-Content -LiteralPath $validFixturePath -Raw | ConvertFrom-Json -ErrorAction Stop
-$validFailures = [System.Collections.ArrayList]@()
-Test-JsonSchemaValue -Value $validFixture -Schema $schema -Path '$' -Failures $validFailures
-if ($validFailures.Count -gt 0) {
-    $validFailures | ForEach-Object { "FAIL: valid fixture: $_" }
-    exit 1
+foreach ($validPath in @($validFixturePath, $sourceConfigPath)) {
+    $validSource = Get-Content -LiteralPath $validPath -Raw | ConvertFrom-Json -ErrorAction Stop
+    $validFailures = [System.Collections.ArrayList]@()
+    Test-JsonSchemaValue -Value $validSource -Schema $schema -Path '$' -Failures $validFailures
+    if ($validFailures.Count -gt 0) {
+        $validFailures | ForEach-Object { "FAIL: approved source '$validPath': $_" }
+        exit 1
+    }
+}
+
+try {
+    $referenceSource = Get-Content -LiteralPath $referenceSourcePath -Raw | ConvertFrom-Json -ErrorAction Stop
+}
+catch {
+    throw "Research reference source is not valid JSON: $referenceSourcePath. $($_.Exception.Message)"
+}
+if ($referenceSource.'$schema' -ne 'https://opencode.ai/config.json' -or
+    $referenceSource.references.codegraph.path -ne 'D:\Projects\Docs\codegraph' -or
+    $referenceSource.references.codegraph.hidden -ne $true -or
+    [string]::IsNullOrWhiteSpace($referenceSource.references.codegraph.description)) {
+    throw 'Research reference source must expose only the reviewed hidden CodeGraph reference.'
 }
 
 $failures = [System.Collections.ArrayList]@()

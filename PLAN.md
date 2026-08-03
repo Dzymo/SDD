@@ -11,7 +11,10 @@ global OpenCode framework used through OpenChamber.
 - Target OpenCode config: `C:\Users\quang\.config\opencode`
 - Target OpenChamber config: `C:\Users\quang\.config\openchamber`
 - Distribution target: none; this is not a public project
-- Plan status: Phase 2 private framework skeleton completed; no framework global configuration changes applied
+- Plan status: Phase 2 source skeleton, Phase 3 runtime research layer, Phase 4
+  agent-layer source and controlled global activation, and the Phase 6
+  project-local OpenSpec template are completed. Phase 5 multimedia remains
+  active and requires revalidation after its runtime dependencies change.
 
 This file is the source of truth for framework implementation. If a later
 decision changes the architecture, model routing, safety boundary, or workflow,
@@ -720,11 +723,12 @@ The underlying GPT model may support media, but OpenCode currently treats the
 CPA GUI entries as text-only because model metadata does not declare media
 capabilities.
 
-Initial policy:
+Active policy:
 
-- enable Observer with M3 `none` only after explicit read-only permissions are
-  enforced;
-- use `image_routing: auto` while the GPT route remains text-only;
+- enable Observer with M3 `none` under explicit read-only permissions;
+- use `image_routing: auto` while the GPT route remains text-only, then call
+  `observer_attachment` to create a child session and send M3 a structured
+  image `FilePart`;
 - use Observer for screenshots, diagrams, OCR, and image comparison;
 - do not claim PDF support through M3;
 - use OpenChamber text extraction, selected-page image conversion, or another
@@ -733,6 +737,10 @@ Initial policy:
 Observer permissions must default deny and allow only read-oriented tools.
 Explicitly deny shell mutation, editing, patching, delegation, todo, and user
 question tools.
+
+`scripts\Test-ObserverAttachment.ps1` is the activation evidence. It creates
+an image with a unique visible code, verifies the child session result, and
+requires M3 to return that code. Rerun it after a plugin reinstall or update.
 
 After direct GPT multimedia metadata and transport are verified, benchmark:
 
@@ -907,9 +915,10 @@ Complete when:
 
 Objective: create the private source layout in `D:\Projects\SDD`.
 
-Status: completed on 2026-08-02. The skeleton, lifecycle documentation, and
-read-only verifier are present. No global OpenCode or OpenChamber configuration
-was copied, generated, or applied.
+Status: completed on 2026-08-02 and verified on 2026-08-03. The skeleton,
+lifecycle documentation, and read-only verifier are present. No global OpenCode
+or OpenChamber configuration was copied, generated, or applied. The bounded
+source-level evidence is recorded in `PHASE-2-FRAMEWORK-SKELETON.md`.
 
 Expected layout:
 
@@ -950,6 +959,12 @@ Complete when:
 
 Objective: make current external and local evidence available globally.
 
+Status: completed and runtime-verified on 2026-08-03. The managed OpenCode
+runtime uses the reviewed Context7 OAuth MCP and CodeGraph local MCP; Librarian
+returned versioned Context7 evidence, Explorer returned CodeGraph path/line
+evidence, and disabled-MCP fixtures established explicit fail-soft behavior.
+See `PHASE-3-RESEARCH-LAYER.md`.
+
 Tasks:
 
 - install Context7 through its supported OpenCode OAuth setup or equivalent
@@ -969,6 +984,15 @@ Complete when:
 ### Phase 4 - Agent Layer
 
 Objective: activate the lean personal orchestration preset.
+
+Status: completed on 2026-08-02. The pinned
+`oh-my-opencode-slim@2.2.8` registration, `sdd-personal` preset, targeted
+prompt replacements, and runtime/source verifiers are recorded in
+`docs/agent-layer.md`. The standalone managed CLI passes the runtime verifier,
+and the user confirmed Orchestrator, Explorer, Librarian, Oracle, Designer, and
+Fixer appear in OpenChamber after restart. Council remains disabled; Observer
+was enabled later by the verified Phase 5 structured attachment handoff.
+Phase 5 must enable Observer only after its media path is directly verified.
 
 Tasks:
 
@@ -993,6 +1017,16 @@ Complete when:
 ### Phase 5 - Multimedia Layer
 
 Objective: make screenshots and design evidence safe and predictable.
+
+Status: completed on 2026-08-02. Managed
+metadata confirms Terra/Sol are text-only and M3 supports image/video but not
+PDF. After source was synchronized to the package commit, an approved temporary
+hotfix guarded the package's non-array `disabled_tools` failure and restored
+slim initialization. The JPEG hook saves images and a trace confirms the full
+path-only task handoff was insufficient because M3 exited without `read`. The
+implemented child-session `FilePart` handoff instead passes the OCR smoke; the
+temporary path-only Observer activation was rolled back before this structured
+handoff replaced it. See `PHASE-5-MULTIMEDIA.md`.
 
 Tasks:
 
@@ -1228,7 +1262,6 @@ The final design decisions are:
 
 ## 23. Next Action
 
-Begin Phase 0 only. Do not create the complete global configuration in one pass.
-Phase 0 must first establish configuration ownership, backups, provider/model
-behavior, and rollback evidence. After Phase 0 is reviewed, proceed to the model
-and prompt benchmarks in Phase 1.
+Find a structured child-attachment/message primitive that does not rely on the
+Observer model calling `read`. Do not enable Observer or PDF support; rerun
+Phase 5 gates after any slim reinstall or version update.

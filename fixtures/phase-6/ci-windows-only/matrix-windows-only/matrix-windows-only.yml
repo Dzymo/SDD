@@ -1,0 +1,13 @@
+name: Valid Windows-only matrix fixture
+
+on:
+  workflow_dispatch:
+
+jobs:
+  matrix-check:
+    strategy:
+      matrix:
+        os: [windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - run: echo fixture

@@ -1,0 +1,13 @@
+name: Matrix runner fixture
+
+on:
+  workflow_dispatch:
+
+jobs:
+  matrix-runner:
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - run: echo fixture

@@ -1,0 +1,208 @@
+{
+  "$schema": "https://unpkg.com/oh-my-opencode-slim@2.2.8/oh-my-opencode-slim.schema.json",
+  "preset": "sdd-personal",
+  "setDefaultAgent": true,
+  "autoUpdate": false,
+  "disabled_agents": [
+    "council"
+  ],
+  "image_routing": "auto",
+  "disabled_skills": [
+    "worktrees"
+  ],
+  "disabled_mcps": [
+    "websearch",
+    "context7",
+    "gh_grep"
+  ],
+  "multiplexer": {
+    "type": "none"
+  },
+  "companion": {
+    "enabled": false
+  },
+  "backgroundJobs": {
+    "continueOnIdle": false,
+    "maxSessionsPerAgent": 1
+  },
+  "fallback": {
+    "enabled": true,
+    "maxRetries": 1
+  },
+  "presets": {
+    "sdd-personal": {
+      "orchestrator": {
+        "model": [
+          {
+            "id": "cliproxy/gpt-5.6-terra",
+            "variant": "medium"
+          },
+          {
+            "id": "cliproxy/gpt-5.6-terra",
+            "variant": "high"
+          }
+        ],
+        "skills": [
+          "*",
+          "!worktrees"
+        ],
+        "mcps": []
+      },
+      "oracle": {
+        "model": [
+          {
+            "id": "cliproxy/gpt-5.6-sol",
+            "variant": "medium"
+          },
+          {
+            "id": "cliproxy/gpt-5.6-sol",
+            "variant": "high"
+          }
+        ],
+        "skills": [],
+        "mcps": []
+      },
+      "librarian": {
+        "model": [
+          {
+            "id": "minimax-coding-plan/MiniMax-M3",
+            "variant": "none"
+          },
+          {
+            "id": "minimax-coding-plan/MiniMax-M3",
+            "variant": "thinking"
+          }
+        ],
+        "skills": [],
+        "mcps": [
+          "context7"
+        ]
+      },
+      "explorer": {
+        "model": [
+          {
+            "id": "minimax-coding-plan/MiniMax-M3",
+            "variant": "none"
+          },
+          {
+            "id": "minimax-coding-plan/MiniMax-M3",
+            "variant": "thinking"
+          }
+        ],
+        "skills": [],
+        "mcps": [
+          "codegraph"
+        ]
+      },
+      "designer": {
+        "model": [
+          {
+            "id": "minimax-coding-plan/MiniMax-M3",
+            "variant": "thinking"
+          },
+          {
+            "id": "minimax-coding-plan/MiniMax-M3",
+            "variant": "none"
+          }
+        ],
+        "skills": [],
+        "mcps": []
+      },
+      "fixer": {
+        "model": [
+          {
+            "id": "minimax-coding-plan/MiniMax-M3",
+            "variant": "none"
+          },
+          {
+            "id": "minimax-coding-plan/MiniMax-M3",
+            "variant": "thinking"
+          }
+        ],
+        "skills": [],
+        "mcps": []
+      },
+      "observer": {
+        "model": [
+          {
+            "id": "minimax-coding-plan/MiniMax-M3",
+            "variant": "none"
+          },
+          {
+            "id": "minimax-coding-plan/MiniMax-M3",
+            "variant": "thinking"
+          }
+        ],
+        "skills": [],
+        "mcps": []
+      }
+    }
+  },
+  "agents": {
+    "explorer": {
+      "permission": {
+        "*": "deny",
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "list": "allow",
+        "edit": "deny",
+        "bash": "deny",
+        "task": "deny",
+        "external_directory": "deny",
+        "question": "deny",
+        "webfetch": "deny",
+        "websearch": "deny"
+      }
+    },
+    "librarian": {
+      "permission": {
+        "*": "deny",
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "list": "allow",
+        "edit": "deny",
+        "bash": "deny",
+        "task": "deny",
+        "external_directory": "deny",
+        "question": "deny",
+        "webfetch": "allow",
+        "websearch": "allow"
+      }
+    },
+    "oracle": {
+      "permission": {
+        "*": "deny",
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "list": "allow",
+        "edit": "deny",
+        "bash": "deny",
+        "task": "deny",
+        "external_directory": "deny",
+        "question": "deny",
+        "webfetch": "deny",
+        "websearch": "deny"
+      }
+    },
+    "observer": {
+      "permission": {
+        "*": "deny",
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "list": "allow",
+        "edit": "deny",
+        "bash": "deny",
+        "task": "deny",
+        "external_directory": "deny",
+        "question": "deny",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "todowrite": "deny"
+      }
+    }
+  }
+}

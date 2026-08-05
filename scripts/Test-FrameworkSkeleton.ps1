@@ -19,6 +19,7 @@ $requiredPaths = @(
     'PHASE-9-UI-QUALITY-LAYER.md',
     'PHASE-10-PACKAGING-AND-RELEASE.md',
     'PHASE-11-EVALUATION-AND-FAILURE-DRILLS.md',
+    'PHASE-12-GLOBAL-ROLLOUT.md',
     'README.md',
     'docs\architecture.md',
     'docs\agent-layer.md',
@@ -137,6 +138,8 @@ $requiredPaths = @(
     'scripts\Apply-PackagingRelease.ps1',
     'scripts\Test-PackagingReleaseRuntime.ps1',
     'scripts\Test-EvaluationFailureDrills.ps1',
+    'scripts\Invoke-Phase12RollbackDrill.ps1',
+    'scripts\Test-Phase12RollbackDrill.ps1',
     '.github\workflows\research-config.yml'
 )
 
@@ -195,6 +198,9 @@ if (Test-Path -LiteralPath $workflowPath -PathType Leaf) {
     }
     if ($workflowContent -notmatch 'Test-EvaluationFailureDrills\.ps1') {
         $failures += 'CI workflow must run the Phase 11 evaluation and failure-drill gate.'
+    }
+    if ($workflowContent -notmatch 'Test-Phase12RollbackDrill\.ps1') {
+        $failures += 'CI workflow must run the Phase 12 rollback drill regression gate.'
     }
     if ($workflowContent -notmatch 'Test-OpenSpecProjectTemplate\.ps1') {
         $failures += 'CI workflow must run the strict OpenSpec project template fixture validator.'

@@ -19,6 +19,10 @@ jobs:
         shell: pwsh
         run: ./scripts/Test-EvaluationFailureDrills.ps1
 
+      - name: Validate Phase 12 rollback drill
+        shell: pwsh
+        run: ./scripts/Test-Phase12RollbackDrill.ps1
+
       - name: Validate research MCP schema
         shell: pwsh
         run: ./scripts/Test-ResearchConfigSchema.ps1

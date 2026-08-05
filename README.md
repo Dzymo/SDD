@@ -63,8 +63,9 @@ compliance. See `PHASE-11-EVALUATION-AND-FAILURE-DRILLS.md`.
 
 Phase 12 global rollout is **unstarted**. Its required gates (final backups,
 dry-run/diff preview, controlled global apply, restart, smoke tests, rollback
-drill, active versions and checksums) are listed in `PLAN.md` and none has been
-performed in this update.
+drill, active versions and checksums) are listed in `PLAN.md`; the execution
+runbook is `PHASE-12-GLOBAL-ROLLOUT.md`; and none has been performed in this
+update.
 
 ## Layout
 

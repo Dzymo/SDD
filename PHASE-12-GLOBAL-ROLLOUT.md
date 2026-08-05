@@ -258,6 +258,32 @@ push, merge, migrate, or delete data.
 - The drill record identifies baseline health checks, expected current-source
   verifier failures after restore, and the reapply commands.
 
+### No-Drift Verification Reapply
+
+When every approved target is `MATCH`, no normal apply creates a Phase 12 backup
+manifest. Do not claim rollback is proven in that state. With a separate
+approval, the one permitted verification reapply is the single framework-owned
+Orchestrator target:
+
+```powershell
+PowerShell -ExecutionPolicy Bypass -File .\scripts\Apply-OpenChamberOperatingGuide.ps1
+```
+
+It is permitted only to create a `phase-8-*` file-level backup manifest for the
+rollback drill. Before the command, record that the target hash matches the
+reviewed source. After it, record that the target remains byte-identical. Use
+that exact manifest with `Invoke-Phase12RollbackDrill.ps1`, restart OpenChamber,
+and run:
+
+```powershell
+PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-OpenChamberOperatingGuideRuntime.ps1
+```
+
+Reapply only the same Phase 8 script, restart, and rerun the verifier. This
+proves the reviewed file-level backup, restore, and reapply route. It does not
+prove reversal of behaviorally different content, because a no-drift reapply is
+intentionally byte-identical before and after the drill.
+
 ### Restore Procedure
 
 Use the guarded rollback command for manifests produced by Phases 3, 7, 8, 9,

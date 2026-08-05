@@ -1310,7 +1310,10 @@ item only with its command output, exit code, date, and relevant artifact path.
    and use only the reviewed phase-specific apply scripts for approved targets.
    Do not run an apply script merely to reproduce an already matching target,
    do not manually merge JSON, and stop immediately if a script refuses or a
-   hash check fails. Record every created manifest and after hash.
+   hash check fails. The only exception is the explicit no-drift rollback
+   verification reapply in item 10; it requires its own approval and must use
+   only the named Phase 8 script and target below. Record every created manifest
+   and after hash.
 8. [ ] **Restart and verify affected runtime contracts.** Restart
    OpenChamber, run `opencode debug config` through the managed binary, and run
    the focused runtime verifier for every changed layer. At minimum, a change to
@@ -1330,7 +1333,19 @@ item only with its command output, exit code, date, and relevant artifact path.
     focused verifiers that demonstrate the restoration. Reapply only the same
     approved drift through the reviewed scripts, restart, and repeat the
     affected runtime checks. Do not restore a directory, use destructive Git
-    commands, or modify OpenChamber state.
+    commands, or modify OpenChamber state. If every approved target is `MATCH`
+    and no Phase 12 apply created a backup manifest, pause rather than treating
+    rollback as implicitly proven. The user may separately approve one
+    verification reapply of only
+    `C:\Users\quang\.config\opencode\oh-my-opencode-slim\sdd-personal\orchestrator.md`
+    through `Apply-OpenChamberOperatingGuide.ps1`. The script creates the
+    `phase-8-*` backup manifest used by this drill. Restore that one target with
+    `Invoke-Phase12RollbackDrill.ps1`, restart OpenChamber, run
+    `Test-OpenChamberOperatingGuideRuntime.ps1`, then reapply through the same
+    Phase 8 script, restart, and rerun the verifier. The target must be a
+    byte-identical `MATCH` before and after this verification reapply. Record
+    that this proves the reviewed file-level backup/restore/reapply mechanism,
+    not a behavioral reversal of differing content.
 11. [ ] **Close the rollout record.** Record the candidate SHA, all command
     outputs and exit codes, CI URL, active versions, before/after checksums,
     backup locations, diff outcome, apply/no-op decisions, smoke results,

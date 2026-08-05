@@ -186,7 +186,9 @@ missing binary or workspace, a failed or invalid runtime config, disabled
 Observer, wrong M3 route, both missing prompt contracts, missing MiniMax
 credential, and inactive M3 image metadata. Every negative case also verifies
 that its credential sentinel is absent from the error output. It runs in the
-Windows pull-request workflow and makes no provider call.
+Windows pull-request workflow and makes no provider call. The mock fixture skips
+the local package-cache preflight; the default live smoke retains its
+fail-closed managed-package, hash, and symbol checks.
 
 ## Validate OpenSpec Template
 

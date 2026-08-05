@@ -60,9 +60,11 @@ managed-command failure branches: binary/workspace availability, config command
 failure and invalid JSON, Observer enablement/model, both prompt contracts, a
 provider-only auth listing, a missing MiniMax credential, and M3 image metadata.
 Each branch verifies its dedicated error and that a credential sentinel cannot
-reach output. It performs no provider request and reads no credential value; the
-package/hash/symbol checks run before those mocked CLI assertions and therefore
-still require the exact managed bundle described above.
+reach output. It performs no provider request and reads no credential value. The
+mock-only invocation skips the package cache check so the fixture remains
+self-contained on CI; the default `Test-ObserverAttachment.ps1` preflight and
+live smoke still require the exact managed bundle, hash, and symbols described
+above.
 
 ## Source Evidence
 

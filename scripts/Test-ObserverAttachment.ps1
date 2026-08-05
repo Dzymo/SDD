@@ -3,7 +3,8 @@ param(
     [string]$Managed = 'C:\Users\quang\AppData\Local\Programs\@openchamberelectron\resources\opencode-cli\opencode.exe',
     [string]$Workspace,
     [string]$PackageRoot = (Join-Path $env:USERPROFILE '.cache\opencode\packages\oh-my-opencode-slim@2.2.8\node_modules\oh-my-opencode-slim'),
-    [switch]$PreflightOnly
+    [switch]$PreflightOnly,
+    [switch]$SkipRuntimePatchPreflightForMock
 )
 
 if ([string]::IsNullOrWhiteSpace($Workspace)) {
@@ -104,7 +105,9 @@ function Test-RuntimePatchPreflight {
 }
 
 function Test-OcrPreflight {
-    Test-RuntimePatchPreflight
+    if (-not $SkipRuntimePatchPreflightForMock) {
+        Test-RuntimePatchPreflight
+    }
     $configText = Invoke-ManagedOpenCode -Arguments @('debug', 'config')
     try {
         $config = $configText | ConvertFrom-Json -ErrorAction Stop

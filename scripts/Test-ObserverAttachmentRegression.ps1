@@ -84,10 +84,12 @@ Assert-Contains -Text $smoke -Expected '--file $imagePath' -Message 'The smoke m
 Assert-Contains -Text $smoke -Expected 'observer_session_id' -Message 'The smoke must require a child Observer session.'
 Assert-Contains -Text $smoke -Expected '6E6A67DF17820B6E3DCAE43BCAFD6DEA2705666A161227769AE32E2576A8989A' -Message 'The smoke must require the exact structured-patch dist/index.js hash.'
 Assert-Contains -Text $smoke -Expected 'Test-RuntimePatchPresence -Path $distIndex -ExpectedAfterHash $expectedDistIndex' -Message 'The smoke must fail closed on a missing or mismatched dist/index.js.'
+Assert-Contains -Text $smoke -Expected 'if (-not $SkipRuntimePatchPreflightForMock)' -Message 'The default smoke must retain runtime-patch preflight unless the mock-only switch is explicitly supplied.'
 Assert-Contains -Text $smoke -Expected 'function createObserverAttachmentTool(options)' -Message 'The smoke must require the structured attachment implementation symbol.'
 Assert-Contains -Text $smoke -Expected 'let observerAttachmentTools;' -Message 'The smoke must require the tool declaration symbol.'
 Assert-Contains -Text $smoke -Expected '...observerAttachmentTools' -Message 'The smoke must require the tool-map spread symbol.'
 Assert-Contains -Text $preflightSource -Expected 'Provider name without credential' -Message 'Negative preflight coverage must prove a provider name alone is not accepted as auth.'
+Assert-Contains -Text $preflightSource -Expected '-SkipRuntimePatchPreflightForMock' -Message 'The temporary mock preflight must explicitly bypass only the unavailable local package-cache gate.'
 
 # --- Structured attachment patch record ------------------------------------------
 

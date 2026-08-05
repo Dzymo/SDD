@@ -1089,12 +1089,12 @@ Complete when:
 
 Objective: automate bounded implementation with truthful completion evidence.
 
-Status: source-only complete. The offline evaluator and fixtures prove the
-policy contracts; the reviewed global preset prompts and skills still require
-the normal controlled global apply and managed-runtime restart before this
-behavior is active outside the source workspace. The managed-runtime
-verification is a required residual gate and has not been re-run in this
-update. See `PHASE-7-EXECUTION-AND-VERIFICATION.md`.
+Status: runtime-verified on 2026-08-05. The offline evaluator and fixtures
+prove the policy contracts; the reviewed global preset prompts and skills were
+controlled-applied with per-file backup `phase-7-20260805-180814`, then
+`Test-ExecutionVerificationRuntime.ps1` passed against the managed runtime.
+This establishes the installed contract, not arbitrary future model compliance.
+See `PHASE-7-EXECUTION-AND-VERIFICATION.md`.
 
 Tasks:
 
@@ -1250,15 +1250,92 @@ performed in this update. The framework source, offline evaluators, and
 runtime verifiers are in place; the rollout itself is a separate, user-gated
 operation.
 
-Required gates before Phase 12 can be marked complete:
+#### Execution Checklist
 
-- create final backups;
-- run dry-run or diff preview;
-- apply global configuration, prompts, skills, MCPs, and commands;
-- restart OpenCode/OpenChamber;
-- run smoke tests;
-- perform rollback drill;
-- record active versions and checksums.
+Run this checklist in order for one immutable candidate revision. Do not use a
+successful check from an earlier revision as evidence for the candidate. Mark an
+item only with its command output, exit code, date, and relevant artifact path.
+
+1. [ ] **Freeze the candidate.** Confirm the source worktree is clean, record
+   its commit SHA, and inspect the diff from the last CI-validated revision.
+   Do not start rollout from uncommitted framework source.
+2. [ ] **Run the current-revision source and fixture gates.** Run the local
+   source gates in this order: `Test-FrameworkSkeleton.ps1`,
+   `Test-ResearchConfigSchema.ps1`, `Test-AgentLayer.ps1`,
+   `Test-ExecutionVerification.ps1`,
+   `Test-OpenChamberOperatingGuide.ps1`, `Test-UIQualityLayer.ps1`,
+   `Test-ObserverAttachmentRegression.ps1`,
+   `Test-CiWindowsOnlyRegression.ps1`, and
+   `Test-EvaluationFailureDrills.ps1`. Then run the isolated temporary gates:
+   `Test-ObserverAttachmentPreflight.ps1`,
+   `Test-PackagingRelease.ps1`, and
+   `Test-OpenSpecProjectTemplate.ps1`. These gates must not modify global
+   OpenCode or OpenChamber configuration; the package and Observer negative
+   gates create and remove only their own temporary fixtures, while the OpenSpec
+   fixture may retrieve the pinned CLI through `npx`.
+3. [ ] **Obtain current-revision Windows CI evidence.** Push or open a pull
+   request for the candidate and require the `Research Configuration` workflow
+   to pass on that same SHA. Its copied-bootstrap preflight additionally proves
+   the exact global `@fission-ai/openspec@1.5.0` CLI and a fresh template copy.
+   A green run for an earlier SHA is not sufficient.
+4. [ ] **Create the pre-apply evidence manifest and diff preview.** Record the
+   active OpenChamber and managed OpenCode versions, active plugin and patch
+   identity, MCP/auth state without credentials, framework-owned target paths,
+   and current SHA-256 values. Compare each reviewed source with its named
+   target and classify it as `MATCH`, `DRIFT`, or `ABSENT`. A `MATCH` target is
+   not reapplied. For every `DRIFT` or `ABSENT` target, record the owner,
+   approved apply script, planned backup location, expected after hash, focused
+   verifier, rollback action, restart requirement, and side effect. Never add
+   CPA GUI-managed `opencode.json`, OpenChamber state, credentials, sessions,
+   or runtime files to this manifest.
+5. [ ] **Approval checkpoint.** Present the candidate SHA, source/CI evidence,
+   latest runtime evidence and the stale runtime gates still required, diff
+   preview, exact target list, backup paths, planned writes, restart, live-model
+   smoke cost, and rollback procedure. Obtain explicit user approval before
+   creating backups, changing a persistent global target, restarting
+   OpenChamber, or making a live provider request.
+6. [ ] **Refresh stale runtime evidence after approval and before a write.**
+   The managed OpenCode version has changed since the recorded Phase 3 evidence,
+   so run `Test-ResearchRuntime.ps1` and perform its documented manual
+   disabled-MCP live behavioral check. Re-run any Phase 4, 5, or 7-10 runtime
+   verifier only if its source, managed version, plugin version, prompt/skill
+   target, or package patch changed after its recorded evidence. If the slim
+   package was reinstalled or updated, Phase 5 additionally requires
+   `Test-MultimediaCapabilities.ps1`,
+   `Test-ObserverAttachment.ps1 -PreflightOnly`, and the live
+   `Test-ObserverAttachment.ps1` OCR smoke. Stop before creating a backup or
+   applying a target if any required runtime or behavior gate fails.
+7. [ ] **Apply only approved drift.** Close OpenChamber and CPA GUI. Create
+   timestamped file-level backups outside this repository, record before hashes,
+   and use only the reviewed phase-specific apply scripts for approved targets.
+   Do not run an apply script merely to reproduce an already matching target,
+   do not manually merge JSON, and stop immediately if a script refuses or a
+   hash check fails. Record every created manifest and after hash.
+8. [ ] **Restart and verify affected runtime contracts.** Restart
+   OpenChamber, run `opencode debug config` through the managed binary, and run
+   the focused runtime verifier for every changed layer. At minimum, a change to
+   the agent/preset, research MCP, multimedia patch, Phase 7 execution assets,
+   Phase 8 guidance, Phase 9 UI assets, or Phase 10 release assets requires its
+   corresponding runtime verifier. A failed verifier is a rollback trigger, not
+   a condition for a second blind apply.
+9. [ ] **Run final project smokes.** In a fresh temporary project, copy
+   `templates\project`, run its `Test-OpenSpecBootstrapPreflight.ps1`, and
+   validate a minimal OpenSpec change with the pinned CLI. In one user-selected
+   existing project, run only a bounded, non-destructive smoke with named
+   project-native evidence. Record the selected project, command, result, and
+   remaining uncertainty; do not treat a fixture command as evidence for that
+   project.
+10. [ ] **Prove rollback.** With explicit approval, restore the exact named
+    targets from the Phase 12 backup manifests, restart OpenChamber, and run the
+    focused verifiers that demonstrate the restoration. Reapply only the same
+    approved drift through the reviewed scripts, restart, and repeat the
+    affected runtime checks. Do not restore a directory, use destructive Git
+    commands, or modify OpenChamber state.
+11. [ ] **Close the rollout record.** Record the candidate SHA, all command
+    outputs and exit codes, CI URL, active versions, before/after checksums,
+    backup locations, diff outcome, apply/no-op decisions, smoke results,
+    rollback result, and remaining limitations. Confirm the repository contains
+    no secret-bearing file before marking Phase 12 complete.
 
 Complete when:
 
@@ -1339,20 +1416,8 @@ The final design decisions are:
 
 ## 23. Next Action
 
-Phase 12 global rollout is unstarted. Before starting it, refresh the
-required residual gates that have not been re-run in this update:
-
-- managed-runtime verification for Phase 7, Phase 8, Phase 9, and Phase 10
-  (`Test-ExecutionVerificationRuntime.ps1`,
-  `Test-OpenChamberOperatingGuideRuntime.ps1`,
-  `Test-UIQualityLayerRuntime.ps1`, and
-  `Test-PackagingReleaseRuntime.ps1`);
-- the Phase 4 runtime re-run that now also inspects Observer permissions
-  (`Test-AgentLayerRuntime.ps1`);
-- a manual disabled-MCP live behavioral check
-  (`Test-ResearchRuntime.ps1` config inspection plus a manual gate for live
-  model behavior under the disabled state).
-
-Preserve the separate Phase 5 revalidation requirement after any slim
-reinstall or version update, and retain the controlled global lifecycle for
-framework-owned sources.
+Phase 12 remains unstarted. When rollout preparation begins, start at Phase 12
+checklist item 1. The next required evidence is the current-candidate
+source/fixture and Windows CI result; do not perform a global write, restart,
+provider call, or rollback drill before reaching the explicit approval
+checkpoint at item 5.

@@ -77,34 +77,33 @@ PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-FrameworkSkeleton.ps1
 
 The Phase 7 evaluator is also a Windows pull-request gate. It is deliberately
 offline: it never calls a provider, writes a global configuration target, or
-mistakes a model response for command evidence. The source-completeness
-classification means the offline evaluator passes; managed-runtime activation
-and any live model compliance evidence remain required residual gates and are
-not part of the Phase 7 source-only status.
+mistakes a model response for command evidence. The source gate proves the
+policy contract; the controlled apply and managed-runtime verifier recorded
+above establish that the reviewed contract is installed. Neither is evidence
+that an arbitrary future model response will follow every instruction.
 
-## Controlled Global Activation
+## Controlled Global Activation Record
 
-Close OpenChamber and CPA GUI, then run the fail-closed controlled apply. It
-validates the Phase 7 and agent-layer source, backs up only the three reviewed
-prompt targets and two reviewed skill targets, verifies every copied SHA-256,
-and restores all changed targets if a copy or manifest write fails. It does not
-alter OpenChamber state or `opencode.json`:
+The fail-closed controlled apply completed on 2026-08-05. It validated the
+Phase 7 and agent-layer source, backed up only the three reviewed prompt targets
+and two reviewed skill targets to `phase-7-20260805-180814`, verified every
+copied SHA-256, and would restore all changed targets if a copy or manifest
+write failed. It did not alter OpenChamber state or `opencode.json`.
 
 ```powershell
 PowerShell -ExecutionPolicy Bypass -File .\scripts\Apply-ExecutionVerification.ps1
 ```
 
-Restart OpenCode/OpenChamber after applying the reviewed assets, then run:
+After restarting OpenCode/OpenChamber, the following runtime validation passed:
 
 ```powershell
 PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-AgentLayerRuntime.ps1
 PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-ExecutionVerificationRuntime.ps1
 ```
 
-That runtime command validates effective agent registration and routes. It does
-not prove every prompt instruction was followed in a future task; execute the
-Phase 7 fixtures and a bounded real-project task before treating behavior as
-runtime-verified.
+That runtime command validates active prompt and skill hashes, plugin
+initialization, effective prompt contracts, and Fixer/Oracle registration. It
+does not prove every prompt instruction will be followed in a future task.
 
 ## Remaining Uncertainty
 
@@ -112,6 +111,5 @@ runtime-verified.
   compliance.
 - A project must supply real focused test commands in each task brief; a fixture
   command name is not application evidence.
-- Runtime activation still requires the controlled apply, restart, runtime
-  verifier, and a bounded real-project task; the offline evaluator alone does
-  not prove arbitrary model compliance.
+- A bounded real-project task remains the appropriate behavior smoke before a
+  project relies on the workflow for a material change.

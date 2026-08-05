@@ -85,7 +85,7 @@ foreach ($agent in @('orchestrator', 'explorer', 'librarian', 'oracle', 'designe
     Assert-Contains -Text $agents -Pattern "(?m)^$agent \(" -Message "Expected agent '$agent' is not registered."
 }
 
-foreach ($agent in @('explorer', 'librarian', 'oracle')) {
+foreach ($agent in @('explorer', 'librarian', 'oracle', 'observer')) {
     $match = [regex]::Match($agents, "(?ms)^$agent \(.*?(?=^[a-z-]+ \(|\z)")
     if (-not $match.Success) {
         throw "Could not inspect permissions for '$agent'."

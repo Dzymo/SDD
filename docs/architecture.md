@@ -52,6 +52,39 @@ standard artifact graph and adjacent evidence records; it does not add an
 OpenSpec schema, agent, or command. Product facts, active change artifacts, and
 release records remain in the participating project.
 
+Phase 7 adds prompt and skill contracts to the existing slim execution layer.
+The Orchestrator remains the routing and reconciliation authority, Fixer remains
+the M3 write worker, Oracle remains read-only and risk-triggered, and
+project-native commands remain the only runtime correctness proof. The Phase 7
+offline evaluator validates policy records; it is not a second task engine.
+Phase 7 is **source-only complete**; the managed-runtime verification is a
+required residual gate that has not been re-run in this update.
+
+Phase 8 adds advisory prompt and guide contracts only. OpenChamber remains the
+sole owner of Focus Mode, Session Goals, worktree lifecycle, and MultiRun.
+Session Goals remain the sole automatic parent-session continuation controller;
+slim idle continuation and the slim worktree skill stay disabled. The runtime
+verifier hash-compares the active global Orchestrator prompt with the reviewed
+Phase 8 source before checking the required rule substrings. Phase 8 is
+**source-only complete**; the managed-runtime verification is a required
+residual gate that has not been re-run in this update.
+
+Phase 9 adds a UI evidence contract to the existing Designer and Observer lanes.
+`PRODUCT.md`, `DESIGN.md`, and an approved project-local surface brief are the
+authority chain for material UI work. Project-native browser/accessibility checks,
+fresh screenshot review, and explicit user visual approval are distinct evidence;
+no detector or synthetic score becomes a second design authority or release gate.
+Phase 9 is **source-only complete**; the managed-runtime verification is a
+required residual gate that has not been re-run in this update.
+
+Phase 11 adds one deterministic cross-phase regression gate. It evaluates fixed
+normal and failure observations against the existing Orchestrator, Fixer, Oracle,
+research, Goal, and release boundaries. It is not an agent, continuation loop,
+runtime simulator, or alternate release authority. The offline evaluator is a
+source-policy regression guard; it does not prove live model compliance.
+Phase 12 global rollout is **unstarted** and is intentionally not part of the
+framework source.
+
 ## Provenance
 
 | Need | Repositories inspected | Candidate mechanism | Decision | Reason |

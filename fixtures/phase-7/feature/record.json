@@ -1,0 +1,26 @@
+{
+  "taskId": "F-001",
+  "kind": "feature",
+  "brief": {
+    "observableOutcome": "The status endpoint returns HTTP 200 with a JSON status value.",
+    "allowedFiles": ["src/status.ts", "tests/status.test.ts"],
+    "interfacesAndInvariants": "Existing response shape remains JSON.",
+    "acceptanceCriteria": "A focused endpoint test passes.",
+    "focusedValidation": "npm test -- status",
+    "forbiddenScopeChanges": "No dependencies or unrelated refactors.",
+    "expectedFinalReport": "Files changed and command exit code."
+  },
+  "worker": {
+    "role": "fixer",
+    "model": "minimax-coding-plan/MiniMax-M3"
+  },
+  "attempts": [
+    {
+      "number": 1,
+      "validations": [
+        { "command": "npm test -- status", "output": "PASS  src/status.test.ts (status)\n  ok status returns HTTP 200 with JSON\nTests: 1 passed, 1 total", "exitCode": 0 }
+      ]
+    }
+  ],
+  "completion": "PASS"
+}

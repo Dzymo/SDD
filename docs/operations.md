@@ -27,6 +27,16 @@ It fails for an unavailable or version-mismatched CLI and warns, with source
 file and line, about unavailable generated command or skill dependencies. It
 does not add commands or skills to compensate for the OpenSpec `core` profile.
 
+Phase 10 adds project-local package and release evidence. Complete the copied
+`PACKAGE.md` before selecting package, clean-smoke, content-check, checksum,
+or rollback commands. See `docs/packaging-and-release.md`. This phase does not
+perform an external release action or apply global configuration without a
+separate explicit user approval. Its offline source evaluator and source
+contracts are complete; the historic 2026-08-04 record of the controlled
+activation and managed-runtime verification is retained for provenance, and
+the managed-runtime verification is a required residual gate that has not
+been re-run in this update.
+
 ## Future Configuration Lifecycle
 
 1. Author a non-secret source under the appropriate `config/` subdirectory and
@@ -63,7 +73,7 @@ An apply operation requires all of the following before any write:
 | Specific target and owner | Recorded in `PHASE-3-RESEARCH-LAYER.md`. |
 | Supported write mechanism | `scripts\Apply-ResearchMcp.ps1` merges only reviewed non-secret sources. |
 | External protected backup | `phase-3-20260803-171732` manifest records the initial file-level state. |
-| Managed-runtime validation command | `scripts\Test-ResearchRuntime.ps1`. |
+| Managed-runtime validation command | `scripts\Test-ResearchRuntime.ps1` (config inspection plus prompt-based behavioral assertion; live model behavior is a manual gate, not a runtime-verified claim). |
 | File-level rollback path | `docs\rollback.md` Phase 3 procedure. |
 
 No blanket directory copy, `git reset`, `git checkout`, or OpenChamber runtime
@@ -79,6 +89,161 @@ PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-FrameworkSkeleton.ps1
 
 The verifier is local and read-only. It neither accesses nor alters global
 OpenCode or OpenChamber configuration.
+
+Validate the Phase 7 execution and truthful-completion source contracts:
+
+```powershell
+PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-ExecutionVerification.ps1
+```
+
+This evaluator accepts only records with a complete task brief and M3 Fixer
+route. It requires red-green evidence for its bug fixture, requires Oracle
+assumption review after two failed repairs, and rejects any `PASS` record with a
+nonzero required command exit code. It is an offline framework check, not proof
+that an application's commands have passed.
+
+To activate all Phase 7 framework-owned prompts and skills, first close
+OpenChamber and CPA GUI, then run:
+
+```powershell
+PowerShell -ExecutionPolicy Bypass -File .\scripts\Apply-ExecutionVerification.ps1
+```
+
+The script validates source contracts, creates a timestamped file-level backup
+and manifest, verifies every copied target hash, and restores all changed
+targets if any write or manifest step fails. Restart OpenChamber, then run:
+
+```powershell
+PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-ExecutionVerificationRuntime.ps1
+```
+
+The runtime step is a required residual gate for Phase 7 and has not been
+re-run in this update. The runtime verifier hash-compares the active global
+Orchestrator, Fixer, and Oracle prompts and the systematic-debugging and
+verification-before-completion skills against their reviewed sources and
+checks the Phase 7 prompt rules; a hash mismatch is a fail-closed condition
+that means a manual edit drifted an active target from the reviewed source.
+
+Validate the Phase 8 OpenChamber operating-guide source contracts:
+
+```powershell
+PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-OpenChamberOperatingGuide.ps1
+```
+
+This evaluator is offline and read-only. It tests the recommendation matrix,
+the no-silent-Goal prompt contract, and the invariant that OpenChamber Session
+Goals are the only automatic parent-session continuation controller. It does
+not arm a Goal or alter OpenChamber settings.
+
+After controlled Phase 8 prompt activation and an OpenChamber restart, run:
+
+```powershell
+PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-OpenChamberOperatingGuideRuntime.ps1
+```
+
+The runtime smoke checks the managed OpenCode plugin and active global
+Orchestrator prompt. It is read-only and does not arm a Goal or create a
+worktree. The runtime verifier hash-compares the active global Orchestrator
+prompt with the reviewed Phase 8 source before checking the required rule
+substrings; a hash mismatch is a fail-closed condition that means a manual
+edit drifted the active prompt from the reviewed source. The runtime step
+is a required residual gate for Phase 8 and has not been re-run in this
+update.
+
+Validate the Phase 11 evaluation and failure drills:
+
+```powershell
+PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-EvaluationFailureDrills.ps1
+```
+
+This offline source gate derives the verdict for all 18 required failure drills
+and checks the related Orchestrator, Fixer, Oracle, research-skill, and preset
+contracts. It does not call a provider, modify global configuration, create a
+worktree, or perform an external action. See `docs\evaluation-and-failure-drills.md`
+for its exact scope and limitations.
+
+Validate the Phase 9 UI-quality source contracts:
+
+```powershell
+PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-UIQualityLayer.ps1
+```
+
+This evaluator is offline and read-only. It requires product/design/surface
+authority, desktop/mobile/browser/accessibility evidence, and a closed fresh
+screenshot review, but it distinguishes that review-ready state from explicit
+user visual approval. It rejects synthetic-score proof and does not invoke a
+browser, install Impeccable, or change global configuration.
+
+To activate only the reviewed Phase 9 Designer/Observer prompts, Designer skill
+permission, and `ui-quality` skill, first close OpenChamber and CPA GUI, then
+run:
+
+```powershell
+PowerShell -ExecutionPolicy Bypass -File .\scripts\Apply-UIQualityLayer.ps1
+```
+
+The apply script backs up only `oh-my-opencode-slim.json`, the Designer and
+Observer prompts, and the new skill file under a `phase-9-*` protected backup
+directory. It merges only `presets.sdd-personal.designer.skills` in the JSON
+target and restores changed files on a failed post-write check. Restart
+OpenChamber, then verify the effective managed runtime with:
+
+```powershell
+PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-UIQualityLayerRuntime.ps1
+```
+
+The runtime step is a required residual gate for Phase 9 and has not been
+re-run in this update. The runtime verifier hash-compares the active global
+Designer/Observer prompts and the `ui-quality` skill against their reviewed
+sources and checks the Phase 9 prompt rules; a hash mismatch is a fail-closed
+condition that means a manual edit drifted an active target from the reviewed
+source.
+
+Validate the Phase 10 package and release source contracts:
+
+```powershell
+PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-PackagingRelease.ps1
+```
+
+This offline source gate packs a local dependency-free fixture, installs it in
+a new temporary directory with install scripts disabled, runs its smoke entry
+point, verifies its SHA-256 and delivered contents, and tests release approval
+and archive scenarios. It does not contact a registry, publish, deploy, tag,
+push, merge, or modify global OpenCode configuration.
+
+To activate only the reviewed Orchestrator release contract and
+`package-and-release` skill, first close OpenChamber and CPA GUI, then run:
+
+```powershell
+PowerShell -ExecutionPolicy Bypass -File .\scripts\Apply-PackagingRelease.ps1
+```
+
+It makes a timestamped `phase-10-*` file-level backup and SHA-256 manifest for
+only those two global targets, restores changed targets on a failed write or
+hash check, and never performs a release. Restart OpenChamber, then run:
+
+```powershell
+PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-PackagingReleaseRuntime.ps1
+```
+
+The runtime step is a required residual gate for Phase 10 and has not been
+re-run in this update. The runtime verifier hash-compares the active global
+Orchestrator prompt and the `package-and-release` skill against their
+reviewed sources and checks the Phase 10 prompt rules; a hash mismatch is a
+fail-closed condition that means a manual edit drifted an active target
+from the reviewed source.
+
+Use the controlled activation script only after OpenChamber and CPA GUI have
+stopped:
+
+```powershell
+PowerShell -ExecutionPolicy Bypass -File .\scripts\Apply-OpenChamberOperatingGuide.ps1
+```
+
+It refuses to run if an OpenChamber, CPA GUI, or managed OpenCode process is
+active. On apply it copies only the framework-owned Orchestrator prompt and
+writes a timestamped backup plus SHA-256 manifest under the protected backup
+root.
 
 Validate the reviewed research-MCP source before staging it:
 
@@ -103,7 +268,12 @@ PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-AgentLayerRuntime.ps1
 ```
 
 Do not use the shell `opencode` wrapper as proof for this check: the managed
-OpenChamber binary is the active runtime.
+OpenChamber binary is the active runtime. The runtime verifier inspects the
+read-only agents' permission denials for `edit`, `bash`, `task`, and
+`external_directory` equivalently across Explorer, Librarian, Oracle, and
+Observer. The runtime step is a required residual gate for Phase 4 and has
+not been re-run in this update; the last re-run was on 2026-08-02 before
+Observer was added to the verifier.
 
 Validate the offline Observer attachment regression contract before a pull
 request or source change:
@@ -182,14 +352,31 @@ profile limitations and their workarounds.
 ## Pull Request Validation
 
 `.github/workflows/research-config.yml` runs the research schema, agent-layer,
-Observer attachment regression, Observer OCR preflight negative suite, copied
-OpenSpec bootstrap preflight with `@fission-ai/openspec@1.5.0`, and framework
-source-safety verifiers on Windows for every pull request. The bootstrap job
-installs the exact CLI, asserts its version, copies `templates\project` into a
-fresh runner-temporary directory, then runs the copied preflight script.
+execution/verification, OpenChamber operating-guide, UI-quality layer, package
+and release fixture, evaluation and failure drills, Observer attachment regression, Observer OCR preflight
+negative suite, copied OpenSpec bootstrap
+preflight with `@fission-ai/openspec@1.5.0`, and framework source-safety
+verifiers on Windows for every pull request. The bootstrap job installs the
+exact CLI, asserts its version, copies `templates\project` into a fresh
+runner-temporary directory, then runs the copied preflight script.
+
+The pull-request workflow exercises the **offline** source and preflight
+gates only. The managed-runtime verifiers (`Test-AgentLayerRuntime.ps1`,
+`Test-ExecutionVerificationRuntime.ps1`,
+`Test-OpenChamberOperatingGuideRuntime.ps1`,
+`Test-UIQualityLayerRuntime.ps1`, `Test-PackagingReleaseRuntime.ps1`, and
+`Test-ResearchRuntime.ps1`) require the local managed OpenCode binary and,
+in the case of the live run calls, a provider; they are intentionally not
+hosted CI jobs. Phase 12 global rollout is **unstarted**; the required
+managed-runtime and provider gates listed in `PLAN.md` Phase 12 must be
+executed locally before any release, deploy, tag, push, merge, or other
+external write.
+
 Repository branch protection must require `Validate research MCP schema (Windows)`
 before merge; the workflow file does not change repository-level merge
-permissions by itself.
+permissions by itself. Configuring that required check in branch protection
+is a separate repository administration step and has not been performed in
+this update.
 
 ## Action Update Cadence
 

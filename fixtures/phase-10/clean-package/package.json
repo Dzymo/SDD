@@ -1,0 +1,15 @@
+{
+  "name": "@sdd/phase-10-clean-fixture",
+  "version": "1.0.0",
+  "description": "Local fixture for clean package installation smoke testing.",
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "README.md"
+  ],
+  "scripts": {
+    "smoke": "node -e \"const fixture = require('./'); if (fixture.smoke() !== 'phase-10-clean-smoke') process.exit(1);\""
+  },
+  "license": "UNLICENSED",
+  "private": false
+}

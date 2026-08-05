@@ -1,0 +1,26 @@
+{
+  "taskId": "B-NOREG-001",
+  "kind": "bug",
+  "brief": {
+    "observableOutcome": "The empty status value returns a validation error rather than an exception.",
+    "allowedFiles": ["src/status.ts", "tests/status.test.ts"],
+    "interfacesAndInvariants": "Valid status values keep their existing response.",
+    "acceptanceCriteria": "The regression test fails before the fix and passes after it.",
+    "focusedValidation": "npm test -- status-empty-value",
+    "forbiddenScopeChanges": "No API redesign or dependencies.",
+    "expectedFinalReport": "Regression and final command exit codes."
+  },
+  "worker": {
+    "role": "fixer",
+    "model": "minimax-coding-plan/MiniMax-M3"
+  },
+  "attempts": [
+    {
+      "number": 1,
+      "validations": [
+        { "command": "npm test -- status-empty-value", "output": "PASS  src/status.test.ts (status-empty-value)\n  ok empty status value returns a validation error\nTests: 1 passed, 1 total", "exitCode": 0 }
+      ]
+    }
+  ],
+  "completion": "PASS"
+}

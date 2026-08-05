@@ -15,6 +15,10 @@ jobs:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Validate Phase 11 evaluation and failure drills
+        shell: pwsh
+        run: ./scripts/Test-EvaluationFailureDrills.ps1
+
       - name: Validate research MCP schema
         shell: pwsh
         run: ./scripts/Test-ResearchConfigSchema.ps1
@@ -22,6 +26,26 @@ jobs:
       - name: Validate agent layer source
         shell: pwsh
         run: ./scripts/Test-AgentLayer.ps1
+
+      - name: Validate execution and verification contracts
+        shell: pwsh
+        run: ./scripts/Test-ExecutionVerification.ps1
+
+      - name: Validate OpenChamber operating guide
+        shell: pwsh
+        run: ./scripts/Test-OpenChamberOperatingGuide.ps1
+
+      - name: Validate UI quality layer
+        shell: pwsh
+        run: ./scripts/Test-UIQualityLayer.ps1
+
+      - name: Validate packaging and release contracts
+        shell: pwsh
+        run: ./scripts/Test-PackagingRelease.ps1
+
+      - name: Validate strict OpenSpec project template fixture
+        shell: pwsh
+        run: ./scripts/Test-OpenSpecProjectTemplate.ps1
 
       - name: Validate Observer attachment regression source
         shell: pwsh

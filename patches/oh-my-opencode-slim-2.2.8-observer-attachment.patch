@@ -1,28 +1,249 @@
---- dist/index.js
-+++ dist/index.js
-@@
+# oh-my-opencode-slim@2.2.8 - Structured Observer Attachment Patch Record
+#
+# Purpose
+#   Record the one-file runtime patch that preserves image parts in Observer
+#   child sessions, routes parent images through observer_attachment, implements
+#   that structured child-session tool, and registers it in OhMyOpenCodeLite.
+#
+# Source package identity
+#   npm package : oh-my-opencode-slim
+#   npm version : 2.2.8
+#   npm commit  : 218836d6f94fb00943d43f3c64fc3cd835be0ae1
+#   clone path  : D:\Projects\SDD\.slim\clonedeps\repos\alvinunreal__oh-my-opencode-slim
+#   The clone and package cache are read-only evidence while maintaining this record.
+#
+# Target file paths
+#   dist/index.js only, relative to the oh-my-opencode-slim package root.
+#   The npm artifact bundles the relevant hook and tool code into this file; no
+#   separate distribution hook or tool modules are published for these changes.
+#
+# Hash chain (SHA-256)
+#   Official npm publish baseline:
+#     dist/index.js : 816D84ABF3DD5923F56DF2C52F3AB7149B46654C3FBBDE9DF8760D22823DEDFC
+#   Separate disabled-tools hotfix output:
+#     dist/index.js : 3D70AB6200A5AF7718BFFCF229D985A9C8E2925BA0AD7676046C274E57E65CC5
+#
+# Before SHA-256
+#   dist/index.js : 3D70AB6200A5AF7718BFFCF229D985A9C8E2925BA0AD7676046C274E57E65CC5
+#
+# After SHA-256
+#   dist/index.js : 6E6A67DF17820B6E3DCAE43BCAFD6DEA2705666A161227769AE32E2576A8989A
+#
+# Ordering invariant
+#   Apply patches\oh-my-opencode-slim-2.2.8-disabled-tools.patch first. This
+#   record deliberately gates on its 3D70... output and must not be applied to
+#   the 816D... npm baseline or to any other package build.
+#
+# Pre-apply backup (PowerShell 5.1, file-level and timestamped)
+#   Close OpenChamber and CPA GUI before changing a managed package file.
+#   $pkg = "$env:USERPROFILE\.cache\opencode\packages\oh-my-opencode-slim@2.2.8\node_modules\oh-my-opencode-slim"
+#   $target = Join-Path $pkg 'dist\index.js'
+#   $packageJson = Join-Path $pkg 'package.json'
+#   if (-not (Test-Path -LiteralPath $packageJson -PathType Leaf)) { throw "Missing package manifest: $packageJson" }
+#   $identity = Get-Content -LiteralPath $packageJson -Raw | ConvertFrom-Json
+#   if ($identity.name -ne 'oh-my-opencode-slim' -or $identity.version -ne '2.2.8') { throw 'Package identity mismatch.' }
+#   if (-not (Test-Path -LiteralPath $target -PathType Leaf)) { throw "Missing patch target: $target" }
+#   $before = (Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash
+#   if ($before -ne '3D70AB6200A5AF7718BFFCF229D985A9C8E2925BA0AD7676046C274E57E65CC5') { throw "Refusing backup/apply from unreviewed hash: $before" }
+#   $backupParent = "$env:USERPROFILE\.local\share\opencode\framework-backups"
+#   if (-not (Test-Path -LiteralPath $backupParent -PathType Container)) { throw "Missing approved backup parent: $backupParent" }
+#   $backupRoot = Join-Path $backupParent ((Get-Date -Format 'yyyyMMdd-HHmmss') + '-observer-attachment')
+#   New-Item -ItemType Directory -Path $backupRoot | Out-Null
+#   $backup = Join-Path $backupRoot 'dist-index.js.before-observer-attachment.bak'
+#   Copy-Item -LiteralPath $target -Destination $backup
+#   if ((Get-FileHash -LiteralPath $backup -Algorithm SHA256).Hash -ne $before) { throw 'Backup verification failed; do not apply.' }
+#   $backupRoot
+#
+# Apply (PowerShell 5.1)
+#   Run the verified Pre-apply backup block first and retain its $backupRoot.
+#   $patchRecord = 'D:\Projects\SDD\patches\oh-my-opencode-slim-2.2.8-observer-attachment.patch'
+#   if ((Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash -ne '3D70AB6200A5AF7718BFFCF229D985A9C8E2925BA0AD7676046C274E57E65CC5') { throw 'Structured patch prerequisite hash is not present.' }
+#   & git -C $pkg apply --check --whitespace=nowarn $patchRecord
+#   if ($LASTEXITCODE -ne 0) { throw 'Structured patch does not apply cleanly; leave the target unchanged.' }
+#   & git -C $pkg apply --whitespace=nowarn $patchRecord
+#   if ($LASTEXITCODE -ne 0) { Copy-Item -LiteralPath $backup -Destination $target -Force; throw 'Structured patch apply failed; restored backup.' }
+#   $after = (Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash
+#   if ($after -ne '6E6A67DF17820B6E3DCAE43BCAFD6DEA2705666A161227769AE32E2576A8989A') { Copy-Item -LiteralPath $backup -Destination $target -Force; throw "Unexpected after hash $after; restored backup." }
+#   PowerShell -NoProfile -ExecutionPolicy Bypass -File D:\Projects\SDD\scripts\Test-ObserverAttachment.ps1 -PreflightOnly
+#
+# Rollback (PowerShell 5.1)
+#   Close OpenChamber and CPA GUI. Set $backupRoot to the exact directory printed
+#   by the successful Pre-apply backup block; never restore a parent directory.
+#   $pkg = "$env:USERPROFILE\.cache\opencode\packages\oh-my-opencode-slim@2.2.8\node_modules\oh-my-opencode-slim"
+#   $target = Join-Path $pkg 'dist\index.js'
+#   $backup = Join-Path $backupRoot 'dist-index.js.before-observer-attachment.bak'
+#   if (-not (Test-Path -LiteralPath $backup -PathType Leaf)) { throw "Missing rollback backup: $backup" }
+#   if ((Get-FileHash -LiteralPath $backup -Algorithm SHA256).Hash -ne '3D70AB6200A5AF7718BFFCF229D985A9C8E2925BA0AD7676046C274E57E65CC5') { throw 'Rollback backup hash mismatch.' }
+#   $current = (Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash
+#   if ($current -ne '6E6A67DF17820B6E3DCAE43BCAFD6DEA2705666A161227769AE32E2576A8989A') { throw "Refusing to overwrite unreviewed current hash: $current" }
+#   Copy-Item -LiteralPath $backup -Destination $target -Force
+#   if ((Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash -ne '3D70AB6200A5AF7718BFFCF229D985A9C8E2925BA0AD7676046C274E57E65CC5') { throw 'Rollback verification failed.' }
+#   Restart OpenChamber, then expect Test-ObserverAttachment.ps1 -PreflightOnly to
+#   fail closed because the structured attachment after hash is no longer active.
+#
+# Safe reapply after rollback, reinstall, or package upgrade
+#   1. Close OpenChamber and CPA GUI and verify package name/version as above.
+#   2. If dist/index.js is the official 816D... baseline, apply the separate
+#      disabled-tools patch and verify its 3D70... after hash first.
+#   3. If dist/index.js is neither 3D70... nor 6E6A..., stop. Re-derive and review
+#      both patches for that artifact; do not fuzz-apply this record.
+#   4. From 3D70..., repeat the Pre-apply backup and Apply blocks with a fresh
+#      timestamped backup. From 6E6A..., do not reapply; run preflight instead.
+#   5. Run the offline regression and preflight-only smoke before any provider run.
+#
+# ----------------------------------------------------------------------------
+# Unified diff body: dist/index.js on top of the disabled-tools hotfix
+# ----------------------------------------------------------------------------
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -26357,10 +26357,12 @@ function processImageAttachments(args) {
+     return;
+   const messagesWithImages = [];
+   for (const msg of messages) {
+     if (!isUserMessageWithParts(msg))
+       continue;
++    if (msg.info.agent === "observer")
++      continue;
+     const imageParts = msg.parts.filter(isImagePart);
+     if (imageParts.length > 0) {
+       messagesWithImages.push({ msg, imageParts });
+     }
+   }
+@@ -26417,11 +26419,11 @@ function processImageAttachments(args) {
+     log2(`[image-hook] saved image/file parts to disk${pathsText}`);
+     log2(`[image-routing] auto mode: intercepted ${savedImageParts.size} image(s), delegating to @observer`);
+     msg.parts = msg.parts.filter((p) => !savedImageParts.has(p)).concat([
+       {
+         type: "text",
+-        text: `[Image attachment detected.${pathsText} Your model may not support image input. Delegate to @observer with the file path(s) above so it can read the file with its read tool.]`
++          text: `[Image attachment detected.${pathsText} Call observer_attachment with every file path above. It sends structured image attachments to a child @observer session; do not use task or read for this handoff.]`
+       }
+     ]);
+   }
+ }
+ // src/hooks/json-error-recovery/hook.ts
+@@ -39802,10 +39804,93 @@ Use this only as the final tool action after you have already given the user con
+ `);
+     }
+   });
+   return { wait_for_user };
+ }
 +function createObserverAttachmentTool(options) {
-+  // Creates a child session with parentID and prompts it synchronously so the
-+  // visual result returns to the parent tool call.
-+  // It accepts only PNG, JPEG, GIF, and WebP files below .opencode/images,
-+  // reads at most 10 MiB each, and sends FilePart data URLs with agent: observer.
-+  // Register the returned observer_attachment tool beside wait_for_user.
++  const observer_attachment = tool5({
++    description: "Create a child Observer session and send saved image files as structured attachments. Use this for visual analysis after image routing saves files under .opencode/images. Do not use task or read for this handoff.",
++    args: {
++      files: z7.array(z7.string().min(1)).min(1).max(4).describe("Full paths to image files saved under .opencode/images for this workspace"),
++      prompt: z7.string().min(1).max(4e3).describe("The visual question for Observer to answer")
++    },
++    async execute(args, toolContext) {
++      const parentID = toolContext?.sessionID;
++      if (!parentID)
++        throw new Error("observer_attachment requires sessionID");
++      const agent = typeof toolContext?.agent === "string" ? options.resolveAgentName?.(toolContext.agent) ?? toolContext.agent : void 0;
++      if (agent && agent !== "orchestrator")
++        throw new Error("observer_attachment can only be used by orchestrator");
++      const directory = toolContext?.directory;
++      const worktree = toolContext?.worktree;
++      if (!directory || !worktree)
++        throw new Error("observer_attachment requires workspace paths");
++      const imageRoot = path22.resolve(worktree, ".opencode", "images");
++      const comparableRoot = process.platform === "win32" ? imageRoot.toLowerCase() : imageRoot;
++      const mimeForPath = (filePath) => {
++        switch (path22.extname(filePath).toLowerCase()) {
++          case ".jpg":
++          case ".jpeg":
++            return "image/jpeg";
++          case ".png":
++            return "image/png";
++          case ".gif":
++            return "image/gif";
++          case ".webp":
++            return "image/webp";
++          default:
++            throw new Error(`observer_attachment does not support ${path22.extname(filePath) || "this file type"}`);
++        }
++      };
++      const parts = [{
++        type: "text",
++        text: `Analyze the attached image evidence and answer only the requested visual question.\n\n${args.prompt}`
++      }];
++      for (const requestedPath of args.files) {
++        const absolutePath = path22.resolve(directory, requestedPath);
++        const comparablePath = process.platform === "win32" ? absolutePath.toLowerCase() : absolutePath;
++        if (!comparablePath.startsWith(`${comparableRoot}${path22.sep}`))
++          throw new Error("observer_attachment only accepts files saved under .opencode/images");
++        const stat = fs9.statSync(absolutePath);
++        if (!stat.isFile())
++          throw new Error(`observer_attachment file is not a regular file: ${absolutePath}`);
++        if (stat.size > 10485760)
++          throw new Error(`observer_attachment file exceeds the 10 MiB limit: ${absolutePath}`);
++        const mime = mimeForPath(absolutePath);
++        const data = fs9.readFileSync(absolutePath);
++        parts.push({
++          type: "file",
++          mime,
++          filename: path22.basename(absolutePath),
++          url: `data:${mime};base64,${data.toString("base64")}`
++        });
++      }
++      const created = await options.client.session.create({
++        responseStyle: "data",
++        throwOnError: true,
++        query: { directory },
++        body: { parentID, title: "observer-image" }
++      });
++      const childID = created?.data?.id ?? created?.id;
++      if (!childID)
++        throw new Error("observer_attachment child session did not return an id");
++      const response = await options.client.session.prompt({
++        responseStyle: "data",
++        throwOnError: true,
++        path: { id: childID },
++        query: { directory },
++        body: { agent: "observer", parts }
++      });
++      const result = response?.data ?? response;
++      const text = Array.isArray(result?.parts) ? result.parts.filter((part) => part?.type === "text" && typeof part.text === "string").map((part) => part.text).join("").trim() : "";
++      if (!text)
++        throw new Error("observer_attachment child session returned no text");
++      return `state: completed\nprotocol: oh-my-opencode-slim.observer_attachment.v1\nobserver_session_id: ${childID}\n\n${text}`;
++    }
++  });
++  return { observer_attachment };
 +}
-@@
-+    if (msg.info.agent === "observer") continue;
-+
---- src/hooks/image-hook.ts
-+++ src/hooks/image-hook.ts
-@@
-+    // The parent needs stripping before the text-only route. An Observer child
-+    // already receives a structured image part, so it must retain that part.
-+    if (msg.info.agent === 'observer') continue;
-
---- src/index.ts
-+++ src/index.ts
-@@
+ // src/tui-state.ts
+ import { createHash as createHash4 } from "node:crypto";
+ import * as fs9 from "node:fs";
+ import * as os7 from "node:os";
+ import * as path22 from "node:path";
+@@ -39996,10 +40081,11 @@ var OhMyOpenCodeLite = async (ctx) => {
+   let backgroundJobBoard;
+   let interviewManager;
+   let companionManager;
+   let cancelTaskTools;
+   let waitForUserTools;
++  let observerAttachmentTools;
+   let acpRunTools;
+   let webfetch;
+   let tools;
+   let rewriteDisplayNameMentions;
+   let toolCount = 0;
+@@ -40126,13 +40212,18 @@ var OhMyOpenCodeLite = async (ctx) => {
+       registerSessionAsOrchestrator: (sessionID) => {
+         sessionAgentMap.set(sessionID, "orchestrator");
+       },
+       beginUserWait: (sessionID) => taskSessionManagerHook.beginUserWait(sessionID)
+     });
 +    observerAttachmentTools = createObserverAttachmentTool({
 +      client: ctx.client,
-+      resolveAgentName: (agent) => resolveRuntimeAgentName(config, agent),
++      resolveAgentName: (agent) => resolveRuntimeAgentName(config, agent)
 +    });
-+    tools = { ...cancelTaskTools, ...waitForUserTools, ...observerAttachmentTools, ... };
+     tools = {
+       ...cancelTaskTools,
+       ...waitForUserTools,
++      ...observerAttachmentTools,
+       ...acpRunTools,
+       webfetch,
+       ast_grep_search,
+       ast_grep_replace
+     };

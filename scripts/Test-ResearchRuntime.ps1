@@ -126,18 +126,21 @@ Assert-Match -Text $codegraphRun -Pattern 'src\\+mcp\\+index\.ts' -Message 'Code
 $temporaryDirectory = Join-Path ([System.IO.Path]::GetTempPath()) "phase-3-fallback-$PID"
 New-Item -ItemType Directory -Path $temporaryDirectory -Force | Out-Null
 try {
+    # Config inspection: this branch verifies that a temporary overlay disables the
+    # MCP and the effective plugin config reflects that disabled state. It does not
+    # require a provider call and does not prove model behavior.
     $context7Disabled = Join-Path $temporaryDirectory 'context7-disabled.json'
     '{"mcp":{"context7":{"enabled":false}}}' | Set-Content -LiteralPath $context7Disabled -Encoding ascii
     $context7FallbackConfig = Invoke-ManagedOpenCode -AdditionalConfig $context7Disabled -Arguments @('debug', 'config') | ConvertFrom-Json
-    Assert-True -Condition ($context7FallbackConfig.mcp.context7.enabled -eq $false) -Message 'The Context7 failure fixture did not disable Context7.'
-    Assert-Match -Text $context7FallbackConfig.agent.librarian.prompt -Pattern 'verified external evidence is unavailable' -Message 'The Librarian does not report unavailable verified evidence when fallback retrieval is unavailable.'
+    Assert-True -Condition ($context7FallbackConfig.mcp.context7.enabled -eq $false) -Message 'CONFIG INSPECTION: The Context7 failure fixture did not disable Context7.'
+    Assert-Match -Text $context7FallbackConfig.agent.librarian.prompt -Pattern 'verified external evidence is unavailable' -Message 'PROMPT-BASED BEHAVIORAL ASSERTION: The Librarian prompt does not instruct the model to report unavailable verified evidence when fallback retrieval is unavailable. Live model behavior remains a manual gate because it requires a provider call.'
 
     $codegraphDisabled = Join-Path $temporaryDirectory 'codegraph-disabled.json'
     '{"mcp":{"codegraph":{"enabled":false}}}' | Set-Content -LiteralPath $codegraphDisabled -Encoding ascii
     $codegraphFallbackConfig = Invoke-ManagedOpenCode -AdditionalConfig $codegraphDisabled -Arguments @('debug', 'config') | ConvertFrom-Json
-    Assert-True -Condition ($codegraphFallbackConfig.mcp.codegraph.enabled -eq $false) -Message 'The CodeGraph failure fixture did not disable CodeGraph.'
-    Assert-Match -Text $codegraphFallbackConfig.agent.explorer.prompt -Pattern 'local evidence is unavailable' -Message 'The Explorer does not report unavailable local evidence when inspection tools are absent.'
-    Assert-Match -Text $codegraphFallbackConfig.agent.explorer.prompt -Pattern 'never infer missing paths or lines' -Message 'The Explorer does not prohibit inferred CodeGraph fallback evidence.'
+    Assert-True -Condition ($codegraphFallbackConfig.mcp.codegraph.enabled -eq $false) -Message 'CONFIG INSPECTION: The CodeGraph failure fixture did not disable CodeGraph.'
+    Assert-Match -Text $codegraphFallbackConfig.agent.explorer.prompt -Pattern 'local evidence is unavailable' -Message 'PROMPT-BASED BEHAVIORAL ASSERTION: The Explorer prompt does not instruct the model to report unavailable local evidence when inspection tools are absent. Live model behavior remains a manual gate because it requires a provider call.'
+    Assert-Match -Text $codegraphFallbackConfig.agent.explorer.prompt -Pattern 'never infer missing paths or lines' -Message 'PROMPT-BASED BEHAVIORAL ASSERTION: The Explorer prompt does not prohibit inferred CodeGraph fallback evidence. Live model behavior remains a manual gate because it requires a provider call.'
 }
 finally {
     if (Test-Path -LiteralPath $temporaryDirectory) {

@@ -11,10 +11,19 @@ global OpenCode framework used through OpenChamber.
 - Target OpenCode config: `C:\Users\quang\.config\opencode`
 - Target OpenChamber config: `C:\Users\quang\.config\openchamber`
 - Distribution target: none; this is not a public project
-- Plan status: Phase 2 source skeleton, Phase 3 runtime research layer, Phase 4
-  agent-layer source and controlled global activation, and the Phase 6
-  project-local OpenSpec template are completed. Phase 5 multimedia remains
-  active and requires revalidation after its runtime dependencies change.
+- Plan status: Phases 2 and 6 are source-complete. Phases 3 and 4 are active
+  and runtime-verified. Phase 5 is active and was revalidated with its
+  preflight and live structured-attachment OCR smoke on 2026-08-05; it still
+  requires revalidation after a slim reinstall or update. Phases 7, 8, and 10
+  were controlled-applied with per-file backups and runtime-verified on
+  2026-08-05. Phase 9 is runtime-verified on 2026-08-05. Phase 11 is
+  source-complete; its offline gate covers all 18 required scenarios but is a
+  source-policy regression guard rather than live model-compliance evidence.
+
+Phase 12 global rollout is **unstarted** as a separate final-rollout record.
+The phase-scoped activations above do not substitute for its final backups,
+dry-run/diff preview, fresh/existing-project smoke tests, rollback drill, and
+recorded active versions/checksums.
 
 This file is the source of truth for framework implementation. If a later
 decision changes the architecture, model routing, safety boundary, or workflow,
@@ -202,14 +211,14 @@ Rules:
 
 ## 8. Model Routing Baseline
 
-Model routing remains provisional until Phase 1 benchmarks the exact local
-provider routes. The baseline below is the starting configuration, not a claim
-of model superiority.
+Model routing uses the active CLIProxy provider selected by Phase 1. The retired
+CPA GUI routes are historical provenance only and must not be reintroduced as a
+framework dependency or inferred from model-name suffixes.
 
 | Agent | Baseline model | Mode/variant | Role |
 |---|---|---|---|
-| Orchestrator | `cpa-gui/gpt-5.6-terra` | Effective Medium/default must be verified | Routine orchestration and decisions |
-| Oracle | `cpa-gui/gpt-5.6-sol` | Effective Medium/default must be verified | Architecture, difficult debugging, material risk, independent review |
+| Orchestrator | `cliproxy/gpt-5.6-terra` | Default `medium`; `high` is the named fallback | Routine orchestration and decisions |
+| Oracle | `cliproxy/gpt-5.6-sol` | Default `medium`; `high` is the named fallback | Architecture, difficult debugging, material risk, independent review |
 | Librarian | `minimax-coding-plan/MiniMax-M3` | `none` | Context7 and external source retrieval |
 | Explorer | `minimax-coding-plan/MiniMax-M3` | `none` | Local search and code navigation |
 | Designer | `minimax-coding-plan/MiniMax-M3` | `thinking` | Approved UI direction, implementation, and visual review |
@@ -260,7 +269,8 @@ Rules:
 3. Escalation is per task, not a permanent session-wide upgrade.
 4. XHigh work must use a fresh or narrowly scoped session, one clear question,
    explicit evidence, a findings cap, and no unapproved subagent fan-out.
-5. The framework must verify how CPA GUI model IDs map to reasoning effort.
+5. CPA GUI routes are retired from framework selection. Do not infer their old
+   suffixes or restore that provider merely to benchmark it.
 
 ## 9. Anti-Overthinking and Anti-Overengineering Policy
 
@@ -959,11 +969,17 @@ Complete when:
 
 Objective: make current external and local evidence available globally.
 
-Status: completed and runtime-verified on 2026-08-03. The managed OpenCode
-runtime uses the reviewed Context7 OAuth MCP and CodeGraph local MCP; Librarian
-returned versioned Context7 evidence, Explorer returned CodeGraph path/line
-evidence, and disabled-MCP fixtures established explicit fail-soft behavior.
-See `PHASE-3-RESEARCH-LAYER.md`.
+Status: source-complete; the historic 2026-08-03 runtime record is retained
+for provenance. The managed OpenCode runtime uses the reviewed Context7 OAuth
+MCP and CodeGraph local MCP; Librarian returned versioned Context7 evidence,
+Explorer returned CodeGraph path/line evidence, and disabled-MCP fixtures
+established explicit fail-soft behavior. The runtime verifier now separates
+config inspection from the prompt-based behavioral assertion; live model
+behavior under the disabled state is a manual gate, not a runtime-verified
+claim. The runtime must be re-run after any change to the verifier, the
+reviewed MCP source, the CodeGraph install, or the OpenCode version. The
+re-run is a required residual gate and has not been performed in this
+update. See `PHASE-3-RESEARCH-LAYER.md`.
 
 Tasks:
 
@@ -985,14 +1001,21 @@ Complete when:
 
 Objective: activate the lean personal orchestration preset.
 
-Status: completed on 2026-08-02. The pinned
-`oh-my-opencode-slim@2.2.8` registration, `sdd-personal` preset, targeted
-prompt replacements, and runtime/source verifiers are recorded in
-`docs/agent-layer.md`. The standalone managed CLI passes the runtime verifier,
-and the user confirmed Orchestrator, Explorer, Librarian, Oracle, Designer, and
-Fixer appear in OpenChamber after restart. Council remains disabled; Observer
-was enabled later by the verified Phase 5 structured attachment handoff.
-Phase 5 must enable Observer only after its media path is directly verified.
+Status: source-complete; historic 2026-08-02 runtime verification retained
+for provenance. The pinned `oh-my-opencode-slim@2.2.8` registration,
+`sdd-personal` preset, targeted prompt replacements, and runtime/source
+verifiers are recorded in `docs/agent-layer.md` and
+`PHASE-4-AGENT-LAYER.md`. The standalone managed CLI passed the runtime
+verifier on 2026-08-02 (before Observer was added to the verifier), and the
+user confirmed Orchestrator, Explorer, Librarian, Oracle, Designer, and Fixer
+appear in OpenChamber after restart. Council remains disabled. Observer was
+originally disabled at the Phase 4 record date and was later enabled by the
+verified Phase 5 structured attachment handoff; the runtime verifier now
+inspects Observer permissions equivalently to the other read-only agents and
+the runtime must be re-run with the updated verifier to refresh that
+evidence. The re-run is a required residual gate and has not been performed
+in this update. Phase 5 must enable Observer only after its media path is
+directly verified.
 
 Tasks:
 
@@ -1066,6 +1089,13 @@ Complete when:
 
 Objective: automate bounded implementation with truthful completion evidence.
 
+Status: source-only complete. The offline evaluator and fixtures prove the
+policy contracts; the reviewed global preset prompts and skills still require
+the normal controlled global apply and managed-runtime restart before this
+behavior is active outside the source workspace. The managed-runtime
+verification is a required residual gate and has not been re-run in this
+update. See `PHASE-7-EXECUTION-AND-VERIFICATION.md`.
+
 Tasks:
 
 - implement task-brief generation;
@@ -1087,6 +1117,17 @@ Complete when:
 
 Objective: make the framework guide the user at the right moment.
 
+Status: source-only complete. The Orchestrator now contains explicit
+conditional advice for Focus Mode, Session Goals, worktrees, and MultiRun.
+`docs/openchamber-operating-guide.md`, advisory fixtures, and an offline
+evaluator document and test the user-operating contract. The runtime
+verifier hash-compares the active global Orchestrator prompt with the
+reviewed Phase 8 source before checking the required rule substrings. The
+prompt still requires the normal controlled global apply and restart before
+it is active in the managed runtime. The managed-runtime verification is a
+required residual gate and has not been re-run in this update. See
+`PHASE-8-OPENCHAMBER-OPERATING-GUIDE.md`.
+
 Tasks:
 
 - add Focus/Goal/worktree/MultiRun recommendation logic to Orchestrator;
@@ -1104,6 +1145,16 @@ Complete when:
 ### Phase 9 - UI Quality Layer
 
 Objective: support user-guided design without generic AI UI.
+
+Status: source-only complete. The framework now defines
+`PRODUCT.md`/`DESIGN.md`/surface-brief authority, contextual Impeccable and
+Taste usage, required desktop/mobile/browser/accessibility evidence, fresh
+screenshot review, and explicit human visual approval. The offline evaluator
+rejects synthetic-score proof. The source prompts and skill still require
+the normal controlled global apply and restart before they are active in
+the managed runtime. The managed-runtime verification is a required
+residual gate and has not been re-run in this update. See
+`PHASE-9-UI-QUALITY-LAYER.md`.
 
 Tasks:
 
@@ -1123,24 +1174,45 @@ Complete when:
 
 Objective: prove that deliverables, not only source code, work.
 
+Status: source-complete. The framework provides a project-local package
+contract, deterministic clean-install fixture, checksum and delivered-content
+checks, verification/release templates, explicit approval gating for external
+actions, and strict post-release OpenSpec archive rules. The offline
+evaluator and source contract pass; the historic 2026-08-04 record of the
+controlled global activation and managed-runtime verification is retained for
+provenance. The managed-runtime verification has not been re-run in this
+update and remains a required residual gate before relying on runtime
+evidence. The framework does not release any project; every external release
+remains a separately approved operation. See
+`PHASE-10-PACKAGING-AND-RELEASE.md`.
+
 Tasks:
 
-- add package-command discovery or project configuration;
-- add clean-environment install/run smoke tests;
-- add checksum and secret/file-content checks;
-- add verification and release templates;
-- enforce user approval before external release actions;
-- archive OpenSpec changes after successful release.
+- [x] add package-command discovery or project configuration;
+- [x] add clean-environment install/run smoke tests;
+- [x] add checksum and secret/file-content checks;
+- [x] add verification and release templates;
+- [x] enforce user approval before external release actions;
+- [x] archive OpenSpec changes after successful release.
 
 Complete when:
 
-- a fixture artifact installs or runs cleanly;
-- release cannot proceed without explicit approval;
-- rollback instructions are present.
+- [x] a fixture artifact installs or runs cleanly;
+- [x] release cannot proceed without explicit approval;
+- [x] rollback instructions are present.
 
 ### Phase 11 - Evaluation and Failure Drills
 
 Objective: validate behavior under realistic failure conditions.
+
+Status: source-complete. The deterministic offline evaluator derives
+outcomes for all 18 required scenarios, validates the cross-phase source
+contracts, and runs in the Windows pull-request gate. It is a source-policy
+regression guard, not live model-compliance evidence or project-native
+runtime evidence. The Context7/CodeGraph failure drills inspect the effective
+disabled configuration and the disabled-state prompt contract; live model
+behavior under the disabled state is a manual gate, not a runtime-verified
+claim. See `PHASE-11-EVALUATION-AND-FAILURE-DRILLS.md`.
 
 Required scenarios:
 
@@ -1173,7 +1245,12 @@ Complete when:
 
 Objective: install the verified framework into the personal global environment.
 
-Tasks:
+Status: **unstarted**. None of the required Phase 12 gates has been
+performed in this update. The framework source, offline evaluators, and
+runtime verifiers are in place; the rollout itself is a separate, user-gated
+operation.
+
+Required gates before Phase 12 can be marked complete:
 
 - create final backups;
 - run dry-run or diff preview;
@@ -1262,6 +1339,20 @@ The final design decisions are:
 
 ## 23. Next Action
 
-Find a structured child-attachment/message primitive that does not rely on the
-Observer model calling `read`. Do not enable Observer or PDF support; rerun
-Phase 5 gates after any slim reinstall or version update.
+Phase 12 global rollout is unstarted. Before starting it, refresh the
+required residual gates that have not been re-run in this update:
+
+- managed-runtime verification for Phase 7, Phase 8, Phase 9, and Phase 10
+  (`Test-ExecutionVerificationRuntime.ps1`,
+  `Test-OpenChamberOperatingGuideRuntime.ps1`,
+  `Test-UIQualityLayerRuntime.ps1`, and
+  `Test-PackagingReleaseRuntime.ps1`);
+- the Phase 4 runtime re-run that now also inspects Observer permissions
+  (`Test-AgentLayerRuntime.ps1`);
+- a manual disabled-MCP live behavioral check
+  (`Test-ResearchRuntime.ps1` config inspection plus a manual gate for live
+  model behavior under the disabled state).
+
+Preserve the separate Phase 5 revalidation requirement after any slim
+reinstall or version update, and retain the controlled global lifecycle for
+framework-owned sources.

@@ -10,7 +10,10 @@ passed the deterministic routing contract in fresh sessions. The invalid
 historical `cpa-gui/*` records are preserved separately and do not affect model
 selection.
 
-No global configuration was changed.
+The benchmark harness made no global configuration write. It ran after a
+provider change outside this framework switched the active route to CLIProxy;
+the missing backup/rollback record for that historical change is retained as a
+provenance limitation, not treated as framework-controlled evidence.
 
 ## Method
 
@@ -91,8 +94,9 @@ is the cause of their apparent Terra/Sol failure:
 5. Current `cliproxy` metadata maps each route's default to `medium` effort
    and exposes a `high` variant.
 
-Do not restore CPA GUI solely for this benchmark. Keep the invalid CPA records
-as provenance; do not score them or use them to judge model behavior.
+CPA GUI is retired from framework model selection. Do not restore it solely for
+this benchmark. Keep the invalid CPA records as provenance; do not score them,
+use them to judge model behavior, or infer effort from their old suffixes.
 
 ## Verification
 

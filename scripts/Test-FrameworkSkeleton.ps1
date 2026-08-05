@@ -14,9 +14,18 @@ $requiredPaths = @(
     'PHASE-4-AGENT-LAYER.md',
     'PHASE-5-MULTIMEDIA.md',
     'PHASE-6-OPENSPEC-PROJECT-TEMPLATE.md',
+    'PHASE-7-EXECUTION-AND-VERIFICATION.md',
+    'PHASE-8-OPENCHAMBER-OPERATING-GUIDE.md',
+    'PHASE-9-UI-QUALITY-LAYER.md',
+    'PHASE-10-PACKAGING-AND-RELEASE.md',
+    'PHASE-11-EVALUATION-AND-FAILURE-DRILLS.md',
     'README.md',
     'docs\architecture.md',
     'docs\agent-layer.md',
+    'docs\openchamber-operating-guide.md',
+    'docs\ui-quality-layer.md',
+    'docs\packaging-and-release.md',
+    'docs\evaluation-and-failure-drills.md',
     'docs\decisions.md',
     'docs\operations.md',
     'docs\model-evals.md',
@@ -33,15 +42,24 @@ $requiredPaths = @(
     'prompts\oh-my-opencode-slim\sdd-personal\explorer.md',
     'prompts\oh-my-opencode-slim\sdd-personal\librarian.md',
     'prompts\oh-my-opencode-slim\sdd-personal\observer.md',
+    'prompts\oh-my-opencode-slim\sdd-personal\fixer.md',
+    'prompts\oh-my-opencode-slim\sdd-personal\oracle.md',
+    'prompts\oh-my-opencode-slim\sdd-personal\designer.md',
     'patches\oh-my-opencode-slim-2.2.8-disabled-tools.patch',
     'patches\oh-my-opencode-slim-2.2.8-observer-attachment.patch',
     'skills\.gitkeep',
     'skills\source-first-research\SKILL.md',
+    'skills\systematic-debugging\SKILL.md',
+    'skills\verification-before-completion\SKILL.md',
+    'skills\ui-quality\SKILL.md',
+    'skills\package-and-release\SKILL.md',
     'commands\.gitkeep',
     'templates\project\README.md',
     'templates\project\Test-OpenSpecBootstrapPreflight.ps1',
     'templates\project\PRODUCT.md',
     'templates\project\DESIGN.md',
+    'templates\project\PACKAGE.md',
+    'templates\project\docs\surfaces\README.md',
     'templates\project\openspec\config.yaml',
     'templates\project\.opencode\commands\opsx-apply.md',
     'templates\project\.opencode\commands\opsx-archive.md',
@@ -77,6 +95,22 @@ $requiredPaths = @(
     'fixtures\phase-6\ci-windows-only\valid-windows\valid-windows.yml',
     'fixtures\phase-6\ci-windows-only\multi-windows\multi-windows.yml',
     'fixtures\phase-6\ci-windows-only\matrix-windows-only\matrix-windows-only.yml',
+    'fixtures\phase-7\feature\record.json',
+    'fixtures\phase-7\bug\record.json',
+    'fixtures\phase-7\failed-command-false-pass.json',
+    'fixtures\phase-7\two-failed-repairs.json',
+    'fixtures\phase-7\missing-task-id.json',
+    'fixtures\phase-7\invalid-task-id.json',
+    'fixtures\phase-7\empty-command.json',
+    'fixtures\phase-7\empty-output.json',
+    'fixtures\phase-7\no-attempts.json',
+    'fixtures\phase-7\missing-regression-evidence.json',
+    'fixtures\phase-8\advisory-scenarios.json',
+    'fixtures\phase-9\ui-review-scenarios.json',
+    'fixtures\phase-10\release-scenarios.json',
+    'fixtures\phase-10\clean-package\package.json',
+    'fixtures\phase-10\clean-package\index.js',
+    'fixtures\phase-11\failure-drills.json',
     'scripts\Test-FrameworkSkeleton.ps1',
     'scripts\Test-ResearchConfigSchema.ps1',
     'scripts\Apply-ResearchMcp.ps1',
@@ -90,6 +124,19 @@ $requiredPaths = @(
     'scripts\Test-OpenSpecProjectTemplate.ps1',
     'scripts\CiWindowsOnly.psm1',
     'scripts\Test-CiWindowsOnlyRegression.ps1',
+    'scripts\Test-ExecutionVerification.ps1',
+    'scripts\Apply-ExecutionVerification.ps1',
+    'scripts\Test-ExecutionVerificationRuntime.ps1',
+    'scripts\Apply-OpenChamberOperatingGuide.ps1',
+    'scripts\Test-OpenChamberOperatingGuide.ps1',
+    'scripts\Test-OpenChamberOperatingGuideRuntime.ps1',
+    'scripts\Test-UIQualityLayer.ps1',
+    'scripts\Apply-UIQualityLayer.ps1',
+    'scripts\Test-UIQualityLayerRuntime.ps1',
+    'scripts\Test-PackagingRelease.ps1',
+    'scripts\Apply-PackagingRelease.ps1',
+    'scripts\Test-PackagingReleaseRuntime.ps1',
+    'scripts\Test-EvaluationFailureDrills.ps1',
     '.github\workflows\research-config.yml'
 )
 
@@ -134,6 +181,24 @@ if (Test-Path -LiteralPath $workflowPath -PathType Leaf) {
     if ($workflowContent -notmatch 'Test-CiWindowsOnlyRegression\.ps1') {
         $failures += 'CI workflow must run the Windows-only runner fixture regression.'
     }
+    if ($workflowContent -notmatch 'Test-ExecutionVerification\.ps1') {
+        $failures += 'CI workflow must run the Phase 7 execution and verification fixture gate.'
+    }
+    if ($workflowContent -notmatch 'Test-OpenChamberOperatingGuide\.ps1') {
+        $failures += 'CI workflow must run the Phase 8 OpenChamber operating-guide fixture gate.'
+    }
+    if ($workflowContent -notmatch 'Test-UIQualityLayer\.ps1') {
+        $failures += 'CI workflow must run the Phase 9 UI-quality fixture gate.'
+    }
+    if ($workflowContent -notmatch 'Test-PackagingRelease\.ps1') {
+        $failures += 'CI workflow must run the Phase 10 packaging and release fixture gate.'
+    }
+    if ($workflowContent -notmatch 'Test-EvaluationFailureDrills\.ps1') {
+        $failures += 'CI workflow must run the Phase 11 evaluation and failure-drill gate.'
+    }
+    if ($workflowContent -notmatch 'Test-OpenSpecProjectTemplate\.ps1') {
+        $failures += 'CI workflow must run the strict OpenSpec project template fixture validator.'
+    }
 
 }
 
@@ -165,14 +230,52 @@ foreach ($configFile in $configFiles) {
 
 $forbiddenName = '(?i)(^|[._-])(secret|token|credential|password|apikey|api-key|private-key)([._-]|$)|(^|\\.)env($|\\.)'
 $sensitiveFiles = @(Get-ChildItem -LiteralPath $Root -File -Recurse -Force |
-    Where-Object { $_.FullName -notmatch '\\.git\\|\\.slim\\clonedeps\\repos\\|\\.opencode\\' -and $_.Name -match $forbiddenName })
+    Where-Object { $_.FullName -notmatch '\\\.git\\|\\\.slim\\clonedeps\\repos\\|\\\.opencode\\node_modules\\' -and $_.Name -match $forbiddenName })
 foreach ($file in $sensitiveFiles) {
     $failures += "Sensitive-looking file is not allowed in the framework source: $($file.FullName)"
 }
 
+function Test-IsBinaryTextLikeFile {
+    param([string]$Path)
+
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        return $true
+    }
+
+    $extension = [System.IO.Path]::GetExtension($Path).ToLowerInvariant()
+    $textLikeExtensions = @('.md', '.markdown', '.txt', '.ps1', '.psm1', '.psd1', '.json', '.jsonc', '.yaml', '.yml', '.patch', '.diff', '.js', '.cjs', '.mjs', '.ts', '.tsx', '.jsx', '.css', '.html', '.xml', '.ini', '.sh', '.toml')
+    if ($extension -notin $textLikeExtensions) {
+        return $true
+    }
+
+    try {
+        $stream = [System.IO.File]::Open($Path, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::Read)
+    }
+    catch {
+        return $true
+    }
+
+    try {
+        $buffer = New-Object byte[] 8192
+        $bytesRead = $stream.Read($buffer, 0, $buffer.Length)
+        for ($i = 0; $i -lt $bytesRead; $i++) {
+            if ($buffer[$i] -eq 0) {
+                return $true
+            }
+        }
+        return $false
+    }
+    finally {
+        $stream.Dispose()
+    }
+}
+
 $secretPattern = '(?i)(-----BEGIN (?:[A-Z ]+ )?PRIVATE KEY-----|sk-[A-Za-z0-9_-]{20,}|(?:api[_-]?key|access[_-]?token|secret|password)\s*[=:]\s*["'']?[A-Za-z0-9_+\/-]{16,})'
 $textFiles = @(Get-ChildItem -LiteralPath $Root -File -Recurse -Force |
-    Where-Object { $_.FullName -notmatch '\\.slim\\clonedeps\\repos\\|\\.opencode\\' -and $_.Extension -in @('.md', '.ps1', '.json', '.jsonc', '.yaml', '.yml') })
+    Where-Object {
+        $_.FullName -notmatch '\\\.slim\\clonedeps\\repos\\|\\\.opencode\\node_modules\\' -and
+        -not (Test-IsBinaryTextLikeFile -Path $_.FullName)
+    })
 foreach ($file in $textFiles) {
     if (Select-String -LiteralPath $file.FullName -Pattern $secretPattern -Quiet) {
         $failures += "Potential credential marker found in: $($file.FullName)"

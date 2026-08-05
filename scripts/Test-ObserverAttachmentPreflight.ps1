@@ -70,7 +70,7 @@ function New-MockManagedCli {
 $credentialSentinel = 'CREDENTIAL_SENTINEL_DO_NOT_LEAK'
 $validConfig = '{ "agent": { "orchestrator": { "prompt": "observer_attachment" }, "observer": { "model": "minimax-coding-plan/MiniMax-M3", "prompt": "structured attachments" } } }'
 $validModels = '{ "id": "MiniMax-M3", "status": "active", "attachment": true, "input": { "image": true } }'
-$validCredentials = 'MiniMax Token Plan'
+$validCredentials = 'MiniMax Token Plan minimax.io api'
 $smoke = Join-Path $Root 'scripts\Test-ObserverAttachment.ps1'
 $powerShellExecutable = if ($PSVersionTable.PSEdition -eq 'Core') {
     'pwsh.exe'
@@ -116,6 +116,9 @@ try {
 
     New-MockManagedCli -Path $mock -Config '{ "agent": { "orchestrator": { "prompt": "observer_attachment" }, "observer": { "model": "minimax-coding-plan/MiniMax-M3", "prompt": "path only" } } }' -Credentials $validCredentials -Models $validModels
     Assert-PreflightFailure -Name 'Missing Observer contract' -SmokeArguments @('-Managed', $mock, '-Workspace', $workspace, '-PreflightOnly') -ExpectedMessage 'The effective Observer prompt does not accept structured attachments.' -CredentialSentinel $credentialSentinel
+
+    New-MockManagedCli -Path $mock -Config $validConfig -Credentials 'MiniMax Token Plan minimax.io' -Models $validModels
+    Assert-PreflightFailure -Name 'Provider name without credential' -SmokeArguments @('-Managed', $mock, '-Workspace', $workspace, '-PreflightOnly') -ExpectedMessage 'No MiniMax credential is available to the managed OpenCode runtime.' -CredentialSentinel $credentialSentinel
 
     New-MockManagedCli -Path $mock -Config $validConfig -Credentials $credentialSentinel -Models $validModels
     Assert-PreflightFailure -Name 'Missing MiniMax credential' -SmokeArguments @('-Managed', $mock, '-Workspace', $workspace, '-PreflightOnly') -ExpectedMessage 'No MiniMax credential is available to the managed OpenCode runtime.' -CredentialSentinel $credentialSentinel

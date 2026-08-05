@@ -21,3 +21,6 @@ node_modules/
 # BEGIN oh-my-opencode-slim clonedeps
 .slim/clonedeps/repos/
 # END oh-my-opencode-slim clonedeps
+
+# Local deepwork progress records.
+.slim/deepwork/

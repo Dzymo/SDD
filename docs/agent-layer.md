@@ -47,8 +47,8 @@ must be restarted after the write.
 - Oracle: Sol `medium`, with Sol `high` as its one model fallback.
 - Explorer, Librarian, Fixer, and Observer: M3 `none`, with M3 `thinking` as
   fallback. Designer uses the inverse primary/fallback pair.
-- Council and Observer are disabled. Observer's future configuration is still
-  deny-by-default so Phase 5 can only enable it intentionally.
+- Council is disabled. Phase 5 later enabled Observer with its existing
+  deny-by-default permissions for the verified M3 structured-attachment route.
 - Multiplexer, companion, idle continuation, and slim's worktree skill are
   disabled. OpenChamber remains the sole worktree and continuation controller.
 - Slim's bundled `websearch`, non-OAuth `context7`, and `gh_grep` MCPs are
@@ -57,10 +57,15 @@ must be restarted after the write.
 - Explorer, Librarian, Oracle, and Observer deny edit, shell, delegation, and
   external-directory access. They can only use their named inspection tools;
   Librarian has Context7 and permitted web retrieval, while Explorer has
-  CodeGraph plus read-only local inspection permissions.
+  CodeGraph plus read-only local inspection permissions. The runtime verifier
+  inspects all four read-only agents equivalently for these denials.
 - The Orchestrator prompt limits delegation to two non-overlapping lanes and
   provides Vietnamese, action-first, non-coder communication plus OpenChamber
   advisory rules.
+- Designer loads the Phase 9 `ui-quality` skill and a replacement prompt that
+  makes `PRODUCT.md`, `DESIGN.md`, and approved surface briefs authoritative;
+  it separates deterministic checks, independent screenshot review, and final
+  user visual approval.
 
 ## Verification
 
@@ -78,9 +83,14 @@ PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-AgentLayerRuntime.ps1
 ```
 
 The runtime verifier checks plugin registration, required active agents,
-disabled Observer, and the direct-tool/shell denial rules for read-only agents.
+enabled Observer, and the direct-tool/shell denial rules for read-only
+agents. The denial loop is equivalent for Explorer, Librarian, Oracle, and
+Observer: each must deny `edit`, `bash`, `task`, and `external_directory`.
 Its limitation is that it proves effective policy, not that a model will never
 attempt a denied call. OpenCode enforces those policy denials at tool execution.
+The updated verifier passed on 2026-08-05, including Observer. A live
+denied-tool probe remains a separate residual gate when provider-backed
+execution proof is required.
 
 ## Rollback
 

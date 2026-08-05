@@ -1,157 +1,50 @@
 ---
-description: Archive a completed change in the experimental workflow
+description: Archive a completed, released OpenSpec change
 ---
 
-Archive a completed change in the experimental workflow.
+Archive a completed OpenSpec change only after its release evidence is complete.
 
-**Store selection:** If the user names a store (a store is a standalone OpenSpec repo registered on this machine) or the work lives in one, run `openspec store list --json` to discover registered store ids, then pass `--store <id>` on the commands that read or write specs and changes (`new change`, `status`, `instructions`, `list`, `show`, `validate`, `archive`, `doctor`, `context`). Other commands do not take the flag. Hints printed by commands already carry the flag; keep it on follow-ups. Without a store, commands act on the nearest local `openspec/` root.
+**Store selection:** If the user names a store or the work belongs to a registered standalone OpenSpec store, run `openspec store list --json` and pass `--store <id>` to commands that read or write changes and specs. Otherwise, use the nearest local `openspec/` root.
 
-**Input**: Optionally specify a change name after `/opsx-archive` (e.g., `/opsx-archive add-auth`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
+**Input:** Optionally specify a change name, for example `/opsx-archive add-auth`. If it is omitted or ambiguous, run `openspec list --json` and use AskUserQuestion to select an active change. Never guess or auto-select.
 
 **Steps**
 
-1. **If no change name provided, prompt for selection**
+1. Run `openspec status --change "<name>" --json` and use its `schemaName`, `planningHome`, `changeRoot`, `artifactPaths`, and `artifacts` fields as the source of truth.
+2. If any artifact is not `done`, display the incomplete artifacts and abort. Complete them through the schema-specific `openspec instructions <artifact-id> --change "<name>" --json` flow, then rerun status. User confirmation cannot override this gate.
+3. Resolve the tasks artifact from status. If it exists and contains any `- [ ]` task, display the count and abort. Complete the tasks and their focused validation first. If no task artifact exists, confirm from status that the schema does not require one; otherwise abort and create it.
+4. Assess delta specs from `artifactPaths.specs.existingOutputPaths`. If sync is needed, show the combined delta summary and offer `Sync now`, `Archive without syncing`, or `Cancel`. Syncing remains the recommended choice, but it cannot bypass any completion, release, or verification gate.
+5. **Enforce framework release and approval gates before archive.** Resolve `release.md` and `verification.md` using `artifactPaths`; do not assume default filenames.
 
-   Run `openspec list --json` to get available changes. Use the **AskUserQuestion tool** to let the user select.
+   **Release gate:** `release.md` must record the exact intended version, release notes, target, known warnings, rollback plan, external action, and explicit user approval for those exact values. It must also record the external action result and post-release smoke, both with exit code `0`. If the record is absent, incomplete, unapproved, stale for the recorded action, or failed, abort.
 
-   Show only active changes (not already archived).
-   Include the schema used for each change if available.
+   **Pre-release validation gate:** Run `openspec validate <name> --strict --no-interactive` after the recorded external action. Record its exit code in `verification.md` or `release.md`. If it fails, is missing, or predates the external action, abort.
 
-   **IMPORTANT**: Do NOT guess or auto-select a change. Always let the user choose.
+   **Verification gate:** `verification.md` must record requirement coverage for every requirement introduced by the change. Uncovered requirements must be addressed before archive. If coverage cannot be demonstrated, abort.
 
-2. **Check artifact completion status**
+   **OpenSpec archive is forbidden without a successful recorded release.** A missing, incomplete, unapproved, or failed release is a release-not-yet-attempted condition, never a waiver.
 
-   Run `openspec status --change "<name>" --json` to check artifact completion.
+6. Run the portable installed-CLI archive command from the project root:
 
-   Parse the JSON to understand:
-   - `schemaName`: The workflow being used
-   - `planningHome`, `changeRoot`, `artifactPaths`, and `actionContext`: path and scope context
-   - `artifacts`: List of artifacts with their status (`done` or other)
-
-   **If any artifacts are not `done`:**
-   - Display warning listing incomplete artifacts
-   - Prompt user for confirmation to continue
-   - Proceed if user confirms
-
-3. **Check task completion status**
-
-   Read the tasks file (typically `tasks.md`) to check for incomplete tasks.
-
-   Count tasks marked with `- [ ]` (incomplete) vs `- [x]` (complete).
-
-   **If incomplete tasks found:**
-   - Display warning showing count of incomplete tasks
-   - Prompt user for confirmation to continue
-   - Proceed if user confirms
-
-   **If no tasks file exists:** Proceed without task-related warning.
-
-4. **Assess delta spec sync state**
-
-   Use `artifactPaths.specs.existingOutputPaths` from status JSON to check for delta specs. If none exist, proceed without sync prompt.
-
-   **If delta specs exist:**
-   - Compare each delta spec with its corresponding main spec at `openspec/specs/<capability>/spec.md`
-   - Determine what changes would be applied (adds, modifications, removals, renames)
-   - Show a combined summary before prompting
-
-   **Prompt options:**
-   - If changes needed: "Sync now (recommended)", "Archive without syncing"
-   - If already synced: "Archive now", "Sync anyway", "Cancel"
-
-   If user chooses sync, use Task tool (subagent_type: "general-purpose", prompt: "Use Skill tool to invoke openspec-sync-specs for change '<name>'. Delta spec analysis: <include the analyzed delta spec summary>"). Proceed to archive regardless of choice.
-
-5. **Perform the archive**
-
-   Create an `archive` directory under `planningHome.changesDir` if it doesn't exist:
-   ```bash
-   mkdir -p "<planningHome.changesDir>/archive"
+   ```powershell
+   openspec archive <change-name>
    ```
 
-   Generate target name using current date: `YYYY-MM-DD-<change-name>`
+   The reviewed `@fission-ai/openspec@1.5.0` CLI manages archive naming and target existence. Do not create archive directories or move the change directory manually.
+7. Report the change name, schema, archive location, spec-sync decision, recorded approval, post-release smoke result, strict-validation result, and requirement-coverage result.
 
-   **Check if target already exists:**
-   - If yes: Fail with error, suggest renaming existing archive or using different date
-   - If no: Move `changeRoot` to the archive directory
+**Archive Abort Conditions**
 
-   ```bash
-   mv "<changeRoot>" "<planningHome.changesDir>/archive/YYYY-MM-DD-<name>"
-   ```
-
-6. **Display summary**
-
-   Show archive completion summary including:
-   - Change name
-   - Schema that was used
-   - Archive location
-   - Spec sync status (synced / sync skipped / no delta specs)
-   - Note about any warnings (incomplete artifacts/tasks)
-
-**Output On Success**
-
-```
-## Archive Complete
-
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Archived to:** the archive path derived from `planningHome.changesDir`/YYYY-MM-DD-<name>/
-**Specs:** ✓ Synced to main specs
-
-All artifacts complete. All tasks complete.
-```
-
-**Output On Success (No Delta Specs)**
-
-```
-## Archive Complete
-
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Archived to:** the archive path derived from `planningHome.changesDir`/YYYY-MM-DD-<name>/
-**Specs:** No delta specs
-
-All artifacts complete. All tasks complete.
-```
-
-**Output On Success With Warnings**
-
-```
-## Archive Complete (with warnings)
-
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Archived to:** the archive path derived from `planningHome.changesDir`/YYYY-MM-DD-<name>/
-**Specs:** Sync skipped (user chose to skip)
-
-**Warnings:**
-- Archived with 2 incomplete artifacts
-- Archived with 3 incomplete tasks
-- Delta spec sync was skipped (user chose to skip)
-
-Review the archive if this was not intentional.
-```
-
-**Output On Error (Archive Exists)**
-
-```
-## Archive Failed
-
-**Change:** <change-name>
-**Target:** the archive path derived from `planningHome.changesDir`/YYYY-MM-DD-<name>/
-
-Target archive directory already exists.
-
-**Options:**
-1. Rename the existing archive
-2. Delete the existing archive if it's a duplicate
-3. Wait until a different date to archive
-```
+- Any artifact or task is incomplete.
+- Release evidence or explicit approval is absent or does not match the action.
+- The external action or post-release smoke failed.
+- Strict validation did not pass after the external action.
+- Requirement coverage is absent or incomplete.
 
 **Guardrails**
-- Always prompt for change selection if not provided
-- Use artifact graph (openspec status --json) for completion checking
-- Don't block archive on warnings - just inform and confirm
-- Preserve .openspec.yaml when moving to archive (it moves with the directory)
-- Show clear summary of what happened
-- If sync is requested, use the Skill tool to invoke `openspec-sync-specs` (agent-driven)
-- If delta specs exist, always run the sync assessment and show the combined summary before prompting
+
+- Never archive a change with incomplete artifacts or tasks.
+- Never archive without a successful recorded release and its explicit user approval.
+- Never archive after failing, skipped, or stale strict pre-release validation.
+- Use only `openspec archive <change-name>` on Windows.
+- Preserve `.openspec.yaml`; the OpenSpec CLI moves the complete change directory.

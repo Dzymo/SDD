@@ -1,0 +1,56 @@
+[
+  {
+    "name": "small-question",
+    "situation": "short-question",
+    "expected": "neither",
+    "requires": []
+  },
+  {
+    "name": "long-requirements",
+    "situation": "long-structured-input",
+    "expected": "focus",
+    "requires": ["structured-input"]
+  },
+  {
+    "name": "unresolved-ui-direction",
+    "situation": "ui-direction-unresolved",
+    "expected": "focus-no-goal",
+    "requires": ["user-choice"]
+  },
+  {
+    "name": "approved-feature",
+    "situation": "approved-multi-step-implementation",
+    "expected": "worktree-goal",
+    "requires": ["self-contained-objective", "completion-evidence", "decisions-resolved", "safe-continuation", "budget"]
+  },
+  {
+    "name": "incomplete-goal-request",
+    "situation": "approved-multi-step-implementation",
+    "expected": "missing-goal-precondition",
+    "requires": ["self-contained-objective", "completion-evidence"]
+  },
+  {
+    "name": "isolation-without-finish-line",
+    "situation": "isolation-needed-unresolved-scope",
+    "expected": "worktree-only",
+    "requires": ["isolation"]
+  },
+  {
+    "name": "alternative-comparison",
+    "situation": "independent-alternatives",
+    "expected": "multirun-isolated",
+    "requires": ["comparison-value", "isolated-writers", "user-decision"]
+  },
+  {
+    "name": "unsafe-multirun",
+    "situation": "independent-alternatives",
+    "expected": "missing-multirun-precondition",
+    "requires": ["comparison-value"]
+  },
+  {
+    "name": "release-boundary",
+    "situation": "release-action",
+    "expected": "stop-for-approval",
+    "requires": ["explicit-approval"]
+  }
+]

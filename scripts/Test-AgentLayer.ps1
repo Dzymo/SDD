@@ -73,6 +73,7 @@ Assert-Equal -Actual $preset.fallback.maxRetries -Expected 1 -Message 'Model fal
 Assert-True -Condition ($preset.presets.'sdd-personal'.orchestrator.mcps.Count -eq 0) -Message 'The Orchestrator must not receive direct MCP access.'
 Assert-True -Condition (($preset.presets.'sdd-personal'.librarian.mcps -join ',') -eq 'context7') -Message 'The Librarian must receive only Context7 MCP access.'
 Assert-True -Condition (($preset.presets.'sdd-personal'.explorer.mcps -join ',') -eq 'codegraph') -Message 'The Explorer must receive only CodeGraph MCP access.'
+Assert-True -Condition ($preset.presets.'sdd-personal'.designer.skills -contains 'ui-quality') -Message 'Designer must load the Phase 9 ui-quality skill.'
 
 $expectedRoutes = @{
     orchestrator = @('cliproxy/gpt-5.6-terra', 'medium', 'high')
@@ -112,6 +113,7 @@ $requiredPromptRules = @{
     'explorer.md' = @('one focused search batch', 'Use CodeGraph for healthy indexed structural questions', 'local evidence is unavailable', 'never infer missing paths or lines', 'Do not inventory unrelated files', 'call the shell')
     'librarian.md' = @('Context7 first', 'one fallback retrieval round', 'verified external evidence is unavailable', 'Do not use model memory as evidence')
     'observer.md' = @('structured attachments', 'MUST call `read`', 'never edit files')
+    'designer.md' = @('Authority Order', 'PRODUCT.md', 'synthetic quality scores', 'final visual approval')
 }
 
 foreach ($promptFile in $requiredPromptRules.Keys) {

@@ -41,7 +41,25 @@ Implement tasks from an OpenSpec change.
    - Dynamic instruction based on current state
 
    **Handle states:**
-   - If `state: "blocked"` (missing artifacts): show message, suggest using `/opsx-continue`
+   - If `state: "blocked"` (missing artifacts): the generated `core` profile
+     provides no built-in continuation surface; complete the missing artifact
+     directly through the installed CLI. Use AskUserQuestion only when the
+     missing artifact is genuinely ambiguous. Concrete recovery steps:
+     1. Run `openspec status --change "<name>" --json` and read the
+        `artifacts` list. Each `not_done` artifact has a stable `id`.
+     2. For each missing artifact, run
+        `openspec instructions <artifact-id> --change "<name>" --json`. The
+        CLI returns the schema-specific frontmatter, required sections, and
+        any `contextFiles` paths to populate.
+     3. Read every `contextFiles` path returned by the instructions. Do not
+        assume the default `proposal`, `specs`, `design`, or `tasks` paths;
+        some schemas relocate them.
+     4. Create or update the artifact at the resolved path so it matches the
+        CLI's required structure, then re-run
+        `openspec status --change "<name>" --json`. Repeat until no listed
+        artifact is `not_done`.
+     5. Re-run `openspec instructions apply --change "<name>" --json`. The
+        `state` should now be `ready` or `in_progress` rather than `blocked`.
    - If `state: "all_done"`: congratulate, suggest archive
    - Otherwise: proceed to implementation
 

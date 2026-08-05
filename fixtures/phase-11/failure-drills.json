@@ -1,0 +1,202 @@
+[
+  {
+    "id": "clear-request",
+    "name": "Clear request needs no question",
+    "observation": {
+      "questionCount": 0,
+      "delegationCount": 0,
+      "directExecution": true
+    },
+    "expected": "DIRECT-EXECUTION"
+  },
+  {
+    "id": "ambiguous-product",
+    "name": "Ambiguous product request asks one material question",
+    "observation": {
+      "materialQuestionCount": 1,
+      "irrelevantQuestionCount": 0,
+      "pausedForAnswer": true
+    },
+    "expected": "ONE-MATERIAL-CLARIFICATION-REQUIRED"
+  },
+  {
+    "id": "ui-direction",
+    "name": "UI task stops for direction selection",
+    "observation": {
+      "directionSelected": false,
+      "questionCount": 1,
+      "implementationStarted": false
+    },
+    "expected": "DIRECTION-SELECTION-REQUIRED"
+  },
+  {
+    "id": "routine-no-deepwork",
+    "name": "Routine task does not invoke Deepwork",
+    "observation": {
+      "deepworkInvoked": false,
+      "independentReviewCount": 0,
+      "focusedValidation": true
+    },
+    "expected": "ROUTINE-NO-DEEPWORK"
+  },
+  {
+    "id": "dependency-context7",
+    "name": "Dependency decision records Context7 evidence",
+    "observation": {
+      "context7Attempted": true,
+      "evidenceStatus": "retrieved",
+      "memoryUsed": false,
+      "fallback": "none"
+    },
+    "expected": "CONTEXT7-EVIDENCE-REQUIRED"
+  },
+  {
+    "id": "context7-outage",
+    "name": "Low-risk Context7 outage is explicit and bounded",
+    "observation": {
+      "context7Attempted": true,
+      "serviceAvailable": false,
+      "risk": "low",
+      "fallback": "official-docs",
+      "limitationRecorded": true,
+      "memoryUsed": false,
+      "decisionBlocked": false
+    },
+    "expected": "CONTEXT7-OUTAGE-LIMITED"
+  },
+  {
+    "id": "codegraph-degraded",
+    "name": "Stale CodeGraph result falls back to direct local tools",
+    "observation": {
+      "status": "stale",
+      "directLocalEvidence": true,
+      "treatedAsRuntimeProof": false,
+      "unrelatedSearches": 0
+    },
+    "expected": "CODEGRAPH-ADVISORY-FALLBACK"
+  },
+  {
+    "id": "worker-file-scope",
+    "name": "Worker write outside the allowed files is blocked",
+    "observation": {
+      "writeOutsideAllowedFiles": true,
+      "completion": "PASS",
+      "writeBlocked": true
+    },
+    "expected": "WORKER-SCOPE-BLOCKED"
+  },
+  {
+    "id": "two-failed-repairs",
+    "name": "Two failed repairs escalate to an Oracle assumption review",
+    "observation": {
+      "failedRepairCount": 2,
+      "editingStopped": true,
+      "escalationRole": "oracle",
+      "escalationReason": "assumption-review",
+      "thirdBlindRepair": false
+    },
+    "expected": "ORACLE-ASSUMPTION-REVIEW"
+  },
+  {
+    "id": "material-plan-deviation",
+    "name": "Material plan deviation pauses for one user decision",
+    "observation": {
+      "materialDeviation": true,
+      "questionCount": 1,
+      "pausedForApproval": true,
+      "changeApplied": false
+    },
+    "expected": "MATERIAL-DEVIATION-PAUSE"
+  },
+  {
+    "id": "failed-test-false-completion",
+    "name": "Failed required test cannot produce completion",
+    "observation": {
+      "requiredValidationExitCode": 1,
+      "claimedCompletion": "PASS",
+      "passBlocked": true
+    },
+    "expected": "FALSE-PASS-BLOCKED"
+  },
+  {
+    "id": "package-clean-smoke-failure",
+    "name": "Package build with a failing clean smoke remains blocked",
+    "observation": {
+      "buildExitCode": 0,
+      "artifactPresent": true,
+      "cleanSmokeExitCode": 1,
+      "releaseStarted": false
+    },
+    "expected": "CLEAN-SMOKE-FAILED"
+  },
+  {
+    "id": "release-approval",
+    "name": "External release is blocked without approval",
+    "observation": {
+      "packageReady": true,
+      "explicitApproval": false,
+      "externalActionStarted": false
+    },
+    "expected": "RELEASE-APPROVAL-REQUIRED"
+  },
+  {
+    "id": "goal-evaluating",
+    "name": "Evaluating Goal has no duplicate continuation",
+    "observation": {
+      "goalStatus": "Evaluating",
+      "continuationCount": 0,
+      "duplicateFollowUpCount": 0,
+      "idleContinuationEnabled": false
+    },
+    "expected": "GOAL-EVALUATING-NO-CONTINUATION"
+  },
+  {
+    "id": "overlapping-writers",
+    "name": "Overlapping writer scopes are not started concurrently",
+    "observation": {
+      "requestedScopes": [
+        "src/account",
+        "src/account/session.ts"
+      ],
+      "overlapDetected": true,
+      "concurrentWritersStarted": 0,
+      "userDecisionRequested": false
+    },
+    "expected": "WRITER-SCOPE-CONFLICT-BLOCKED"
+  },
+  {
+    "id": "obsolete-assumption",
+    "name": "Long session refreshes an obsolete assumption",
+    "observation": {
+      "obsoleteAssumptionDetected": true,
+      "freshFocusedEvidence": true,
+      "assumptionRefreshed": true,
+      "unboundedResearch": false
+    },
+    "expected": "OBSOLETE-ASSUMPTION-REFRESHED"
+  },
+  {
+    "id": "trivial-no-fanout",
+    "name": "Trivial Terra task stops without fan-out",
+    "observation": {
+      "route": "terra",
+      "taskSize": "trivial",
+      "fanOutCount": 0,
+      "deepworkInvoked": false,
+      "acceptanceEvidence": true
+    },
+    "expected": "TRIVIAL-NO-FAN-OUT"
+  },
+  {
+    "id": "high-risk-oracle",
+    "name": "High-risk public auth change receives one scoped Oracle review",
+    "observation": {
+      "materialRisk": "public-auth-boundary",
+      "oracleReviewCount": 1,
+      "reviewScope": "changed-auth-contract",
+      "unrelatedReview": false,
+      "focusedValidation": true
+    },
+    "expected": "SCOPED-ORACLE-REVIEW"
+  }
+]

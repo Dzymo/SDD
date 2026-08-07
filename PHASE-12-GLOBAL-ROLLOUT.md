@@ -213,8 +213,7 @@ dependencies, OpenChamber state, or credentials.
 
 ```powershell
 $freshProject = Join-Path ([System.IO.Path]::GetTempPath()) "phase-12-fresh-project-$PID"
-New-Item -ItemType Directory -Path $freshProject -ErrorAction Stop | Out-Null
-Copy-Item -LiteralPath .\templates\project\* -Destination $freshProject -Recurse -ErrorAction Stop
+Copy-Item -LiteralPath .\templates\project -Destination $freshProject -Recurse -ErrorAction Stop
 PowerShell -ExecutionPolicy Bypass -File "$freshProject\Test-OpenSpecBootstrapPreflight.ps1"
 openspec --version
 ```

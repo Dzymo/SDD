@@ -192,6 +192,8 @@ try {
     $whatIfResult = Invoke-RollbackTest -ManifestPath $whatIfManifest -WhatIf
     Assert-True -Condition ($whatIfResult.ExitCode -eq 0) -Message "Rollback WhatIf failed.`n$($whatIfResult.Output)"
     Assert-True -Condition ($whatIfResult.Output.Contains('Phase 12 rollback preview: PASS')) -Message 'Rollback WhatIf did not report preview PASS.'
+    Assert-True -Condition (-not $whatIfResult.Output.Contains("The property 'Hash' cannot be found")) -Message "Rollback WhatIf must hash files without emitting provider metadata errors.`n$($whatIfResult.Output)"
+    Assert-True -Condition (-not $whatIfResult.Output.Contains('Rollback backup hash does not match BeforeSha256')) -Message "Rollback WhatIf must not report a backup mismatch for a valid manifest.`n$($whatIfResult.Output)"
     Assert-True -Condition ((Get-TestHash -Path $whatIfTarget) -eq $whatIfCandidateHash) -Message 'Rollback WhatIf changed the target.'
 
     foreach ($processCase in @(

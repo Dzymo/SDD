@@ -1,12 +1,12 @@
 # Phase 12 Global Rollout
 
-Date: pending execution
+Date: 2026-08-08
 
 ## Status
 
-Phase 12 is **unstarted**. This document is an execution runbook, not rollout
-evidence. Do not mark any checklist item complete until the candidate SHA,
-command output, exit code, time, and artifact path have been recorded.
+Phase 12 is **complete**. This document retains the execution runbook and the
+sanitized completion evidence for candidate
+`b75043d6097d12ac52c5bbbc3224f316c3243961`.
 
 The rollout applies one immutable, CI-validated framework candidate to the
 personal managed environment. It does not publish, deploy, tag, push, merge,
@@ -372,3 +372,23 @@ Phase 12 may be marked **complete** only when every row is satisfied. The final
 rollout record must include the candidate SHA, command outputs and exit codes,
 CI URL, versions, hashes, manifests, apply/no-op decisions, project smoke
 results, rollback/reapply results, approvals, and remaining limitations.
+
+## Completion Evidence
+
+| Check | Evidence | Result |
+|---|---|---|
+| Candidate integrity | Clean candidate `b75043d6097d12ac52c5bbbc3224f316c3243961`; all 13 local source/fixture gates passed; [Research Configuration run 31201008723](https://github.com/Dzymo/SDD/actions/runs/31201008723) passed on the same SHA. | PASS |
+| Pre-apply manifest | Managed OpenCode `1.18.12`; Context7/CodeGraph active and authenticated; all framework prompt/skill targets, slim config, MCP/reference entries, and Phase 5 patch were `MATCH`. | PASS, no drift apply required |
+| Approvals | The user explicitly approved current-SHA CI, provider-backed runtime checks, temporary fresh-project smoke, OpenSpec CLI change, existing-project smoke, and the Phase 8 no-drift verification reapply/rollback drill. | PASS |
+| Research runtime | `Test-ResearchRuntime.ps1` passed on the final candidate. Manual temporary overlays made Context7 report unavailable verified external evidence and CodeGraph report unavailable local evidence without inferred API/path claims. | PASS |
+| OpenSpec CLI | Global `openspec` changed from `1.6.0` to required `1.5.0` with explicit approval. The prior version can be restored with `npm install --global @fission-ai/openspec@1.6.0` if needed. | PASS |
+| Fresh project smoke | A fresh temporary bootstrap passed copied preflight, created a complete local `phase12-smoke` change, and passed `npx --yes @fission-ai/openspec@1.5.0 validate phase12-smoke --strict --no-interactive`; temporary project removed. | PASS |
+| Existing project smoke | `D:\Projects\SDD`: `Test-FrameworkSkeleton.ps1` passed as the approved bounded project-native smoke. | PASS |
+| Rollback drill | Phase 8 apply generated `phase-8-20260807-234500`; rollback restore and `-VerifyOnly` passed. The repaired `-WhatIf` preview passed. Phase 8 reapply generated `phase-8-20260808-071301`; post-restore and final `Test-OpenChamberOperatingGuideRuntime.ps1` runs passed. | PASS |
+| Secret safety | Framework source safety/secret scan passed on the final candidate and no backup content or credential entered this repository. | PASS |
+
+The verification reapply used a target that was already byte-identical to the
+reviewed source. It proves the reviewed file-level backup, restore, and reapply
+route, but not a behavioral reversal of differing content. The source and
+runtime gates establish configured contracts and observed bounded behavior; they
+do not prove future model compliance or every project-specific runtime outcome.

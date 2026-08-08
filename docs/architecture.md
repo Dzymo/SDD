@@ -82,8 +82,11 @@ normal and failure observations against the existing Orchestrator, Fixer, Oracle
 research, Goal, and release boundaries. It is not an agent, continuation loop,
 runtime simulator, or alternate release authority. The offline evaluator is a
 source-policy regression guard; it does not prove live model compliance.
-Phase 12 global rollout is **unstarted** and is intentionally not part of the
-framework source.
+Phase 12 global rollout is **complete** for immutable candidate
+`b75043d6097d12ac52c5bbbc3224f316c3243961` as of 2026-08-08. Its sanitized
+completion evidence remains separate from framework source and is recorded in
+`PHASE-12-GLOBAL-ROLLOUT.md`; it does not establish future model compliance or
+arbitrary project-specific runtime correctness.
 
 ## Provenance
 

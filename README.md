@@ -61,11 +61,12 @@ fan-out, and scoped review. Phase 11 is **source-complete**; the offline
 evaluator is a source-policy regression guard and does not prove live model
 compliance. See `PHASE-11-EVALUATION-AND-FAILURE-DRILLS.md`.
 
-Phase 12 global rollout is **unstarted**. Its required gates (final backups,
-dry-run/diff preview, controlled global apply, restart, smoke tests, rollback
-drill, active versions and checksums) are listed in `PLAN.md`; the execution
-runbook is `PHASE-12-GLOBAL-ROLLOUT.md`; and none has been performed in this
-update.
+Phase 12 global rollout is **complete** for immutable candidate
+`b75043d6097d12ac52c5bbbc3224f316c3243961` as of 2026-08-08. The rollout
+record includes no-drift comparison, provider-backed research checks,
+fresh/existing-project smoke tests, and a file-level rollback/reapply drill.
+See `PHASE-12-GLOBAL-ROLLOUT.md` for sanitized evidence and its explicit
+limitations. A future candidate requires a new user-gated rollout record.
 
 ## Layout
 

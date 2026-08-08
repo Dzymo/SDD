@@ -367,10 +367,11 @@ gates only. The managed-runtime verifiers (`Test-AgentLayerRuntime.ps1`,
 `Test-UIQualityLayerRuntime.ps1`, `Test-PackagingReleaseRuntime.ps1`, and
 `Test-ResearchRuntime.ps1`) require the local managed OpenCode binary and,
 in the case of the live run calls, a provider; they are intentionally not
-hosted CI jobs. Phase 12 global rollout is **unstarted**; the required
-managed-runtime and provider gates listed in `PLAN.md` Phase 12 must be
-executed locally before any release, deploy, tag, push, merge, or other
-external write.
+hosted CI jobs. Phase 12 global rollout is **complete** for candidate
+`b75043d6097d12ac52c5bbbc3224f316c3243961`; its managed-runtime and
+provider-backed evidence is recorded in `PHASE-12-GLOBAL-ROLLOUT.md`. A future
+framework candidate or managed-runtime change requires a new local Phase 12
+evidence run before its approved global write.
 
 Repository branch protection must require `Validate research MCP schema (Windows)`
 before merge; the workflow file does not change repository-level merge

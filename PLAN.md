@@ -20,10 +20,12 @@ global OpenCode framework used through OpenChamber.
   source-complete; its offline gate covers all 18 required scenarios but is a
   source-policy regression guard rather than live model-compliance evidence.
 
-Phase 12 global rollout is **unstarted** as a separate final-rollout record.
-The phase-scoped activations above do not substitute for its final backups,
-dry-run/diff preview, fresh/existing-project smoke tests, rollback drill, and
-recorded active versions/checksums.
+Phase 12 global rollout is **complete** as of 2026-08-08 for immutable
+candidate `b75043d6097d12ac52c5bbbc3224f316c3243961`. It recorded clean-source
+and CI evidence, a no-drift diff preview, provider-backed research checks,
+fresh/existing-project smoke tests, a file-level rollback/reapply drill, and
+sanitized active-version/checksum evidence. See `PHASE-12-GLOBAL-ROLLOUT.md`
+for the completion record and its stated limitations.
 
 This file is the source of truth for framework implementation. If a later
 decision changes the architecture, model routing, safety boundary, or workflow,
@@ -1245,10 +1247,13 @@ Complete when:
 
 Objective: install the verified framework into the personal global environment.
 
-Status: **unstarted**. None of the required Phase 12 gates has been
-performed in this update. The framework source, offline evaluators, and
-runtime verifiers are in place; the rollout itself is a separate, user-gated
-operation.
+Status: **complete** on 2026-08-08 for immutable candidate
+`b75043d6097d12ac52c5bbbc3224f316c3243961`. The final record in
+`PHASE-12-GLOBAL-ROLLOUT.md` contains the sanitized command outcomes,
+approvals, hashes, no-drift decisions, fresh/existing-project smoke results,
+and rollback/reapply evidence. The checklist below remains the required
+procedure for any future candidate rollout; prior evidence must not be reused
+for a changed candidate.
 
 #### Execution Checklist
 
@@ -1256,10 +1261,10 @@ Run this checklist in order for one immutable candidate revision. Do not use a
 successful check from an earlier revision as evidence for the candidate. Mark an
 item only with its command output, exit code, date, and relevant artifact path.
 
-1. [ ] **Freeze the candidate.** Confirm the source worktree is clean, record
+1. [x] **Freeze the candidate.** Confirm the source worktree is clean, record
    its commit SHA, and inspect the diff from the last CI-validated revision.
    Do not start rollout from uncommitted framework source.
-2. [ ] **Run the current-revision source and fixture gates.** Run the local
+2. [x] **Run the current-revision source and fixture gates.** Run the local
    source gates in this order: `Test-FrameworkSkeleton.ps1`,
    `Test-ResearchConfigSchema.ps1`, `Test-AgentLayer.ps1`,
    `Test-ExecutionVerification.ps1`,
@@ -1273,12 +1278,12 @@ item only with its command output, exit code, date, and relevant artifact path.
    OpenCode or OpenChamber configuration; the package and Observer negative
    gates create and remove only their own temporary fixtures, while the OpenSpec
    fixture may retrieve the pinned CLI through `npx`.
-3. [ ] **Obtain current-revision Windows CI evidence.** Push or open a pull
+3. [x] **Obtain current-revision Windows CI evidence.** Push or open a pull
    request for the candidate and require the `Research Configuration` workflow
    to pass on that same SHA. Its copied-bootstrap preflight additionally proves
    the exact global `@fission-ai/openspec@1.5.0` CLI and a fresh template copy.
    A green run for an earlier SHA is not sufficient.
-4. [ ] **Create the pre-apply evidence manifest and diff preview.** Record the
+4. [x] **Create the pre-apply evidence manifest and diff preview.** Record the
    active OpenChamber and managed OpenCode versions, active plugin and patch
    identity, MCP/auth state without credentials, framework-owned target paths,
    and current SHA-256 values. Compare each reviewed source with its named
@@ -1288,13 +1293,13 @@ item only with its command output, exit code, date, and relevant artifact path.
    verifier, rollback action, restart requirement, and side effect. Never add
    CPA GUI-managed `opencode.json`, OpenChamber state, credentials, sessions,
    or runtime files to this manifest.
-5. [ ] **Approval checkpoint.** Present the candidate SHA, source/CI evidence,
+5. [x] **Approval checkpoint.** Present the candidate SHA, source/CI evidence,
    latest runtime evidence and the stale runtime gates still required, diff
    preview, exact target list, backup paths, planned writes, restart, live-model
    smoke cost, and rollback procedure. Obtain explicit user approval before
    creating backups, changing a persistent global target, restarting
    OpenChamber, or making a live provider request.
-6. [ ] **Refresh stale runtime evidence after approval and before a write.**
+6. [x] **Refresh stale runtime evidence after approval and before a write.**
    The managed OpenCode version has changed since the recorded Phase 3 evidence,
    so run `Test-ResearchRuntime.ps1` and perform its documented manual
    disabled-MCP live behavioral check. Re-run any Phase 4, 5, or 7-10 runtime
@@ -1305,7 +1310,7 @@ item only with its command output, exit code, date, and relevant artifact path.
    `Test-ObserverAttachment.ps1 -PreflightOnly`, and the live
    `Test-ObserverAttachment.ps1` OCR smoke. Stop before creating a backup or
    applying a target if any required runtime or behavior gate fails.
-7. [ ] **Apply only approved drift.** Close OpenChamber and CPA GUI. Create
+7. [x] **Apply only approved drift.** Close OpenChamber and CPA GUI. Create
    timestamped file-level backups outside this repository, record before hashes,
    and use only the reviewed phase-specific apply scripts for approved targets.
    Do not run an apply script merely to reproduce an already matching target,
@@ -1314,21 +1319,21 @@ item only with its command output, exit code, date, and relevant artifact path.
    verification reapply in item 10; it requires its own approval and must use
    only the named Phase 8 script and target below. Record every created manifest
    and after hash.
-8. [ ] **Restart and verify affected runtime contracts.** Restart
+8. [x] **Restart and verify affected runtime contracts.** Restart
    OpenChamber, run `opencode debug config` through the managed binary, and run
    the focused runtime verifier for every changed layer. At minimum, a change to
    the agent/preset, research MCP, multimedia patch, Phase 7 execution assets,
    Phase 8 guidance, Phase 9 UI assets, or Phase 10 release assets requires its
    corresponding runtime verifier. A failed verifier is a rollback trigger, not
    a condition for a second blind apply.
-9. [ ] **Run final project smokes.** In a fresh temporary project, copy
+9. [x] **Run final project smokes.** In a fresh temporary project, copy
    `templates\project`, run its `Test-OpenSpecBootstrapPreflight.ps1`, and
    validate a minimal OpenSpec change with the pinned CLI. In one user-selected
    existing project, run only a bounded, non-destructive smoke with named
    project-native evidence. Record the selected project, command, result, and
    remaining uncertainty; do not treat a fixture command as evidence for that
    project.
-10. [ ] **Prove rollback.** With explicit approval, restore the exact named
+10. [x] **Prove rollback.** With explicit approval, restore the exact named
     targets from the Phase 12 backup manifests, restart OpenChamber, and run the
     focused verifiers that demonstrate the restoration. Reapply only the same
     approved drift through the reviewed scripts, restart, and repeat the
@@ -1346,7 +1351,7 @@ item only with its command output, exit code, date, and relevant artifact path.
     byte-identical `MATCH` before and after this verification reapply. Record
     that this proves the reviewed file-level backup/restore/reapply mechanism,
     not a behavioral reversal of differing content.
-11. [ ] **Close the rollout record.** Record the candidate SHA, all command
+11. [x] **Close the rollout record.** Record the candidate SHA, all command
     outputs and exit codes, CI URL, active versions, before/after checksums,
     backup locations, diff outcome, apply/no-op decisions, smoke results,
     rollback result, and remaining limitations. Confirm the repository contains
@@ -1431,8 +1436,9 @@ The final design decisions are:
 
 ## 23. Next Action
 
-Phase 12 remains unstarted. When rollout preparation begins, start at Phase 12
-checklist item 1. The next required evidence is the current-candidate
-source/fixture and Windows CI result; do not perform a global write, restart,
-provider call, or rollback drill before reaching the explicit approval
-checkpoint at item 5.
+Phase 12 is complete for candidate
+`b75043d6097d12ac52c5bbbc3224f316c3243961`. For any future framework candidate
+or managed-runtime change, begin a new Phase 12 rollout at checklist item 1;
+do not reuse this completion evidence or perform a global write, restart,
+provider call, or rollback drill before the new candidate reaches the explicit
+approval checkpoint at item 5.

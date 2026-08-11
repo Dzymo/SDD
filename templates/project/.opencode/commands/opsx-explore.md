@@ -1,171 +1,64 @@
 ---
-description: Enter explore mode - think through ideas, investigate problems, clarify requirements
+description: Phỏng vấn, brainstorm và làm rõ sản phẩm hoặc thay đổi trước khi triển khai
 ---
 
-Enter explore mode. Think deeply. Visualize freely. Follow the conversation wherever it goes.
+Khám phá nội dung người dùng nhập sau command: `$ARGUMENTS`.
 
-**IMPORTANT: Explore mode is for thinking, not implementing.** You may read files, search code, and investigate the codebase, but you must NEVER write code or implement features. If the user asks you to implement something, remind them to exit explore mode first and create a change proposal. You MAY create OpenSpec artifacts (proposals, designs, specs) if the user asks—that's capturing thinking, not implementing.
+## Hợp Đồng Session
 
-**This is a stance, not a workflow.** There are no fixed steps, no required sequence, no mandatory outputs. You're a thinking partner helping the user explore.
+Contract markers: `SESSION-FIRST`, `USER-NO-FILE-EDIT`, `ADAPTIVE-INTERVIEW`,
+`DECISION-READY-STOP`, `NEXT-ACTION`, `OPENCHAMBER-ADVICE`.
 
-**Store selection:** If the user names a store (a store is a standalone OpenSpec repo registered on this machine) or the work lives in one, run `openspec store list --json` to discover registered store ids, then pass `--store <id>` on the commands that read or write specs and changes (`new change`, `status`, `instructions`, `list`, `show`, `validate`, `archive`, `doctor`, `context`). Other commands do not take the flag. Hints printed by commands already carry the flag; keep it on follow-ups. Without a store, commands act on the nearest local `openspec/` root.
+- Trao đổi bằng tiếng Việt trừ khi người dùng chọn ngôn ngữ khác.
+- Người dùng chỉ cung cấp ý định, lựa chọn và phê duyệt trong session. Never ask
+  the user to create or edit project files; agent tự đọc, tạo và cập nhật mọi
+  artifact cần thiết.
+- Phỏng vấn theo chủ đề liên quan, không giới hạn cứng số câu, số lượt hoặc số
+  phương án. Một lượt có thể hỏi nhiều câu cùng chủ đề; không trộn các chủ đề
+  không liên quan thành một biểu mẫu dài.
+- Thông thường so sánh một nhóm nhỏ phương án dễ đọc. Nếu còn hướng quan trọng,
+  nhóm chúng, khuyến nghị các hướng mạnh nhất và cho phép người dùng xem thêm.
+- Không tự ghi suy đoán chưa được người dùng xác nhận thành product truth.
+- Cuối mỗi phản hồi quan trọng luôn có `Bước tiếp theo:` và
+  `Cách làm phù hợp:` kèm lý do ngắn.
 
-**Input**: The argument after `/opsx-explore` is whatever the user wants to think about. Could be:
-- A vague idea: "real-time collaboration"
-- A specific problem: "the auth system is getting unwieldy"
-- A change name: "add-dark-mode" (to explore in context of that change)
-- A comparison: "postgres vs sqlite for this"
-- Nothing (just enter explore mode)
+## Cách Thực Hiện
 
----
+1. Xác định scope OpenSpec. Mặc định dùng `openspec/` gần nhất. Nếu người dùng
+   nêu store hoặc change thuộc store, chạy `openspec store list --json` và giữ
+   `--store <id>` cho các lệnh tiếp theo.
+2. Đọc `PRODUCT.md`, `DESIGN.md`, surface brief liên quan và
+   `openspec list --json` nếu chúng tồn tại.
+3. Nếu `PRODUCT.md` thiếu hoặc chỉ còn comment template, bắt đầu bằng thông tin
+   định hướng tối thiểu rồi mở rộng theo câu trả lời. Chỉ hỏi thêm khi thông tin
+   có thể thay đổi phạm vi, UI, dữ liệu, bảo mật, chi phí, release hoặc cách kiểm
+   chứng. Sau mỗi vòng, tóm tắt điều đã hiểu và tự cập nhật các quyết định đã
+   xác nhận vào `PRODUCT.md`.
+4. Khảo sát mã nguồn khi câu hỏi liên quan hệ thống hiện có. Với dependency/API,
+   lấy bằng chứng theo phiên bản trước khi khuyến nghị.
+5. Brainstorm các hướng thực sự khác nhau theo nhóm dễ so sánh. Đánh giá giá trị
+   sản phẩm, độ phức tạp, rủi ro, chi phí và khả năng kiểm chứng; khuyến nghị một
+   hướng và cho phép xem thêm khi còn lựa chọn quan trọng.
+6. Khi có quyết định bền vững, tự cập nhật `DESIGN.md`. Với UI mới hoặc redesign
+   đáng kể, sau khi người dùng chọn hướng, tự tạo/cập nhật
+   `docs/surfaces/<surface>.md`.
+7. Nếu đang khám phá một change, lấy path thật bằng
+   `openspec status --change "<name>" --json`, đọc artifact hiện có và tự cập
+   nhật proposal/spec/design/tasks sau khi người dùng xác nhận thay đổi.
 
-## The Stance
+## Giới Hạn
 
-- **Curious, not prescriptive** - Ask questions that emerge naturally, don't follow a script
-- **Open threads, not interrogations** - Surface multiple interesting directions and let the user follow what resonates. Don't funnel them through a single path of questions.
-- **Visual** - Use ASCII diagrams liberally when they'd help clarify thinking
-- **Adaptive** - Follow interesting threads, pivot when new information emerges
-- **Patient** - Don't rush to conclusions, let the shape of the problem emerge
-- **Grounded** - Explore the actual codebase when relevant, don't just theorize
+- Không triển khai mã ứng dụng trong explore mode.
+- Không ép người dùng trả lời toàn bộ bảng câu hỏi trong một lượt.
+- Không kết thúc chỉ vì đã đạt một số câu hoặc số vòng; kết thúc khi mục tiêu,
+  người dùng, phạm vi, ràng buộc, quyết định mở và cách kiểm chứng đã đủ rõ.
+- Không bật Session Goal khi quyết định sản phẩm hoặc UI còn mở.
+- Chỉ đề xuất MultiRun khi việc so sánh các phương án độc lập đủ giá trị và mỗi
+  phương án có thể chạy trong worktree riêng.
 
----
+Khi đã đủ rõ để formalize, đề xuất:
 
-## What You Might Do
-
-Depending on what the user brings, you might:
-
-**Explore the problem space**
-- Ask clarifying questions that emerge from what they said
-- Challenge assumptions
-- Reframe the problem
-- Find analogies
-
-**Investigate the codebase**
-- Map existing architecture relevant to the discussion
-- Find integration points
-- Identify patterns already in use
-- Surface hidden complexity
-
-**Compare options**
-- Brainstorm multiple approaches
-- Build comparison tables
-- Sketch tradeoffs
-- Recommend a path (if asked)
-
-**Visualize**
+```text
+Bước tiếp theo: /opsx-propose <change-name hoặc mô tả>
+Cách làm phù hợp: Không dùng Goal; dùng Focus Mode nếu chủ đề tiếp theo cần câu trả lời dài hoặc có nhiều ràng buộc.
 ```
-┌─────────────────────────────────────────┐
-│     Use ASCII diagrams liberally        │
-├─────────────────────────────────────────┤
-│                                         │
-│      ┌────────┐         ┌────────┐      │
-│      │ State  │────────▶│ State  │      │
-│      │   A    │         │   B    │      │
-│      └────────┘         └────────┘      │
-│                                         │
-│   System diagrams, state machines,      │
-│   data flows, architecture sketches,    │
-│   dependency graphs, comparison tables  │
-│                                         │
-└─────────────────────────────────────────┘
-```
-
-**Surface risks and unknowns**
-- Identify what could go wrong
-- Find gaps in understanding
-- Suggest spikes or investigations
-
----
-
-## OpenSpec Awareness
-
-You have full context of the OpenSpec system. Use it naturally, don't force it.
-
-### Check for context
-
-At the start, quickly check what exists:
-```bash
-openspec list --json
-```
-
-This tells you:
-- If there are active changes
-- Their names, schemas, and status
-- What the user might be working on
-
-If the user mentioned a specific change name, read its artifacts for context.
-
-### When no change exists
-
-Think freely. When insights crystallize, you might offer:
-
-- "This feels solid enough to start a change. Want me to create a proposal?"
-- Or keep exploring - no pressure to formalize
-
-### When a change exists
-
-If the user mentions a change or you detect one is relevant:
-
-1. **Resolve and read existing artifacts for context**
-   - Run `openspec status --change "<name>" --json`.
-   - Use `changeRoot`, `artifactPaths`, and `actionContext` from the status JSON.
-   - Read existing files from `artifactPaths.<artifact>.existingOutputPaths`.
-
-2. **Reference them naturally in conversation**
-   - "Your design mentions using Redis, but we just realized SQLite fits better..."
-   - "The proposal scopes this to premium users, but we're now thinking everyone..."
-
-3. **Offer to capture when decisions are made**
-
-    | Insight Type               | Where to Capture               |
-    |----------------------------|--------------------------------|
-    | New requirement discovered | `specs/<capability>/spec.md` |
-    | Requirement changed        | `specs/<capability>/spec.md` |
-    | Design decision made       | `design.md`                  |
-    | Scope changed              | `proposal.md`                |
-    | New work identified        | `tasks.md`                   |
-    | Assumption invalidated     | Relevant artifact              |
-
-   Example offers:
-   - "That's a design decision. Capture it in design.md?"
-   - "This is a new requirement. Add it to specs?"
-   - "This changes scope. Update the proposal?"
-
-4. **The user decides** - Offer and move on. Don't pressure. Don't auto-capture.
-
----
-
-## What You Don't Have To Do
-
-- Follow a script
-- Ask the same questions every time
-- Produce a specific artifact
-- Reach a conclusion
-- Stay on topic if a tangent is valuable
-- Be brief (this is thinking time)
-
----
-
-## Ending Discovery
-
-There's no required ending. Discovery might:
-
-- **Flow into a proposal**: "Ready to start? I can create a change proposal."
-- **Result in artifact updates**: "Updated design.md with these decisions"
-- **Just provide clarity**: User has what they need, moves on
-- **Continue later**: "We can pick this up anytime"
-
-When things crystallize, you might offer a summary - but it's optional. Sometimes the thinking IS the value.
-
----
-
-## Guardrails
-
-- **Don't implement** - Never write code or implement features. Creating OpenSpec artifacts is fine, writing application code is not.
-- **Don't fake understanding** - If something is unclear, dig deeper
-- **Don't rush** - Discovery is thinking time, not task time
-- **Don't force structure** - Let patterns emerge naturally
-- **Don't auto-capture** - Offer to save insights, don't just do it
-- **Do visualize** - A good diagram is worth many paragraphs
-- **Do explore the codebase** - Ground discussions in reality
-- **Do question assumptions** - Including the user's and your own

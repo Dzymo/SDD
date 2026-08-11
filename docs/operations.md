@@ -10,8 +10,10 @@ Phase 4 adds a controlled global agent-layer apply with the exact source and
 target mapping in `docs/agent-layer.md`.
 Phase 6 adds only a project-local OpenSpec bootstrap. Copy
 `templates\project\` into a participating project, keep product and active
-change artifacts there, and use the generated `/opsx-*` commands. It has no
-global configuration target or apply operation. The generated commands call
+change artifacts there, and use the five adapted `/opsx-*` commands. They
+interview the user in-session and maintain project files themselves; the user
+must not be asked to fill artifacts manually. It has no global configuration
+target or apply operation. The project commands call
 bare `openspec`; install `@fission-ai/openspec@1.5.0` on `PATH`, confirm its
 version, and restart or reload OpenCode after copying the bootstrap. The pinned
 one-off `npx` form is not a replacement for that executable when using slash
@@ -23,8 +25,9 @@ Before first slash-command use in the copied project, run its preflight:
 PowerShell -ExecutionPolicy Bypass -File .\Test-OpenSpecBootstrapPreflight.ps1
 ```
 
-It fails for an unavailable or version-mismatched CLI and warns, with source
-file and line, about unavailable generated command or skill dependencies. It
+It fails for an unavailable or version-mismatched CLI, a missing command, or a
+command that loses the session-first/next-step advisory contract. It also warns,
+with source file and line, about unavailable command or skill dependencies. It
 does not add commands or skills to compensate for the OpenSpec `core` profile.
 
 Phase 10 adds project-local package and release evidence. Complete the copied
@@ -130,10 +133,12 @@ Validate the Phase 8 OpenChamber operating-guide source contracts:
 PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-OpenChamberOperatingGuide.ps1
 ```
 
-This evaluator is offline and read-only. It tests the recommendation matrix,
-the no-silent-Goal prompt contract, and the invariant that OpenChamber Session
-Goals are the only automatic parent-session continuation controller. It does
-not arm a Goal or alter OpenChamber settings.
+This evaluator is offline and read-only. It tests adaptive interview fast/deep
+paths, the recommendation matrix, worktree requirements for writing Goals,
+read-only Goal limits, material-decision and budget pause behavior, the
+`ready for release` boundary, the no-silent-Goal prompt contract, and the
+invariant that OpenChamber Session Goals are the only automatic parent-session
+continuation controller. It does not arm a Goal or alter OpenChamber settings.
 
 After controlled Phase 8 prompt activation and an OpenChamber restart, run:
 
@@ -156,7 +161,7 @@ Validate the Phase 11 evaluation and failure drills:
 PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-EvaluationFailureDrills.ps1
 ```
 
-This offline source gate derives the verdict for all 18 required failure drills
+This offline source gate derives the verdict for all 21 required failure drills
 and checks the related Orchestrator, Fixer, Oracle, research-skill, and preset
 contracts. It does not call a provider, modify global configuration, create a
 worktree, or perform an external action. See `docs\evaluation-and-failure-drills.md`
@@ -343,11 +348,10 @@ validation on its real active change before verification or archive:
 npx --yes @fission-ai/openspec@1.5.0 validate <change-name> --strict --no-interactive
 ```
 
-For a completed change on Windows, invoke `openspec archive <change-name>`
-directly. The generated core `/opsx-archive` prompt uses a POSIX `mkdir -p`
-step that emits a PowerShell `ResourceExists` error when the archive directory
-already exists. See the Phase 6 end-to-end validation record for the other core
-profile limitations and their workarounds.
+For a completed change on Windows, the adapted `/opsx-archive` prompt invokes
+`openspec archive <change-name>` directly and does not create archive folders
+manually. See the Phase 6 end-to-end validation record for the core-profile
+limitations and their workarounds.
 
 ## Pull Request Validation
 
@@ -360,24 +364,31 @@ verifiers on Windows for every pull request. The bootstrap job installs the
 exact CLI, asserts its version, copies `templates\project` into a fresh
 runner-temporary directory, then runs the copied preflight script.
 
-The pull-request workflow exercises the **offline** source and preflight
-gates only. The managed-runtime verifiers (`Test-AgentLayerRuntime.ps1`,
-`Test-ExecutionVerificationRuntime.ps1`,
-`Test-OpenChamberOperatingGuideRuntime.ps1`,
-`Test-UIQualityLayerRuntime.ps1`, `Test-PackagingReleaseRuntime.ps1`, and
-`Test-ResearchRuntime.ps1`) require the local managed OpenCode binary and,
-in the case of the live run calls, a provider; they are intentionally not
-hosted CI jobs. Phase 12 global rollout is **complete** for candidate
+The pull-request workflow also installs pinned `opencode-ai` and slim packages
+under `RUNNER_TEMP`, applies the reviewed package hash chain, and runs
+`Test-ManagedRuntimeIsolated.ps1`. That isolated host smoke invokes the Phase 4
+and Phase 7-10 managed-runtime verifiers with temporary config, data, cache, and
+state paths. It proves plugin initialization and effective source contracts but
+does not read or write active global targets. Provider-backed
+`Test-ResearchRuntime.ps1`, full Observer OCR, and post-apply verification of
+the actual global configuration remain local Phase 12 gates rather than hosted
+CI jobs. Phase 12 global rollout is **complete** for candidate
 `b75043d6097d12ac52c5bbbc3224f316c3243961`; its managed-runtime and
 provider-backed evidence is recorded in `PHASE-12-GLOBAL-ROLLOUT.md`. A future
 framework candidate or managed-runtime change requires a new local Phase 12
 evidence run before its approved global write.
 
-Repository branch protection must require `Validate research MCP schema (Windows)`
-before merge; the workflow file does not change repository-level merge
-permissions by itself. Configuring that required check in branch protection
-is a separate repository administration step and has not been performed in
-this update.
+The `main` branch requires the `Validate research MCP schema (Windows)` check
+before merge. Branch protection also requires branches to be current before
+merge and applies to administrators. Verify the live repository setting with:
+
+```powershell
+gh api repos/Dzymo/SDD/branches/main/protection
+```
+
+The workflow file does not configure repository-level merge permissions by
+itself; retain this GitHub branch-protection setting when changing the workflow
+or its required job name.
 
 ## Action Update Cadence
 

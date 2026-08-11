@@ -8,17 +8,17 @@ any other external write automatically.
 
 ## Package Contract
 
-Each participating project copies and completes `PACKAGE.md` from
-`templates/project/`. It is the project configuration for package command
-discovery: the project names its package/build command, expected artifact or
+Each participating project receives `PACKAGE.md` from `templates/project/`.
+The agent inspects project tooling, interviews the user only for unresolved
+material release facts, and completes the file itself; the user is never asked
+to edit it manually. It records the package/build command, expected artifact or
 entry point, intended version, clean-environment setup, smoke command, content
-checks, and rollback steps. A manifest or build file can supply evidence for a
-missing field, but an agent must record the selected command rather than guess
-one.
+checks, and rollback steps rather than guessing them.
 
 The active OpenSpec change records actual commands and results in
-`verification.md` and `release.md`. The framework does not prescribe a package
-manager or add a package dependency.
+`<changeRoot>/verification.md` and `<changeRoot>/release.md`, where
+`changeRoot` comes from OpenSpec status. The framework does not prescribe a
+package manager or add a package dependency.
 
 ## Package Gate
 
@@ -38,6 +38,18 @@ reuse the source tree's dependencies, build output, login state, or environment
 files as clean-environment evidence. A matching checksum identifies an artifact;
 it does not prove the artifact is safe by itself.
 
+## Goal Boundary
+
+A Session Goal may prepare the release by building or packaging, inspecting the
+artifact, running clean-environment smoke checks, calculating checksums,
+drafting release notes, collecting known warnings, and preparing rollback
+steps. Its terminal state is `ready for release`.
+
+The Goal must stop before publish, deploy, tag, push, merge, purchase,
+production mutation, or post-release archive. The exact approved external action
+runs outside the Goal boundary in normal conversation after explicit approval.
+Do not resume or widen a Goal to cross this boundary.
+
 ## Explicit Release Approval
 
 After the package gate passes, present a release-ready summary and stop. The
@@ -56,7 +68,8 @@ asking to “release”, or an approval for different values is not approval. An
 change to the approved version, notes, target, warnings, rollback plan, or
 external action invalidates the approval and requires a new one.
 
-Only after this record exists may the approved exact external action run. Record
+Only after this record exists may the approved exact external action run outside
+the Goal boundary. Record
 its command, exit code, result identifier or URL where available, and
 post-release smoke result. If it fails, report `BLOCKED`, follow the recorded
 rollback plan when the user directs it, and retain the active OpenSpec change.

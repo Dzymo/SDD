@@ -11,20 +11,24 @@
   },
   {
     "id": "ambiguous-product",
-    "name": "Ambiguous product request asks one material question",
+    "name": "Complex product request uses adaptive interview until decision-ready",
     "observation": {
-      "materialQuestionCount": 1,
+      "topicRoundCount": 3,
+      "relatedQuestionCount": 6,
       "irrelevantQuestionCount": 0,
-      "pausedForAnswer": true
+      "fixedQuestionCap": false,
+      "summaryAfterEachRound": true,
+      "decisionReady": true,
+      "goalRecommended": false
     },
-    "expected": "ONE-MATERIAL-CLARIFICATION-REQUIRED"
+    "expected": "ADAPTIVE-INTERVIEW-DECISION-READY"
   },
   {
     "id": "ui-direction",
     "name": "UI task stops for direction selection",
     "observation": {
       "directionSelected": false,
-      "questionCount": 1,
+      "adaptiveInterview": true,
       "implementationStarted": false
     },
     "expected": "DIRECTION-SELECTION-REQUIRED"
@@ -99,10 +103,11 @@
   },
   {
     "id": "material-plan-deviation",
-    "name": "Material plan deviation pauses for one user decision",
+    "name": "Material plan deviation pauses for explicit user decision",
     "observation": {
       "materialDeviation": true,
-      "questionCount": 1,
+      "decisionRequested": true,
+      "irrelevantQuestionCount": 0,
       "pausedForApproval": true,
       "changeApplied": false
     },
@@ -140,6 +145,20 @@
     "expected": "RELEASE-APPROVAL-REQUIRED"
   },
   {
+    "id": "release-goal-boundary",
+    "name": "Release Goal stops at ready for release",
+    "observation": {
+      "goalStatus": "ready-for-release",
+      "packageReady": true,
+      "releaseSummaryReady": true,
+      "rollbackPlanReady": true,
+      "explicitApproval": false,
+      "externalActionStarted": false,
+      "archiveStarted": false
+    },
+    "expected": "RELEASE-GOAL-BOUNDARY-HELD"
+  },
+  {
     "id": "goal-evaluating",
     "name": "Evaluating Goal has no duplicate continuation",
     "observation": {
@@ -149,6 +168,31 @@
       "idleContinuationEnabled": false
     },
     "expected": "GOAL-EVALUATING-NO-CONTINUATION"
+  },
+  {
+    "id": "goal-material-decision",
+    "name": "Goal pauses when a new material decision appears",
+    "observation": {
+      "materialDecisionDetected": true,
+      "goalPaused": true,
+      "scopeWidened": false,
+      "optionsPresented": true,
+      "userChoicePending": true
+    },
+    "expected": "GOAL-PAUSED-FOR-DECISION"
+  },
+  {
+    "id": "goal-budget-limited",
+    "name": "Budget-limited Goal does not auto-resume",
+    "observation": {
+      "goalStatus": "budget-reached",
+      "progressSummary": true,
+      "remainingWorkSummary": true,
+      "budgetRaisedAutomatically": false,
+      "resumedAutomatically": false,
+      "userChoicePending": true
+    },
+    "expected": "GOAL-BUDGET-WAITS-FOR-USER"
   },
   {
     "id": "overlapping-writers",

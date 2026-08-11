@@ -180,7 +180,7 @@ foreach ($skill in @('systematic-debugging', 'verification-before-completion')) 
     }
 }
 
-foreach ($script in @('Apply-ExecutionVerification.ps1', 'Test-ExecutionVerificationRuntime.ps1')) {
+foreach ($script in @('Apply-ExecutionVerification.ps1', 'Test-ExecutionVerificationApply.ps1', 'Test-ExecutionVerificationRuntime.ps1')) {
     $path = Join-Path $Root "scripts\$script"
     if (-not (Test-Path -LiteralPath $path)) {
         throw "Required Phase 7 lifecycle script not found: $path"
@@ -188,7 +188,7 @@ foreach ($script in @('Apply-ExecutionVerification.ps1', 'Test-ExecutionVerifica
 }
 
 $applySource = Get-Content -LiteralPath (Join-Path $Root 'scripts\Apply-ExecutionVerification.ps1') -Raw
-foreach ($rule in @('Get-FileHashOrAbsent', 'Restore-Target', 'fixer.skills', 'Write-JsonUtf8NoBom', 'UTF8Encoding]::new($false)', 'manifest.json', 'changed targets were restored')) {
+foreach ($rule in @("Merge = 'fixer.skills'", 'Merge = $item.Merge', "if (`$entry.Merge -eq 'fixer.skills')", 'Add-Member -NotePropertyName skills', 'Get-FileHashOrAbsent', 'Restore-Target', 'Write-JsonUtf8NoBom', 'UTF8Encoding]::new($false)', 'manifest.json', 'changed targets were restored')) {
     if (-not $applySource.Contains($rule)) {
         throw "Phase 7 apply script is missing required fail-closed lifecycle rule: $rule"
     }

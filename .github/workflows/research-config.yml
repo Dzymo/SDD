@@ -35,6 +35,58 @@ jobs:
         shell: pwsh
         run: ./scripts/Test-ExecutionVerification.ps1
 
+      - name: Validate isolated execution layer apply
+        shell: pwsh
+        run: ./scripts/Test-ExecutionVerificationApply.ps1
+
+      - name: Install isolated managed runtime
+        shell: pwsh
+        run: |
+          $hostRoot = Join-Path $env:RUNNER_TEMP 'sdd-managed-runtime-host'
+          npm install --prefix $hostRoot --no-audit --no-fund opencode-ai@1.18.16 oh-my-opencode-slim@2.2.8
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
+          $packageRoot = Join-Path $hostRoot 'node_modules\oh-my-opencode-slim'
+          $distIndex = Join-Path $packageRoot 'dist\index.js'
+          $baselineHash = (Get-FileHash -LiteralPath $distIndex -Algorithm SHA256).Hash
+          if ($baselineHash -ne '816D84ABF3DD5923F56DF2C52F3AB7149B46654C3FBBDE9DF8760D22823DEDFC') {
+            throw "Unexpected slim npm baseline hash: $baselineHash"
+          }
+          $disabledToolsPatch = Join-Path $env:GITHUB_WORKSPACE 'patches\oh-my-opencode-slim-2.2.8-disabled-tools.patch'
+          git -c core.autocrlf=false -c core.eol=lf -C $packageRoot apply --check --whitespace=nowarn $disabledToolsPatch
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
+          git -c core.autocrlf=false -c core.eol=lf -C $packageRoot apply --whitespace=nowarn $disabledToolsPatch
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
+          $disabledToolsHash = (Get-FileHash -LiteralPath $distIndex -Algorithm SHA256).Hash
+          if ($disabledToolsHash -ne '3D70AB6200A5AF7718BFFCF229D985A9C8E2925BA0AD7676046C274E57E65CC5') {
+            throw "Unexpected disabled-tools patch hash: $disabledToolsHash"
+          }
+          $observerPatch = Join-Path $env:GITHUB_WORKSPACE 'patches\oh-my-opencode-slim-2.2.8-observer-attachment.patch'
+          git -c core.autocrlf=false -c core.eol=lf -C $packageRoot apply --check --whitespace=nowarn $observerPatch
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
+          git -c core.autocrlf=false -c core.eol=lf -C $packageRoot apply --whitespace=nowarn $observerPatch
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
+          $patchedHash = (Get-FileHash -LiteralPath $distIndex -Algorithm SHA256).Hash
+          if ($patchedHash -ne '6E6A67DF17820B6E3DCAE43BCAFD6DEA2705666A161227769AE32E2576A8989A') {
+            throw "Unexpected structured-attachment patch hash: $patchedHash"
+          }
+
+      - name: Validate isolated managed runtime
+        shell: pwsh
+        run: |
+          $hostRoot = Join-Path $env:RUNNER_TEMP 'sdd-managed-runtime-host'
+          $managed = Join-Path $hostRoot 'node_modules\.bin\opencode.cmd'
+          ./scripts/Test-ManagedRuntimeIsolated.ps1 -Managed $managed -PluginCacheSource $hostRoot
+
       - name: Validate OpenChamber operating guide
         shell: pwsh
         run: ./scripts/Test-OpenChamberOperatingGuide.ps1

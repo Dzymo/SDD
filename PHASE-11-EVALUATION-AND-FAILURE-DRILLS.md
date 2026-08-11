@@ -5,7 +5,7 @@ Date: 2026-08-04
 ## Status
 
 Phase 11 source implementation is **source-complete**. The deterministic
-offline failure-drill gate, the 18 required scenarios, and the cross-phase
+offline failure-drill gate, the 21 required scenarios, and the cross-phase
 source-contract checks all pass without a provider call, a global
 configuration write, a worktree operation, or an external release action.
 
@@ -48,8 +48,11 @@ The evaluator blocks false success when a test or clean smoke fails, blocks a
 worker that writes outside its brief, blocks an external release without exact
 approval, prevents duplicate Goal continuation while Evaluating, rejects
 overlapping writers, and requires explicit Context7/CodeGraph fallback states.
-It also confirms that routine/trivial work avoids Deepwork and fan-out while a
-named public auth boundary receives one scoped, read-only Oracle review.
+It requires adaptive interview rounds without a fixed question cap, holds a
+release Goal at `ready for release`, pauses a Goal for a new material decision,
+and prevents automatic budget increases or resume. It also confirms that
+routine/trivial work avoids Deepwork and fan-out while a named public auth
+boundary receives one scoped, read-only Oracle review.
 For every fixture, it mutates one essential safe condition and requires the
 result to be `DRILL-FAILED`; the expected verdict matrix lives in the evaluator
 so fixture data cannot redefine a safe outcome.

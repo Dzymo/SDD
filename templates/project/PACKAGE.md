@@ -1,7 +1,9 @@
 # Package Contract
 
-> Fill this project-local contract before packaging a release. It configures
-> commands for this project; do not copy example commands from another project.
+> Agent-maintained project-local contract. The agent inspects project tooling,
+> interviews the user only for unresolved release facts, and records the chosen
+> commands here before packaging. Do not ask the user to fill it manually or
+> copy example commands from another project.
 
 ## Delivery
 

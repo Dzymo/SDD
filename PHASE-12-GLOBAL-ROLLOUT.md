@@ -92,6 +92,22 @@ files must be removed after the check.
 
 ### Conditional Residual Gates
 
+The Windows source workflow runs the managed CLI and slim plugin in an isolated
+temporary home before rollout. It installs the pinned host and plugin versions
+under `RUNNER_TEMP`, verifies and applies the reviewed slim hash chain
+`816D... -> 3D70... -> 6E6A...` inside that temporary package, redirects
+config/data/cache/state away from the runner profile, runs the Phase 4 and Phase
+7-10 runtime verifiers, and fails if the effective paths escape that temporary
+root:
+
+```powershell
+PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-ManagedRuntimeIsolated.ps1
+```
+
+This gate proves plugin initialization and effective source contracts without
+writing the active global configuration. It does not replace provider-backed
+research/OCR checks or the post-apply verifiers against actual global targets.
+
 Run each gate below only when its managed OpenCode version, slim version,
 reviewed source, active target, or relevant Phase 5 package patch changed since
 the latest valid evidence. Run every corresponding verifier again after a
@@ -295,21 +311,27 @@ PowerShell -ExecutionPolicy Bypass -File .\scripts\Invoke-Phase12RollbackDrill.p
 PowerShell -ExecutionPolicy Bypass -File .\scripts\Invoke-Phase12RollbackDrill.ps1 -ManifestPath '<approved-manifest.json>' -VerifyOnly
 ```
 
-The command refuses while OpenChamber, CPA GUI, or managed OpenCode is running;
-accepts only manifest targets under `C:\Users\quang\.config\opencode`; requires
-the backup copy to hash to `BeforeSha256`; and verifies every restored target.
-It supports both array manifests and the `entries` or single-entry shape emitted
-by the reviewed apply scripts. It never restores directories. Do not use it for
-the Phase 5 package-cache patch: that patch must be restored in reverse hash
-order through its dedicated procedure in `docs\rollback.md`.
+The command refuses while OpenChamber, CPA GUI, or managed OpenCode is running.
+It accepts only the exact framework-owned files named in its allowlist; notably,
+CPA GUI-managed `opencode.json` is not allowed. Before any mutation it validates
+the complete manifest, rejects duplicate targets and reparse-point traversal,
+requires each backup to remain under the manifest directory and hash to
+`BeforeSha256`, and requires every current target to hash to `AfterSha256`.
+Only after that full preflight does it stage all current target bytes and begin
+the restore. If any restore fails, it compensates every staged target back to
+`AfterSha256` and fails closed. It supports array manifests and the `entries` or
+single-entry shape emitted by the reviewed apply scripts. It never restores
+directories. Do not use it for the Phase 5 package-cache patch: that patch must
+be restored in reverse hash order through its dedicated procedure in
+`docs\rollback.md`.
 
 The offline regression gate uses an isolated temporary `USERPROFILE` and does
-not inspect or modify the real global configuration. It covers a valid restore
-and verification, an explicit successful restore with no runtime process, a
-malformed manifest that leaves the candidate target unchanged, a tampered backup
-hash, a target outside the configuration root, `-WhatIf` non-mutation, and
-fail-closed rejection when each of OpenChamber, CPA GUI, or `opencode` is
-active:
+not inspect or modify the real global configuration. It covers valid restore,
+`ABSENT`, `-VerifyOnly`, and `-WhatIf` flows; stale current targets including an
+`ABSENT` rollback candidate; forbidden and duplicate targets; a late invalid
+manifest entry with zero earlier mutation; malformed input; compensation after
+an injected second-target write failure; and fail-closed rejection when each of
+OpenChamber, CPA GUI, or `opencode` is active:
 
 ```powershell
 PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-Phase12RollbackDrill.ps1
@@ -317,15 +339,19 @@ PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-Phase12RollbackDrill.ps1
 
 For each approved manifest entry:
 
-1. Confirm the manifest's target is a named framework-owned file under
-   `C:\Users\quang\.config\opencode` or the reviewed slim cache target.
-2. If `BeforeSha256` is not `ABSENT`, hash the backup copy and require it to
-   equal `BeforeSha256` before restoring it.
-3. Restore only that file to its named target.
-4. If `BeforeSha256` is `ABSENT`, remove only that named target if it was
-   created by the rollout.
-5. Hash the restored target and require it to equal `BeforeSha256`.
-6. Record the manifest entry, command outcome, and restored hash.
+1. Confirm the target is an exact named framework-owned file in the rollback
+   allowlist, is unique in the manifest, and traverses no reparse point.
+2. Require the current target hash to equal `AfterSha256`. If it differs, stop;
+   do not overwrite or remove a target changed after the recorded apply.
+3. If `BeforeSha256` is not `ABSENT`, require the backup to stay under the
+   manifest directory and hash to `BeforeSha256`. If it is `ABSENT`, require
+   `Backup` to be exactly `ABSENT`.
+4. Complete those checks for every entry before changing the first target.
+5. Stage every current target, then restore only the named files or remove only
+   a named target whose validated `BeforeSha256` is `ABSENT`.
+6. Require each restored target to equal `BeforeSha256`. On any failure,
+   compensate all staged targets to `AfterSha256` and report failure.
+7. Record the manifest entry, command outcome, and restored or compensated hash.
 
 Never restore a parent directory, OpenChamber state, CPA GUI state, credentials,
 or an unrelated target. Never use `git reset --hard`, `git checkout --`, or a

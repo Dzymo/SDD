@@ -17,7 +17,7 @@ global OpenCode framework used through OpenChamber.
   requires revalidation after a slim reinstall or update. Phases 7, 8, and 10
   were controlled-applied with per-file backups and runtime-verified on
   2026-08-05. Phase 9 is runtime-verified on 2026-08-05. Phase 11 is
-  source-complete; its offline gate covers all 18 required scenarios but is a
+  source-complete; its offline gate covers all 21 required scenarios but is a
   source-policy regression guard rather than live model-compliance evidence.
 
 Phase 12 global rollout is **complete** as of 2026-08-08 for immutable
@@ -432,13 +432,20 @@ Do not import:
 
 ### 10.7 OpenSpec Explore
 
-Limit exploration to:
+Keep exploration adaptive and bounded by relevance rather than fixed counts:
 
-- one bounded pass by default;
-- at most three materially different options;
-- at most two search/retrieval batches;
-- after two conversational rounds, recommend `decide`, `formalize`, or `stop`;
-- no continuation solely to improve confidence.
+- use the fast path when the objective, affected behavior, constraints, and
+  completion evidence are already clear;
+- interview by coherent topic and expand only when an answer can change product
+  scope, architecture, UI, data, security, cost, release, or verification;
+- normally compare a small group of viable options, commonly two or three, but
+  group or reveal more when omitting one would hide a material trade-off;
+- after each round, summarize what is understood, what remains open, and why the
+  next topic matters;
+- stop when the objective, users, in-scope/out-of-scope behavior, constraints,
+  unresolved decisions, recommended direction, and completion evidence are
+  decision-ready;
+- do not continue solely to improve confidence or wording.
 
 ## 11. Research and Evidence Protocol
 
@@ -529,6 +536,19 @@ idea/context
 Use OpenSpec as the backbone. Keep its default artifact graph for the initial
 version; store optional evidence files alongside it before considering a custom
 schema.
+
+The session is the user's only authoring surface. Agents use an adaptive
+interview: they ask only about topics that can change the decision, may group
+closely related questions, summarize between rounds, and stop when the work is
+decision-ready. Options are presented in a manageable comparison rather than a
+fixed count; the user may delegate reversible low-risk technical defaults, but
+product intent, privacy, security, payment, destructive work, irreversible
+migration, release targets, and external actions remain explicit decisions.
+Agents create or update `PRODUCT.md`, `DESIGN.md`, `PACKAGE.md`, surface briefs,
+OpenSpec artifacts, verification, and release records themselves. The user is
+never assigned manual file editing. After each workflow step or meaningful
+pause, the agent names the next slash command or session action and recommends
+Focus Mode, Session Goal, worktree, MultiRun, or neither with one short reason.
 
 ### 12.2 Stage Rules
 
@@ -637,10 +657,12 @@ Mode, Session Goals, worktrees, or MultiRun.
 | Brainstorming, research, or unresolved decisions | Normal chat; Focus if useful; no Goal |
 | Approved multi-step implementation with verifiable finish line | Worktree plus Session Goal |
 | Reproducible bug with clear done criteria | Worktree plus Session Goal when multiple attempts are likely |
-| Tests/package loops with deterministic checks | Session Goal with a budget |
+| Read-only deterministic verification or package inspection | Session Goal may run without a new worktree |
+| Writing work in a session already inside an isolated worktree | Session Goal may continue in that worktree |
+| Writing work on the current non-isolated checkout | Create a worktree before recommending a Goal |
 | UI direction still needs user choice | Focus for feedback; no Goal yet |
 | Improve an existing saved plan | Normal session; do not use current `Run as goal` path |
-| Prepare release artifacts | Goal may run to `ready for release` |
+| Prepare release artifacts | Goal may run only to `ready for release` |
 | Publish, deploy, tag, merge, or purchase | Stop and request approval |
 | Compare independent UI/architecture alternatives | MultiRun with separate worktrees, only when comparison value justifies cost |
 
@@ -669,6 +691,11 @@ Recommend a Session Goal only when all are true:
 4. Multiple turns or attempts are likely.
 5. Safe in-scope work can continue without repeated approval.
 6. The objective does not include an unapproved external or destructive action.
+7. Valid blocked conditions are named.
+8. Writer ownership does not overlap another active lane.
+9. Work that writes code is in an OpenChamber-managed worktree; Goal without a
+   new worktree is limited to read-only/deterministic work or a session already
+   running in an isolated worktree.
 
 When recommending a Goal, provide:
 
@@ -678,6 +705,27 @@ When recommending a Goal, provide:
 - valid blocked conditions;
 - worktree recommendation;
 - token-budget recommendation.
+
+Do not recommend a Goal while the agent is interviewing, brainstorming,
+researching an unresolved decision, selecting a UI direction, changing a plan,
+or waiting for product, data, security, cost, credential, release, or external
+approval. Use a worktree without a Goal when isolation is useful but the finish
+line is not decision-ready.
+
+During a Goal, pause and return to normal conversation when a new material
+decision, dependency, service, public contract, schema, migration, security,
+privacy, payment, UI-direction, cost, release-target, or external-action issue
+appears. Report completed work, the blocker, options, and a recommendation. Do
+not silently widen the objective.
+
+For release preparation, a Goal may build/package, inspect the artifact, run a
+clean-environment smoke, calculate checksums, prepare release notes, collect
+warnings, and draft rollback steps. Its terminal state is `ready for release`.
+It must stop before publish, deploy, tag, push, merge, purchase, production
+mutation, or post-release archive. After the user explicitly approves the exact
+version, notes, target, warnings, rollback plan, and external action, that exact
+action runs outside the Goal boundary; archive follows only after success,
+post-release smoke, and fresh strict validation.
 
 The agent must not:
 
@@ -689,6 +737,11 @@ The agent must not:
 - send `continue` while the Goal is evaluating;
 - change Goal scope through ordinary messages without pausing first.
 
+When a Goal is blocked, evaluating, or budget-limited, do not duplicate a
+follow-up, resume it, or increase its budget. Summarize completed and remaining
+work, explain the blocker in plain language, and let the user choose whether to
+resolve, narrow, resume, or stop.
+
 After composer activation, remind the user to confirm that the Goal strip
 appears before leaving the application.
 
@@ -697,8 +750,8 @@ appears before leaving the application.
 Keep advice brief and issue it only when it changes the recommended next action.
 
 ```text
-OpenChamber recommendation: Worktree + Session Goal.
-Reason: the approved plan has a verifiable finish line and will need several turns.
+Cách làm phù hợp: Worktree + Goal.
+Lý do: kế hoạch đã được duyệt, có điểm kết thúc kiểm chứng được và cần nhiều lượt.
 ```
 
 ## 15. UI Workflow
@@ -1078,7 +1131,9 @@ Tasks:
 - add concise proposal, spec, design, task, verification, and release guidance;
 - add source-provenance and Context7 evidence sections;
 - add risk-based TDD and material-deviation rules;
-- generate only OpenSpec OpenCode commands;
+- keep exactly the five OpenSpec core command names, adapt their prompts for
+  session-first interviews, agent-maintained artifacts, next-command advice,
+  OpenChamber mode advice, blocked-artifact recovery, and release gates;
 - avoid custom OpenSpec schema until pilots show a need.
 
 Complete when:
@@ -1208,7 +1263,7 @@ Complete when:
 Objective: validate behavior under realistic failure conditions.
 
 Status: source-complete. The deterministic offline evaluator derives
-outcomes for all 18 required scenarios, validates the cross-phase source
+outcomes for all 21 required scenarios, validates the cross-phase source
 contracts, and runs in the Windows pull-request gate. It is a source-policy
 regression guard, not live model-compliance evidence or project-native
 runtime evidence. The Context7/CodeGraph failure drills inspect the effective
@@ -1219,7 +1274,8 @@ claim. See `PHASE-11-EVALUATION-AND-FAILURE-DRILLS.md`.
 Required scenarios:
 
 1. Clear request requiring no question.
-2. Ambiguous product request requiring one material question.
+2. Complex product request requiring adaptive coherent-topic rounds until
+   decision-ready, without a fixed question cap or Goal.
 3. UI task requiring direction selection.
 4. Routine task that must not invoke Deepwork.
 5. Dependency requiring Context7.
@@ -1231,11 +1287,14 @@ Required scenarios:
 11. Test fails while agent tries to claim completion.
 12. Package builds but fails clean smoke test.
 13. Release requires approval.
-14. Goal is evaluating and the user sends no unnecessary continuation.
-15. Overlapping writer scopes.
-16. Long session with obsolete assumptions.
-17. Trivial task under Sol/Terra that must stop without fan-out.
-18. High-risk task where a scoped Oracle review is justified.
+14. Release Goal stops at `ready for release` without external action or archive.
+15. Goal is evaluating and the user sends no unnecessary continuation.
+16. Goal discovers a new material decision and pauses without widening scope.
+17. Goal reaches its budget and waits for user choice without auto-resume.
+18. Overlapping writer scopes.
+19. Long session with obsolete assumptions.
+20. Trivial task under Sol/Terra that must stop without fan-out.
+21. High-risk task where a scoped Oracle review is justified.
 
 Complete when:
 

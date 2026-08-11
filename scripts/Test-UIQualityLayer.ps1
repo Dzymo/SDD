@@ -160,9 +160,9 @@ Assert-True -Condition ($mutatedVerdict -ceq 'SYNTHETIC-SCORE-REJECTED') -Messag
 Assert-True -Condition ($preset.presets.'sdd-personal'.designer.skills -contains 'ui-quality') -Message 'Designer must load the ui-quality skill.'
 
 $requiredContent = @{
-    $guidePath = @('Authority Order', 'PRODUCT.md', 'DESIGN.md', 'Surface Brief', 'Desktop And Mobile', 'Browser And Accessibility', 'Independent Screenshot Review', 'not proof')
-    $skillPath = @('`PRODUCT.md` owns', '`DESIGN.md` owns', 'Machine checks establish readiness for review', 'explicit user visual approval')
-    $designerPromptPath = @('Authority Order', 'Impeccable detector', 'synthetic quality scores', 'fresh independent screenshot review')
+    $guidePath = @('Authority Order', 'PRODUCT.md', 'DESIGN.md', 'manageable comparison', 'without a fixed question or round count', 'Surface Brief', 'Desktop And Mobile', 'Browser And Accessibility', 'Independent Screenshot Review', 'not proof')
+    $skillPath = @('`PRODUCT.md` owns', '`DESIGN.md` owns', 'manageable comparison', 'Do not impose a fixed question', 'Machine checks establish readiness for review', 'explicit user visual approval')
+    $designerPromptPath = @('Authority Order', 'Interview adaptively', 'Impeccable detector', 'synthetic quality scores', 'fresh independent screenshot review')
     $observerPromptPath = @('Independent UI Review', 'synthetic score', 'user visual approval')
     $surfaceTemplatePath = @('PRODUCT.md', 'DESIGN.md', 'Approved Direction', 'not final visual approval')
     $applyPath = @('SupportsShouldProcess', 'Get-FileHashOrAbsent', 'Write-JsonUtf8NoBom', 'UTF8Encoding]::new($false)', 'Close OpenChamber and CPA GUI', 'Phase 9 apply failed and changed targets were restored')

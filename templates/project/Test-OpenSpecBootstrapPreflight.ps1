@@ -35,7 +35,7 @@ if ($projectRootPath) {
     }
 
     if (-not (Test-Path -LiteralPath $commandDirectory -PathType Container)) {
-        $failures += "Generated OpenCode command directory is missing: $commandDirectory"
+        $failures += "Project OpenCode command directory is missing: $commandDirectory"
     }
 }
 
@@ -45,7 +45,27 @@ if (Test-Path -LiteralPath $commandDirectory -PathType Container) {
     $actualCommandNames = @($commandFiles | ForEach-Object { $_.Name })
     foreach ($expectedCommand in $expectedCommands) {
         if ($expectedCommand -notin $actualCommandNames) {
-            $failures += "Required generated OpenSpec command is missing: $expectedCommand"
+            $failures += "Required adapted OpenSpec command is missing: $expectedCommand"
+        }
+    }
+}
+
+$workflowContract = @{
+    'opsx-explore.md' = @('SESSION-FIRST', 'USER-NO-FILE-EDIT', 'ADAPTIVE-INTERVIEW', 'DECISION-READY-STOP', 'NEXT-ACTION', 'OPENCHAMBER-ADVICE', 'PRODUCT.md')
+    'opsx-propose.md' = @('SESSION-FIRST', 'USER-NO-FILE-EDIT', 'ADAPTIVE-INTERVIEW', 'DECISION-READY-STOP', 'NEXT-ACTION', 'OPENCHAMBER-ADVICE', 'resolvedOutputPath')
+    'opsx-apply.md' = @('SESSION-FIRST', 'USER-NO-FILE-EDIT', 'ADAPTIVE-INTERVIEW', 'DECISION-READY-STOP', 'GOAL-SAFETY', 'NEXT-ACTION', 'OPENCHAMBER-ADVICE', 'provides no built-in continuation', '<changeRoot>/verification.md', 'ready for release')
+    'opsx-sync.md' = @('SESSION-FIRST', 'USER-NO-FILE-EDIT', 'ADAPTIVE-INTERVIEW', 'DECISION-READY-STOP', 'NEXT-ACTION', 'OPENCHAMBER-ADVICE')
+    'opsx-archive.md' = @('SESSION-FIRST', 'USER-NO-FILE-EDIT', 'GOAL-SAFETY', 'NEXT-ACTION', 'OPENCHAMBER-ADVICE', '<changeRoot>/verification.md', '<changeRoot>/release.md')
+}
+foreach ($commandName in $workflowContract.Keys) {
+    $commandPath = Join-Path $commandDirectory $commandName
+    if (-not (Test-Path -LiteralPath $commandPath -PathType Leaf)) {
+        continue
+    }
+    $commandContent = Get-Content -LiteralPath $commandPath -Raw
+    foreach ($requiredText in $workflowContract[$commandName]) {
+        if (-not $commandContent.Contains($requiredText)) {
+            $failures += "Session-first workflow contract missing from ${commandName}: $requiredText"
         }
     }
 }

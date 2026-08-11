@@ -20,10 +20,22 @@ function Get-AdvisoryVerdict {
 
     switch ($Scenario.situation) {
         'short-question' { return 'neither' }
+        'clear-bounded-request' {
+            foreach ($requirement in @('objective-clear', 'scope-clear', 'completion-evidence')) {
+                if ($Scenario.requires -notcontains $requirement) { return 'missing-fast-path-precondition' }
+            }
+            return 'fast-path-no-interview'
+        }
+        'complex-unresolved-request' {
+            foreach ($requirement in @('coherent-topic-rounds', 'decision-ready-stop', 'no-fixed-cap')) {
+                if ($Scenario.requires -notcontains $requirement) { return 'invalid-adaptive-interview' }
+            }
+            return 'adaptive-interview-no-goal'
+        }
         'long-structured-input' { return 'focus' }
         'ui-direction-unresolved' { return 'focus-no-goal' }
         'approved-multi-step-implementation' {
-            foreach ($requirement in @('self-contained-objective', 'completion-evidence', 'decisions-resolved', 'safe-continuation', 'budget')) {
+            foreach ($requirement in @('self-contained-objective', 'completion-evidence', 'decisions-resolved', 'safe-continuation', 'budget', 'blocked-conditions', 'non-overlapping-writer', 'isolated-worktree')) {
                 if ($Scenario.requires -notcontains $requirement) {
                     return 'missing-goal-precondition'
                 }
@@ -31,6 +43,43 @@ function Get-AdvisoryVerdict {
             return 'worktree-goal'
         }
         'isolation-needed-unresolved-scope' { return 'worktree-only' }
+        'readonly-deterministic-work' {
+            foreach ($requirement in @('self-contained-objective', 'completion-evidence', 'decisions-resolved', 'safe-continuation', 'budget', 'blocked-conditions', 'non-overlapping-writer', 'read-only')) {
+                if ($Scenario.requires -notcontains $requirement) { return 'missing-goal-precondition' }
+            }
+            return 'goal-only'
+        }
+        'approved-writing-no-worktree' {
+            foreach ($requirement in @('self-contained-objective', 'completion-evidence', 'decisions-resolved', 'safe-continuation', 'budget', 'blocked-conditions', 'non-overlapping-writer')) {
+                if ($Scenario.requires -notcontains $requirement) { return 'missing-goal-precondition' }
+            }
+            if ($Scenario.requires -contains 'isolated-worktree') { return 'unexpected-worktree-state' }
+            return 'worktree-required-before-goal'
+        }
+        'approved-writing-in-worktree' {
+            foreach ($requirement in @('self-contained-objective', 'completion-evidence', 'decisions-resolved', 'safe-continuation', 'budget', 'blocked-conditions', 'non-overlapping-writer', 'isolated-worktree')) {
+                if ($Scenario.requires -notcontains $requirement) { return 'missing-goal-precondition' }
+            }
+            return 'goal-in-existing-worktree'
+        }
+        'goal-new-material-decision' {
+            foreach ($requirement in @('goal-active', 'material-decision', 'pause', 'user-choice')) {
+                if ($Scenario.requires -notcontains $requirement) { return 'unsafe-goal-continuation' }
+            }
+            return 'pause-for-decision'
+        }
+        'goal-budget-reached' {
+            foreach ($requirement in @('progress-summary', 'remaining-work', 'user-choice', 'no-auto-budget', 'no-auto-resume')) {
+                if ($Scenario.requires -notcontains $requirement) { return 'unsafe-budget-continuation' }
+            }
+            return 'no-auto-resume'
+        }
+        'release-preparation' {
+            foreach ($requirement in @('package-evidence', 'release-summary', 'rollback-plan', 'ready-for-release', 'no-external-action', 'no-archive')) {
+                if ($Scenario.requires -notcontains $requirement) { return 'unsafe-release-goal' }
+            }
+            return 'goal-to-ready-for-release'
+        }
         'independent-alternatives' {
             foreach ($requirement in @('comparison-value', 'isolated-writers', 'user-decision')) {
                 if ($Scenario.requires -notcontains $requirement) {
@@ -47,11 +96,19 @@ function Get-AdvisoryVerdict {
 # Verdict expectations and fixed scenario coverage are owned by code.
 $requiredPhase8Scenarios = [ordered]@{
     'small-question'                = @{ situation = 'short-question';                          expected = 'neither' }
+    'clear-bounded-fast-path'       = @{ situation = 'clear-bounded-request';                   expected = 'fast-path-no-interview' }
+    'complex-adaptive-interview'    = @{ situation = 'complex-unresolved-request';              expected = 'adaptive-interview-no-goal' }
     'long-requirements'             = @{ situation = 'long-structured-input';                   expected = 'focus' }
     'unresolved-ui-direction'       = @{ situation = 'ui-direction-unresolved';                 expected = 'focus-no-goal' }
     'approved-feature'              = @{ situation = 'approved-multi-step-implementation';      expected = 'worktree-goal' }
     'incomplete-goal-request'       = @{ situation = 'approved-multi-step-implementation';      expected = 'missing-goal-precondition' }
     'isolation-without-finish-line' = @{ situation = 'isolation-needed-unresolved-scope';       expected = 'worktree-only' }
+    'readonly-verification-goal'    = @{ situation = 'readonly-deterministic-work';              expected = 'goal-only' }
+    'writing-without-worktree'      = @{ situation = 'approved-writing-no-worktree';             expected = 'worktree-required-before-goal' }
+    'writing-in-existing-worktree'  = @{ situation = 'approved-writing-in-worktree';             expected = 'goal-in-existing-worktree' }
+    'goal-material-decision'        = @{ situation = 'goal-new-material-decision';               expected = 'pause-for-decision' }
+    'goal-budget-limited'           = @{ situation = 'goal-budget-reached';                      expected = 'no-auto-resume' }
+    'release-preparation-goal'      = @{ situation = 'release-preparation';                      expected = 'goal-to-ready-for-release' }
     'alternative-comparison'        = @{ situation = 'independent-alternatives';                expected = 'multirun-isolated' }
     'unsafe-multirun'               = @{ situation = 'independent-alternatives';                expected = 'missing-multirun-precondition' }
     'release-boundary'              = @{ situation = 'release-action';                          expected = 'stop-for-approval' }
@@ -158,12 +215,12 @@ $unknownVerdict = Get-AdvisoryVerdict -Scenario $mutatedTarget
 Assert-True -Condition ($unknownVerdict -ceq 'unknown-situation') -Message 'Phase 8 gate must classify an unknown situation as unknown-situation.'
 
 $guide = Get-Content -LiteralPath $guidePath -Raw
-foreach ($rule in @('Choose The Smallest Mode', 'Suggested Objective Template', 'Evaluating', 'backgroundJobs.continueOnIdle', 'Folder And Project Memory Conventions', 'MultiRun')) {
+foreach ($rule in @('Choose The Smallest Mode', 'Adaptive Interview', 'Suggested Objective Template', 'Pause And Blocked Conditions', 'Goal In Release', 'ready for release', 'Evaluating', 'backgroundJobs.continueOnIdle', 'Folder And Project Memory Conventions', 'MultiRun')) {
     Assert-True -Condition $guide.Contains($rule) -Message "Operating guide is missing required rule: $rule"
 }
 
 $prompt = Get-Content -LiteralPath $promptPath -Raw
-foreach ($rule in @('OpenChamber recommendation', 'self-contained finish line', 'never arm, resume, change its budget', 'Evaluating', 'MultiRun', 'explicit user approval')) {
+foreach ($rule in @('Give one brief', 'After every completed workflow step', 'Do not apply a fixed question count', 'writing work only', 'read-only deterministic work', 'ready for release', 'outside the Goal boundary', 'never arm, resume, change its budget', 'Evaluating', 'MultiRun', 'explicit user approval')) {
     Assert-True -Condition $prompt.Contains($rule) -Message "Orchestrator prompt is missing required Phase 8 rule: $rule"
 }
 

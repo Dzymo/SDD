@@ -3,6 +3,8 @@ param(
     [string]$Root
 )
 
+Set-StrictMode -Version Latest
+
 if ([string]::IsNullOrWhiteSpace($Root)) {
     $Root = Split-Path -Parent $PSScriptRoot
 }
@@ -18,6 +20,9 @@ function Assert-True {
 function Get-TestHash {
     param([string]$Path)
 
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        return 'ABSENT'
+    }
     return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash
 }
 
@@ -26,29 +31,73 @@ function Set-TestFile {
 
     $parent = Split-Path -Parent $Path
     if (-not (Test-Path -LiteralPath $parent -PathType Container)) {
-        New-Item -ItemType Directory -Path $parent -Force | Out-Null
+        New-Item -ItemType Directory -Path $parent -Force -ErrorAction Stop | Out-Null
     }
-    Set-Content -LiteralPath $Path -Value $Content -Encoding Ascii
+    [System.IO.File]::WriteAllText($Path, $Content, [System.Text.Encoding]::ASCII)
+}
+
+function New-TestEntry {
+    param(
+        [string]$Target,
+        [string]$Backup,
+        [string]$BeforeSha256,
+        [string]$AfterSha256
+    )
+
+    return [ordered]@{
+        Target = $Target
+        Backup = $Backup
+        BeforeSha256 = $BeforeSha256
+        AfterSha256 = $AfterSha256
+    }
 }
 
 function New-TestManifest {
     param(
         [string]$Path,
-        [string]$Target,
-        [string]$Backup,
-        [string]$BeforeSha256
+        [object[]]$Entries
     )
 
+    $parent = Split-Path -Parent $Path
+    if (-not (Test-Path -LiteralPath $parent -PathType Container)) {
+        New-Item -ItemType Directory -Path $parent -Force -ErrorAction Stop | Out-Null
+    }
     [ordered]@{
         phase = 'phase-12-test'
-        entries = @(
-            [ordered]@{
-                Target = $Target
-                Backup = $Backup
-                BeforeSha256 = $BeforeSha256
-            }
-        )
+        entries = $Entries
     } | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $Path -Encoding Ascii
+}
+
+function New-RestoreCase {
+    param(
+        [string]$CaseName,
+        [string]$RelativeTarget,
+        [string]$BeforeContent = 'baseline-value',
+        [string]$AfterContent = 'candidate-value'
+    )
+
+    $caseRoot = Join-Path $script:TemporaryRoot $CaseName
+    New-Item -ItemType Directory -Path $caseRoot -Force -ErrorAction Stop | Out-Null
+    $target = Join-Path $script:OpenCodeRoot $RelativeTarget
+    $backup = Join-Path $caseRoot 'backup.bin'
+    $manifest = Join-Path $caseRoot 'manifest.json'
+    Set-TestFile -Path $target -Content $AfterContent
+    Set-TestFile -Path $backup -Content $BeforeContent
+    $entry = New-TestEntry `
+        -Target $target `
+        -Backup $backup `
+        -BeforeSha256 (Get-TestHash -Path $backup) `
+        -AfterSha256 (Get-TestHash -Path $target)
+    New-TestManifest -Path $manifest -Entries @($entry)
+
+    return [pscustomobject]@{
+        Root = $caseRoot
+        Target = $target
+        Backup = $backup
+        Manifest = $manifest
+        BeforeSha256 = $entry.BeforeSha256
+        AfterSha256 = $entry.AfterSha256
+    }
 }
 
 function Invoke-RollbackTest {
@@ -56,13 +105,17 @@ function Invoke-RollbackTest {
         [string]$ManifestPath,
         [switch]$WhatIf,
         [switch]$VerifyOnly,
-        [string]$SimulatedProcessName
+        [string]$SimulatedProcessName,
+        [string]$FailCopySource,
+        [string]$FailCopyDestination
     )
 
     $previousUserProfile = $env:USERPROFILE
+    $copyFailureState = @{ Triggered = $false }
     try {
         $env:USERPROFILE = $script:TestProfile
-        # Tests control the process inventory without inspecting the real desktop.
+        Set-StrictMode -Off
+
         function Get-Process {
             [CmdletBinding()]
             param()
@@ -75,6 +128,30 @@ function Invoke-RollbackTest {
             }
             return @()
         }
+
+        function Copy-Item {
+            [CmdletBinding()]
+            param(
+                [Parameter(Mandatory)]
+                [string]$LiteralPath,
+                [Parameter(Mandatory)]
+                [string]$Destination,
+                [switch]$Force
+            )
+
+            $shouldFail = -not $copyFailureState.Triggered -and
+                -not [string]::IsNullOrWhiteSpace($FailCopySource) -and
+                -not [string]::IsNullOrWhiteSpace($FailCopyDestination) -and
+                ([System.IO.Path]::GetFullPath($LiteralPath) -eq [System.IO.Path]::GetFullPath($FailCopySource)) -and
+                ([System.IO.Path]::GetFullPath($Destination) -eq [System.IO.Path]::GetFullPath($FailCopyDestination))
+            if ($shouldFail) {
+                $copyFailureState.Triggered = $true
+                throw "Injected restore failure: $Destination"
+            }
+
+            Microsoft.PowerShell.Management\Copy-Item @PSBoundParameters
+        }
+
         try {
             if ($WhatIf) {
                 $output = & $script:RollbackScript -ManifestPath $ManifestPath -WhatIf 2>&1 | Out-String
@@ -91,9 +168,11 @@ function Invoke-RollbackTest {
             $output = ($_ | Out-String)
             $exitCode = 1
         }
+
         return [pscustomobject]@{
             ExitCode = $exitCode
             Output = $output
+            CopyFailureTriggered = $copyFailureState.Triggered
         }
     }
     finally {
@@ -101,125 +180,172 @@ function Invoke-RollbackTest {
     }
 }
 
-$rollbackScript = Join-Path $Root 'scripts\Invoke-Phase12RollbackDrill.ps1'
-Assert-True -Condition (Test-Path -LiteralPath $rollbackScript -PathType Leaf) -Message "Rollback drill script not found: $rollbackScript"
+$RollbackScript = Join-Path $Root 'scripts\Invoke-Phase12RollbackDrill.ps1'
+Assert-True -Condition (Test-Path -LiteralPath $RollbackScript -PathType Leaf) -Message "Rollback drill script not found: $RollbackScript"
 
-$temporaryRoot = Join-Path ([System.IO.Path]::GetTempPath()) "phase-12-rollback-test-$([guid]::NewGuid().ToString('N'))"
+$TemporaryRoot = Join-Path ([System.IO.Path]::GetTempPath()) "phase-12-rollback-test-$([guid]::NewGuid().ToString('N'))"
 try {
-    New-Item -ItemType Directory -Path $temporaryRoot -ErrorAction Stop | Out-Null
-    $TestProfile = Join-Path $temporaryRoot 'profile'
-    New-Item -ItemType Directory -Path $TestProfile -ErrorAction Stop | Out-Null
+    New-Item -ItemType Directory -Path $TemporaryRoot -ErrorAction Stop | Out-Null
+    $TestProfile = Join-Path $TemporaryRoot 'profile'
+    $OpenCodeRoot = Join-Path $TestProfile '.config\opencode'
+    New-Item -ItemType Directory -Path $OpenCodeRoot -Force -ErrorAction Stop | Out-Null
 
-    $validTarget = Join-Path $TestProfile '.config\opencode\sdd-personal\orchestrator.md'
-    $validBackup = Join-Path $temporaryRoot 'valid-backup.md'
-    $validManifest = Join-Path $temporaryRoot 'valid-manifest.json'
-    Set-TestFile -Path $validTarget -Content 'candidate-value'
-    Set-TestFile -Path $validBackup -Content 'baseline-value'
-    $validBeforeHash = Get-TestHash -Path $validBackup
-    New-TestManifest -Path $validManifest -Target $validTarget -Backup $validBackup -BeforeSha256 $validBeforeHash
-
-    $validResult = Invoke-RollbackTest -ManifestPath $validManifest
+    $validCase = New-RestoreCase -CaseName 'valid' -RelativeTarget 'opencode.jsonc'
+    $validResult = Invoke-RollbackTest -ManifestPath $validCase.Manifest
     Assert-True -Condition ($validResult.ExitCode -eq 0) -Message "Valid manifest restore failed.`n$($validResult.Output)"
     Assert-True -Condition ($validResult.Output.Contains('Phase 12 rollback restore: PASS')) -Message 'Valid manifest restore did not report PASS.'
-    Assert-True -Condition ((Get-TestHash -Path $validTarget) -eq $validBeforeHash) -Message 'Valid manifest restore did not restore the target hash.'
+    Assert-True -Condition ((Get-TestHash -Path $validCase.Target) -eq $validCase.BeforeSha256) -Message 'Valid manifest restore did not restore the target hash.'
 
-    $verifyResult = Invoke-RollbackTest -ManifestPath $validManifest -VerifyOnly
+    $verifyResult = Invoke-RollbackTest -ManifestPath $validCase.Manifest -VerifyOnly
     Assert-True -Condition ($verifyResult.ExitCode -eq 0) -Message "Valid manifest verification failed.`n$($verifyResult.Output)"
     Assert-True -Condition ($verifyResult.Output.Contains('Phase 12 rollback verification: PASS')) -Message 'Valid manifest verification did not report PASS.'
 
-    $noRuntimeTarget = Join-Path $TestProfile '.config\opencode\sdd-personal\no-runtime.md'
-    $noRuntimeBackup = Join-Path $temporaryRoot 'no-runtime-backup.md'
-    $noRuntimeManifest = Join-Path $temporaryRoot 'no-runtime-manifest.json'
-    Set-TestFile -Path $noRuntimeTarget -Content 'candidate-value'
-    Set-TestFile -Path $noRuntimeBackup -Content 'baseline-value'
-    $noRuntimeBeforeHash = Get-TestHash -Path $noRuntimeBackup
-    New-TestManifest -Path $noRuntimeManifest -Target $noRuntimeTarget -Backup $noRuntimeBackup -BeforeSha256 $noRuntimeBeforeHash
+    $absentRoot = Join-Path $TemporaryRoot 'absent-valid'
+    New-Item -ItemType Directory -Path $absentRoot -Force -ErrorAction Stop | Out-Null
+    $absentTarget = Join-Path $OpenCodeRoot 'oh-my-opencode-slim.json'
+    $absentManifest = Join-Path $absentRoot 'manifest.json'
+    Set-TestFile -Path $absentTarget -Content 'candidate-created-by-apply'
+    $absentAfterHash = Get-TestHash -Path $absentTarget
+    New-TestManifest -Path $absentManifest -Entries @(
+        (New-TestEntry -Target $absentTarget -Backup 'ABSENT' -BeforeSha256 'ABSENT' -AfterSha256 $absentAfterHash)
+    )
+    $absentResult = Invoke-RollbackTest -ManifestPath $absentManifest
+    Assert-True -Condition ($absentResult.ExitCode -eq 0) -Message "ABSENT restore failed.`n$($absentResult.Output)"
+    Assert-True -Condition ((Get-TestHash -Path $absentTarget) -eq 'ABSENT') -Message 'ABSENT restore did not remove the created target.'
+    $absentVerifyResult = Invoke-RollbackTest -ManifestPath $absentManifest -VerifyOnly
+    Assert-True -Condition ($absentVerifyResult.ExitCode -eq 0) -Message "ABSENT verification failed.`n$($absentVerifyResult.Output)"
 
-    # An empty simulated inventory proves the process guard permits a real restore.
-    $noRuntimeResult = Invoke-RollbackTest -ManifestPath $noRuntimeManifest
-    Assert-True -Condition ($noRuntimeResult.ExitCode -eq 0) -Message "Rollback failed without a runtime process.`n$($noRuntimeResult.Output)"
-    Assert-True -Condition ($noRuntimeResult.Output.Contains('Phase 12 rollback restore: PASS')) -Message 'Rollback without a runtime process did not report PASS.'
-    Assert-True -Condition ((Get-TestHash -Path $noRuntimeTarget) -eq $noRuntimeBeforeHash) -Message 'Rollback without a runtime process did not restore the target hash.'
+    $staleCase = New-RestoreCase -CaseName 'stale-current' -RelativeTarget 'oh-my-opencode-slim\sdd-personal\orchestrator.md'
+    Set-TestFile -Path $staleCase.Target -Content 'user-changed-after-apply'
+    $staleHash = Get-TestHash -Path $staleCase.Target
+    $staleResult = Invoke-RollbackTest -ManifestPath $staleCase.Manifest
+    Assert-True -Condition ($staleResult.ExitCode -ne 0) -Message 'A stale current target unexpectedly restored.'
+    Assert-True -Condition ($staleResult.Output.Contains('target hash does not match AfterSha256')) -Message "A stale current target did not report the AfterSha256 mismatch.`n$($staleResult.Output)"
+    Assert-True -Condition ((Get-TestHash -Path $staleCase.Target) -eq $staleHash) -Message 'A stale current target was modified.'
 
-    $malformedManifestTarget = Join-Path $TestProfile '.config\opencode\sdd-personal\malformed-manifest.md'
-    $malformedManifest = Join-Path $temporaryRoot 'malformed-manifest.json'
-    Set-TestFile -Path $malformedManifestTarget -Content 'candidate-value'
-    Set-TestFile -Path $malformedManifest -Content '{ invalid json'
-    $malformedCandidateHash = Get-TestHash -Path $malformedManifestTarget
+    $staleAbsentRoot = Join-Path $TemporaryRoot 'stale-absent'
+    New-Item -ItemType Directory -Path $staleAbsentRoot -Force -ErrorAction Stop | Out-Null
+    $staleAbsentTarget = Join-Path $OpenCodeRoot 'oh-my-opencode-slim\sdd-personal\explorer.md'
+    $staleAbsentManifest = Join-Path $staleAbsentRoot 'manifest.json'
+    Set-TestFile -Path $staleAbsentTarget -Content 'candidate-created-by-apply'
+    New-TestManifest -Path $staleAbsentManifest -Entries @(
+        (New-TestEntry -Target $staleAbsentTarget -Backup 'ABSENT' -BeforeSha256 'ABSENT' -AfterSha256 (Get-TestHash -Path $staleAbsentTarget))
+    )
+    Set-TestFile -Path $staleAbsentTarget -Content 'user-replaced-created-target'
+    $staleAbsentHash = Get-TestHash -Path $staleAbsentTarget
+    $staleAbsentResult = Invoke-RollbackTest -ManifestPath $staleAbsentManifest
+    Assert-True -Condition ($staleAbsentResult.ExitCode -ne 0) -Message 'A stale ABSENT target was unexpectedly removed.'
+    Assert-True -Condition ($staleAbsentResult.Output.Contains('target hash does not match AfterSha256')) -Message "A stale ABSENT target did not report the AfterSha256 mismatch.`n$($staleAbsentResult.Output)"
+    Assert-True -Condition ((Get-TestHash -Path $staleAbsentTarget) -eq $staleAbsentHash) -Message 'A stale ABSENT target was removed or modified.'
 
-    $malformedManifestResult = Invoke-RollbackTest -ManifestPath $malformedManifest
-    Assert-True -Condition ($malformedManifestResult.ExitCode -ne 0) -Message 'Malformed manifest unexpectedly ran a rollback.'
-    Assert-True -Condition (-not $malformedManifestResult.Output.Contains('Phase 12 rollback restore: PASS')) -Message 'Malformed manifest reported a rollback PASS.'
-    Assert-True -Condition (-not [string]::IsNullOrWhiteSpace($malformedManifestResult.Output)) -Message 'Malformed manifest failure did not produce an error.'
-    Assert-True -Condition ((Get-TestHash -Path $malformedManifestTarget) -eq $malformedCandidateHash) -Message 'Malformed manifest changed the candidate target.'
+    $forbiddenRoot = Join-Path $TemporaryRoot 'forbidden-target'
+    New-Item -ItemType Directory -Path $forbiddenRoot -Force -ErrorAction Stop | Out-Null
+    $forbiddenTarget = Join-Path $OpenCodeRoot 'opencode.json'
+    $forbiddenBackup = Join-Path $forbiddenRoot 'backup.json'
+    $forbiddenManifest = Join-Path $forbiddenRoot 'manifest.json'
+    Set-TestFile -Path $forbiddenTarget -Content 'candidate-value'
+    Set-TestFile -Path $forbiddenBackup -Content 'baseline-value'
+    $forbiddenHash = Get-TestHash -Path $forbiddenTarget
+    New-TestManifest -Path $forbiddenManifest -Entries @(
+        (New-TestEntry -Target $forbiddenTarget -Backup $forbiddenBackup -BeforeSha256 (Get-TestHash -Path $forbiddenBackup) -AfterSha256 $forbiddenHash)
+    )
+    $forbiddenResult = Invoke-RollbackTest -ManifestPath $forbiddenManifest
+    Assert-True -Condition ($forbiddenResult.ExitCode -ne 0) -Message 'The forbidden opencode.json target unexpectedly restored.'
+    Assert-True -Condition ($forbiddenResult.Output.Contains('not a named framework-owned target')) -Message "The forbidden target did not report the allowlist failure.`n$($forbiddenResult.Output)"
+    Assert-True -Condition ((Get-TestHash -Path $forbiddenTarget) -eq $forbiddenHash) -Message 'The forbidden target was modified.'
 
-    $badHashTarget = Join-Path $TestProfile '.config\opencode\sdd-personal\bad-hash.md'
-    $badHashBackup = Join-Path $temporaryRoot 'bad-hash-backup.md'
-    $expectedBackup = Join-Path $temporaryRoot 'expected-backup.md'
-    $badHashManifest = Join-Path $temporaryRoot 'bad-hash-manifest.json'
-    Set-TestFile -Path $badHashTarget -Content 'candidate-value'
-    Set-TestFile -Path $expectedBackup -Content 'baseline-value'
-    Set-TestFile -Path $badHashBackup -Content 'tampered-backup-value'
-    $candidateHash = Get-TestHash -Path $badHashTarget
-    New-TestManifest -Path $badHashManifest -Target $badHashTarget -Backup $badHashBackup -BeforeSha256 (Get-TestHash -Path $expectedBackup)
+    $tamperedCase = New-RestoreCase -CaseName 'tampered-backup' -RelativeTarget 'skills\ui-quality\SKILL.md'
+    Set-TestFile -Path $tamperedCase.Backup -Content 'tampered-backup-value'
+    $tamperedResult = Invoke-RollbackTest -ManifestPath $tamperedCase.Manifest
+    Assert-True -Condition ($tamperedResult.ExitCode -ne 0) -Message 'A tampered backup unexpectedly restored.'
+    Assert-True -Condition ($tamperedResult.Output.Contains('Rollback backup hash does not match BeforeSha256')) -Message "A tampered backup did not report the hash mismatch.`n$($tamperedResult.Output)"
+    Assert-True -Condition ((Get-TestHash -Path $tamperedCase.Target) -eq $tamperedCase.AfterSha256) -Message 'A tampered backup modified the target.'
 
-    $badHashResult = Invoke-RollbackTest -ManifestPath $badHashManifest
-    Assert-True -Condition ($badHashResult.ExitCode -ne 0) -Message 'Tampered backup unexpectedly restored a target.'
-    Assert-True -Condition ($badHashResult.Output.Contains('Rollback backup hash does not match BeforeSha256')) -Message "Tampered backup did not report a hash mismatch.`n$($badHashResult.Output)"
-    Assert-True -Condition ((Get-TestHash -Path $badHashTarget) -eq $candidateHash) -Message 'Tampered backup changed the target.'
+    $outsideBackupRoot = Join-Path $TemporaryRoot 'outside-backup'
+    $outsideManifestRoot = Join-Path $outsideBackupRoot 'manifest'
+    New-Item -ItemType Directory -Path $outsideManifestRoot -Force -ErrorAction Stop | Out-Null
+    $outsideBackupTarget = Join-Path $OpenCodeRoot 'skills\package-and-release\SKILL.md'
+    $outsideBackup = Join-Path $outsideBackupRoot 'backup.bin'
+    $outsideManifest = Join-Path $outsideManifestRoot 'manifest.json'
+    Set-TestFile -Path $outsideBackupTarget -Content 'candidate-value'
+    Set-TestFile -Path $outsideBackup -Content 'baseline-value'
+    $outsideBackupAfterHash = Get-TestHash -Path $outsideBackupTarget
+    New-TestManifest -Path $outsideManifest -Entries @(
+        (New-TestEntry -Target $outsideBackupTarget -Backup $outsideBackup -BeforeSha256 (Get-TestHash -Path $outsideBackup) -AfterSha256 $outsideBackupAfterHash)
+    )
+    $outsideBackupResult = Invoke-RollbackTest -ManifestPath $outsideManifest
+    Assert-True -Condition ($outsideBackupResult.ExitCode -ne 0) -Message 'A backup outside the manifest directory unexpectedly restored.'
+    Assert-True -Condition ($outsideBackupResult.Output.Contains('outside its approved root')) -Message "An outside backup did not report the containment failure.`n$($outsideBackupResult.Output)"
+    Assert-True -Condition ((Get-TestHash -Path $outsideBackupTarget) -eq $outsideBackupAfterHash) -Message 'An outside backup modified the target.'
 
-    $invalidTarget = Join-Path $temporaryRoot 'outside-opencode.txt'
-    $invalidBackup = Join-Path $temporaryRoot 'invalid-target-backup.txt'
-    $invalidManifest = Join-Path $temporaryRoot 'invalid-target-manifest.json'
-    Set-TestFile -Path $invalidTarget -Content 'candidate-value'
-    Set-TestFile -Path $invalidBackup -Content 'baseline-value'
-    $invalidTargetHash = Get-TestHash -Path $invalidTarget
-    New-TestManifest -Path $invalidManifest -Target $invalidTarget -Backup $invalidBackup -BeforeSha256 (Get-TestHash -Path $invalidBackup)
+    $preflightFirst = New-RestoreCase -CaseName 'preflight-first' -RelativeTarget 'oh-my-opencode-slim\sdd-personal\librarian.md'
+    $preflightSecond = New-RestoreCase -CaseName 'preflight-second' -RelativeTarget 'oh-my-opencode-slim\sdd-personal\fixer.md'
+    Set-TestFile -Path $preflightSecond.Target -Content 'late-invalid-current-state'
+    $preflightManifest = Join-Path $TemporaryRoot 'preflight-manifest.json'
+    New-TestManifest -Path $preflightManifest -Entries @(
+        (New-TestEntry -Target $preflightFirst.Target -Backup $preflightFirst.Backup -BeforeSha256 $preflightFirst.BeforeSha256 -AfterSha256 $preflightFirst.AfterSha256),
+        (New-TestEntry -Target $preflightSecond.Target -Backup $preflightSecond.Backup -BeforeSha256 $preflightSecond.BeforeSha256 -AfterSha256 $preflightSecond.AfterSha256)
+    )
+    $preflightFirstHash = Get-TestHash -Path $preflightFirst.Target
+    $preflightSecondHash = Get-TestHash -Path $preflightSecond.Target
+    $preflightResult = Invoke-RollbackTest -ManifestPath $preflightManifest
+    Assert-True -Condition ($preflightResult.ExitCode -ne 0) -Message 'A manifest with a late invalid entry unexpectedly restored.'
+    Assert-True -Condition ((Get-TestHash -Path $preflightFirst.Target) -eq $preflightFirstHash) -Message 'Full-manifest preflight modified the first valid target.'
+    Assert-True -Condition ((Get-TestHash -Path $preflightSecond.Target) -eq $preflightSecondHash) -Message 'Full-manifest preflight modified the late invalid target.'
 
-    $invalidTargetResult = Invoke-RollbackTest -ManifestPath $invalidManifest
-    Assert-True -Condition ($invalidTargetResult.ExitCode -ne 0) -Message 'Target outside the OpenCode root unexpectedly restored.'
-    Assert-True -Condition ($invalidTargetResult.Output.Contains('Rollback target is outside the OpenCode configuration root')) -Message "Invalid target did not report the expected boundary failure.`n$($invalidTargetResult.Output)"
-    Assert-True -Condition ((Get-TestHash -Path $invalidTarget) -eq $invalidTargetHash) -Message 'Invalid target was modified.'
+    $duplicateCase = New-RestoreCase -CaseName 'duplicate' -RelativeTarget 'oh-my-opencode-slim\sdd-personal\oracle.md'
+    $duplicateManifest = Join-Path $duplicateCase.Root 'duplicate-manifest.json'
+    $duplicateEntry = New-TestEntry -Target $duplicateCase.Target -Backup $duplicateCase.Backup -BeforeSha256 $duplicateCase.BeforeSha256 -AfterSha256 $duplicateCase.AfterSha256
+    New-TestManifest -Path $duplicateManifest -Entries @($duplicateEntry, $duplicateEntry)
+    $duplicateResult = Invoke-RollbackTest -ManifestPath $duplicateManifest
+    Assert-True -Condition ($duplicateResult.ExitCode -ne 0) -Message 'A duplicate rollback target unexpectedly restored.'
+    Assert-True -Condition ($duplicateResult.Output.Contains('duplicate target')) -Message "A duplicate target did not report the expected failure.`n$($duplicateResult.Output)"
+    Assert-True -Condition ((Get-TestHash -Path $duplicateCase.Target) -eq $duplicateCase.AfterSha256) -Message 'A duplicate target manifest modified the target.'
 
-    $whatIfTarget = Join-Path $TestProfile '.config\opencode\sdd-personal\what-if.md'
-    $whatIfBackup = Join-Path $temporaryRoot 'what-if-backup.md'
-    $whatIfManifest = Join-Path $temporaryRoot 'what-if-manifest.json'
-    Set-TestFile -Path $whatIfTarget -Content 'candidate-value'
-    Set-TestFile -Path $whatIfBackup -Content 'baseline-value'
-    $whatIfCandidateHash = Get-TestHash -Path $whatIfTarget
-    New-TestManifest -Path $whatIfManifest -Target $whatIfTarget -Backup $whatIfBackup -BeforeSha256 (Get-TestHash -Path $whatIfBackup)
-
-    $whatIfResult = Invoke-RollbackTest -ManifestPath $whatIfManifest -WhatIf
+    $whatIfCase = New-RestoreCase -CaseName 'what-if' -RelativeTarget 'oh-my-opencode-slim\sdd-personal\designer.md'
+    $whatIfResult = Invoke-RollbackTest -ManifestPath $whatIfCase.Manifest -WhatIf
     Assert-True -Condition ($whatIfResult.ExitCode -eq 0) -Message "Rollback WhatIf failed.`n$($whatIfResult.Output)"
     Assert-True -Condition ($whatIfResult.Output.Contains('Phase 12 rollback preview: PASS')) -Message 'Rollback WhatIf did not report preview PASS.'
-    Assert-True -Condition (-not $whatIfResult.Output.Contains("The property 'Hash' cannot be found")) -Message "Rollback WhatIf must hash files without emitting provider metadata errors.`n$($whatIfResult.Output)"
-    Assert-True -Condition (-not $whatIfResult.Output.Contains('Rollback backup hash does not match BeforeSha256')) -Message "Rollback WhatIf must not report a backup mismatch for a valid manifest.`n$($whatIfResult.Output)"
-    Assert-True -Condition ((Get-TestHash -Path $whatIfTarget) -eq $whatIfCandidateHash) -Message 'Rollback WhatIf changed the target.'
+    Assert-True -Condition ((Get-TestHash -Path $whatIfCase.Target) -eq $whatIfCase.AfterSha256) -Message 'Rollback WhatIf changed the target.'
 
-    foreach ($processCase in @(
-        [pscustomobject]@{ Name = 'OpenChamber'; Label = 'OpenChamber' },
-        [pscustomobject]@{ Name = 'CPA-GUI'; Label = 'CPA GUI' },
-        [pscustomobject]@{ Name = 'opencode'; Label = 'opencode' }
-    )) {
-        $processTarget = Join-Path $TestProfile ".config\opencode\sdd-personal\blocked-$($processCase.Name).md"
-        $processBackup = Join-Path $temporaryRoot "blocked-$($processCase.Name)-backup.md"
-        $processManifest = Join-Path $temporaryRoot "blocked-$($processCase.Name)-manifest.json"
-        Set-TestFile -Path $processTarget -Content 'candidate-value'
-        Set-TestFile -Path $processBackup -Content 'baseline-value'
-        $processTargetHash = Get-TestHash -Path $processTarget
-        New-TestManifest -Path $processManifest -Target $processTarget -Backup $processBackup -BeforeSha256 (Get-TestHash -Path $processBackup)
+    $transactionFirst = New-RestoreCase -CaseName 'transaction-first' -RelativeTarget 'oh-my-opencode-slim\sdd-personal\observer.md'
+    $transactionSecond = New-RestoreCase -CaseName 'transaction-second' -RelativeTarget 'skills\source-first-research\SKILL.md'
+    $transactionManifest = Join-Path $TemporaryRoot 'transaction-manifest.json'
+    New-TestManifest -Path $transactionManifest -Entries @(
+        (New-TestEntry -Target $transactionFirst.Target -Backup $transactionFirst.Backup -BeforeSha256 $transactionFirst.BeforeSha256 -AfterSha256 $transactionFirst.AfterSha256),
+        (New-TestEntry -Target $transactionSecond.Target -Backup $transactionSecond.Backup -BeforeSha256 $transactionSecond.BeforeSha256 -AfterSha256 $transactionSecond.AfterSha256)
+    )
+    $transactionResult = Invoke-RollbackTest `
+        -ManifestPath $transactionManifest `
+        -FailCopySource $transactionSecond.Backup `
+        -FailCopyDestination $transactionSecond.Target
+    Assert-True -Condition ($transactionResult.ExitCode -ne 0) -Message 'The injected second restore failure unexpectedly passed.'
+    Assert-True -Condition $transactionResult.CopyFailureTriggered -Message 'The second restore failure injection did not run.'
+    Assert-True -Condition ($transactionResult.Output.Contains('all staged targets were restored to AfterSha256')) -Message "Rollback did not report successful compensation.`n$($transactionResult.Output)"
+    Assert-True -Condition ((Get-TestHash -Path $transactionFirst.Target) -eq $transactionFirst.AfterSha256) -Message 'Compensation did not restore the first target to AfterSha256.'
+    Assert-True -Condition ((Get-TestHash -Path $transactionSecond.Target) -eq $transactionSecond.AfterSha256) -Message 'Compensation did not preserve the second target at AfterSha256.'
 
-        $processResult = Invoke-RollbackTest -ManifestPath $processManifest -SimulatedProcessName $processCase.Name
-        Assert-True -Condition ($processResult.ExitCode -ne 0) -Message "Rollback unexpectedly ran while $($processCase.Label) was active."
-        Assert-True -Condition ($processResult.Output.Contains('Close OpenChamber and CPA GUI before a rollback drill.')) -Message "Rollback did not reject active $($processCase.Label).`n$($processResult.Output)"
-        Assert-True -Condition ($processResult.Output.Contains("$($processCase.Name) (PID 4242)")) -Message "Rollback did not identify active $($processCase.Label).`n$($processResult.Output)"
-        Assert-True -Condition ((Get-TestHash -Path $processTarget) -eq $processTargetHash) -Message "Rollback changed a target while $($processCase.Label) was active."
+    $malformedTarget = Join-Path $OpenCodeRoot 'skills\systematic-debugging\SKILL.md'
+    $malformedManifest = Join-Path $TemporaryRoot 'malformed-manifest.json'
+    Set-TestFile -Path $malformedTarget -Content 'candidate-value'
+    Set-TestFile -Path $malformedManifest -Content '{ invalid json'
+    $malformedHash = Get-TestHash -Path $malformedTarget
+    $malformedResult = Invoke-RollbackTest -ManifestPath $malformedManifest
+    Assert-True -Condition ($malformedResult.ExitCode -ne 0) -Message 'Malformed manifest unexpectedly ran a rollback.'
+    Assert-True -Condition ((Get-TestHash -Path $malformedTarget) -eq $malformedHash) -Message 'Malformed manifest changed a target.'
+
+    foreach ($processName in @('OpenChamber', 'CPA-GUI', 'opencode')) {
+        $processCase = New-RestoreCase -CaseName "blocked-$processName" -RelativeTarget 'skills\verification-before-completion\SKILL.md'
+        $processResult = Invoke-RollbackTest -ManifestPath $processCase.Manifest -SimulatedProcessName $processName
+        Assert-True -Condition ($processResult.ExitCode -ne 0) -Message "Rollback unexpectedly ran while $processName was active."
+        Assert-True -Condition ($processResult.Output.Contains('Close OpenChamber and CPA GUI before a rollback drill.')) -Message "Rollback did not reject active $processName.`n$($processResult.Output)"
+        Assert-True -Condition ((Get-TestHash -Path $processCase.Target) -eq $processCase.AfterSha256) -Message "Rollback changed a target while $processName was active."
     }
 
     'Phase 12 rollback drill: PASS'
 }
 finally {
-    if (Test-Path -LiteralPath $temporaryRoot) {
-        Remove-Item -LiteralPath $temporaryRoot -Recurse -Force -ErrorAction SilentlyContinue
+    if (Test-Path -LiteralPath $TemporaryRoot) {
+        Remove-Item -LiteralPath $TemporaryRoot -Recurse -Force -ErrorAction SilentlyContinue
     }
 }

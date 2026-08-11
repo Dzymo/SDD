@@ -1,7 +1,9 @@
 # Surface Briefs
 
-Use one short Markdown file per material route, screen, flow, or artifact that
-has an approved UI direction. For example: `docs/surfaces/onboarding.md`.
+The agent creates and maintains one short Markdown file per material route,
+screen, flow, or artifact after the user selects a UI direction in the session.
+The user should not be asked to edit this file manually. Example:
+`docs/surfaces/onboarding.md`.
 
 ## Authority
 

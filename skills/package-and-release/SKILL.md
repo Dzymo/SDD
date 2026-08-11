@@ -11,11 +11,13 @@ description: Package an application and prepare or execute a release only with c
    content-check commands. It is the project configuration for this workflow.
 2. If it is missing or incomplete, discover the supported project command from
    its declared tooling (for example, package manifest or build configuration),
-   record the proposed command and artifact, and do not invent a publish or
-   deploy command.
+   interview the user only for unresolved material release facts, then create or
+   update `PACKAGE.md` yourself. Never ask the user to fill a project file
+   manually, and do not invent a publish or deploy command.
 3. Keep the command, intended version, expected artifact, clean-environment
-   smoke check, content exclusions, and rollback procedure in the active
-   OpenSpec change's verification and release records.
+   smoke check, content exclusions, and rollback procedure in
+   `<changeRoot>/verification.md` and `<changeRoot>/release.md`, where
+   `changeRoot` comes from `openspec status --change <name> --json`.
 
 ## Package Gate
 
@@ -32,6 +34,12 @@ Do not mark a package ready until fresh evidence shows all of the following:
 Package success is local evidence only. It is not permission to publish,
 deploy, push, tag, merge, or make another external write.
 
+A Session Goal may prepare the release by building, packaging, inspecting the
+artifact, running clean-environment smoke checks, calculating checksums,
+drafting release notes, collecting warnings, and preparing rollback steps. Its
+terminal state is `ready for release`. It must stop before publish, deploy, tag,
+push, merge, purchase, production mutation, or post-release archive.
+
 ## Release Gate
 
 When all package evidence is complete, present a concise release-ready summary
@@ -43,6 +51,9 @@ those values changes.
 Never infer approval from a request to “release”, a passing build, a prior
 conversation, or a prepared `release.md`. Never perform an external release
 action while approval is missing, ambiguous, or scoped to different values.
+
+Run the exact approved external action outside the Goal boundary. Do not resume
+or widen a Goal to cross the release boundary.
 
 After an approved external command succeeds, record its command, exit code,
 result identifier or URL when available, and post-release smoke result. Run

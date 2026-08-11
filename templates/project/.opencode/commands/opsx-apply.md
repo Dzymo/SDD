@@ -1,170 +1,72 @@
 ---
-description: Implement tasks from an OpenSpec change (Experimental)
+description: Tự hoàn thiện artifact, triển khai tasks và ghi bằng chứng kiểm chứng
 ---
 
-Implement tasks from an OpenSpec change.
+Triển khai change được nêu sau command: `$ARGUMENTS`.
 
-**Store selection:** If the user names a store (a store is a standalone OpenSpec repo registered on this machine) or the work lives in one, run `openspec store list --json` to discover registered store ids, then pass `--store <id>` on the commands that read or write specs and changes (`new change`, `status`, `instructions`, `list`, `show`, `validate`, `archive`, `doctor`, `context`). Other commands do not take the flag. Hints printed by commands already carry the flag; keep it on follow-ups. Without a store, commands act on the nearest local `openspec/` root.
+## Hợp Đồng Session
 
-**Input**: Optionally specify a change name (e.g., `/opsx-apply add-auth`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
+Contract markers: `SESSION-FIRST`, `USER-NO-FILE-EDIT`, `ADAPTIVE-INTERVIEW`,
+`DECISION-READY-STOP`, `GOAL-SAFETY`, `NEXT-ACTION`,
+`OPENCHAMBER-ADVICE`.
 
-**Steps**
+- Never ask the user to create or edit project files. Agent tự cập nhật artifact,
+  mã nguồn, task checkbox và bằng chứng; người dùng chỉ quyết định material
+  deviation hoặc phê duyệt hành động bên ngoài.
+- Khi có lựa chọn kỹ thuật quan trọng, phỏng vấn theo chủ đề, trình bày một nhóm
+  phương án dễ so sánh và khuyến nghị một hướng. Cho phép người dùng giao AI
+  chọn mặc định kỹ thuật có thể đảo ngược và rủi ro thấp.
+- Cuối mỗi phản hồi quan trọng luôn có `Bước tiếp theo:` và
+  `Cách làm phù hợp:`.
 
-1. **Select the change**
+## Cách Thực Hiện
 
-   If a name is provided, use it. Otherwise:
-   - Infer from conversation context if the user mentioned a change
-   - Auto-select if only one active change exists
-   - If ambiguous, run `openspec list --json` to get available changes and use the **AskUserQuestion tool** to let the user select
+1. Chọn change từ input hoặc ngữ cảnh. Nếu mơ hồ, chạy `openspec list --json`
+   và hỏi người dùng chọn; luôn thông báo change đang dùng.
+2. Xác định local root hoặc store, rồi chạy:
 
-   Always announce: "Using change: <name>" and how to override (e.g., `/opsx-apply <other>`).
-
-2. **Check status to understand the schema**
    ```bash
    openspec status --change "<name>" --json
-   ```
-   Parse the JSON to understand:
-   - `schemaName`: The workflow being used (e.g., "spec-driven")
-   - `planningHome`, `changeRoot`, and `actionContext`: planning scope and edit constraints
-   - Which artifact contains the tasks (typically "tasks" for spec-driven, check status for others)
-
-3. **Get apply instructions**
-
-   ```bash
    openspec instructions apply --change "<name>" --json
    ```
 
-   This returns:
-   - `contextFiles`: artifact ID -> array of concrete file paths (varies by schema)
-   - Progress (total, complete, remaining)
-   - Task list with status
-   - Dynamic instruction based on current state
+3. Nếu apply trả về `blocked`, profile core provides no built-in continuation surface.
+   Agent tự phục hồi, không giao người dùng sửa file:
+   - Đọc từng artifact `not_done` từ status.
+   - Chạy `openspec instructions <artifact-id> --change "<name>" --json`.
+   - Đọc mọi `contextFiles`, tự ghi đúng `resolvedOutputPath`, rồi chạy lại status.
+   - Lặp đến khi apply là `ready` hoặc `in_progress`.
+   - Chỉ phỏng vấn người dùng khi thiếu một quyết định material.
+4. Đọc mọi file trong `contextFiles` của apply instructions. Tôn trọng
+   `actionContext`, allowed edit roots, proposal, specs, design và tasks.
+5. Trước implementation nhiều bước, đưa `Cách làm phù hợp:`. Công việc ghi code
+   chỉ được đề xuất Worktree + Goal khi scope, quyết định, completion evidence,
+   blocked conditions và writer ownership đã rõ. Goal đơn lẻ chỉ dùng cho
+   read-only/deterministic work hoặc session đã ở trong worktree; không tự bật,
+   resume hoặc tăng budget.
+6. Thực hiện từng task pending với thay đổi nhỏ nhất đúng yêu cầu. Chạy focused
+   validation, rồi đổi `- [ ]` thành `- [x]` ngay khi task thực sự hoàn thành.
+7. Nếu implementation làm lộ vấn đề trong spec/design, tự đề xuất phương án và
+   cập nhật artifact sau quyết định của người dùng. Không yêu cầu họ sửa file.
+8. Với bug hồi quy hoặc hành vi rủi ro, tạo focused regression check khi phù hợp.
+   Sau hai lần sửa thất bại, dừng blind repair và đánh giá lại root cause.
+9. Sau task cuối, chạy project-native checks và strict validation. Tạo hoặc cập
+   nhật `<changeRoot>/verification.md` với command, exit code, requirement
+   coverage và remaining uncertainty.
 
-   **Handle states:**
-   - If `state: "blocked"` (missing artifacts): the generated `core` profile
-     provides no built-in continuation surface; complete the missing artifact
-     directly through the installed CLI. Use AskUserQuestion only when the
-     missing artifact is genuinely ambiguous. Concrete recovery steps:
-     1. Run `openspec status --change "<name>" --json` and read the
-        `artifacts` list. Each `not_done` artifact has a stable `id`.
-     2. For each missing artifact, run
-        `openspec instructions <artifact-id> --change "<name>" --json`. The
-        CLI returns the schema-specific frontmatter, required sections, and
-        any `contextFiles` paths to populate.
-     3. Read every `contextFiles` path returned by the instructions. Do not
-        assume the default `proposal`, `specs`, `design`, or `tasks` paths;
-        some schemas relocate them.
-     4. Create or update the artifact at the resolved path so it matches the
-        CLI's required structure, then re-run
-        `openspec status --change "<name>" --json`. Repeat until no listed
-        artifact is `not_done`.
-     5. Re-run `openspec instructions apply --change "<name>" --json`. The
-        `state` should now be `ready` or `in_progress` rather than `blocked`.
-   - If `state: "all_done"`: congratulate, suggest archive
-   - Otherwise: proceed to implementation
+## Kết Thúc
 
-4. **Read context files**
+- Nếu còn delta spec chưa đồng bộ:
 
-   Read every file path listed under `contextFiles` from the apply instructions output.
-   The files depend on the schema being used:
-   - **spec-driven**: proposal, specs, design, tasks
-   - Other schemas: follow the contextFiles from CLI output
+  ```text
+  Bước tiếp theo: /opsx-sync <change-name>
+  Cách làm phù hợp: Không dùng Goal nếu chỉ còn đồng bộ và rà soát ngắn.
+  ```
 
-5. **Show current progress**
-
-   Display:
-   - Schema being used
-   - Progress: "N/M tasks complete"
-   - Remaining tasks overview
-   - Dynamic instruction from CLI
-
-6. **Implement tasks (loop until done or blocked)**
-
-   For each pending task:
-   - Show which task is being worked on
-   - Make the code changes required
-   - Keep changes minimal and focused
-   - Mark task complete in the tasks file: `- [ ]` → `- [x]`
-   - Continue to next task
-
-   **Pause if:**
-   - Task is unclear → ask for clarification
-   - Implementation reveals a design issue → suggest updating artifacts
-   - Error or blocker encountered → report and wait for guidance
-   - User interrupts
-
-7. **On completion or pause, show status**
-
-   Display:
-   - Tasks completed this session
-   - Overall progress: "N/M tasks complete"
-   - If all done: suggest archive
-   - If paused: explain why and wait for guidance
-
-**Output During Implementation**
-
-```
-## Implementing: <change-name> (schema: <schema-name>)
-
-Working on task 3/7: <task description>
-[...implementation happening...]
-✓ Task complete
-
-Working on task 4/7: <task description>
-[...implementation happening...]
-✓ Task complete
-```
-
-**Output On Completion**
-
-```
-## Implementation Complete
-
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Progress:** 7/7 tasks complete ✓
-
-### Completed This Session
-- [x] Task 1
-- [x] Task 2
-...
-
-All tasks complete! You can archive this change with `/opsx-archive`.
-```
-
-**Output On Pause (Issue Encountered)**
-
-```
-## Implementation Paused
-
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Progress:** 4/7 tasks complete
-
-### Issue Encountered
-<description of the issue>
-
-**Options:**
-1. <option 1>
-2. <option 2>
-3. Other approach
-
-What would you like to do?
-```
-
-**Guardrails**
-- Keep going through tasks until done or blocked
-- Always read context files before starting (from the apply instructions output)
-- If task is ambiguous, pause and ask before implementing
-- If implementation reveals issues, pause and suggest artifact updates
-- Keep code changes minimal and scoped to each task
-- Update task checkbox immediately after completing each task
-- Pause on errors, blockers, or unclear requirements - don't guess
-- Use contextFiles from CLI output, don't assume specific file names
-
-**Fluid Workflow Integration**
-
-This skill supports the "actions on a change" model:
-
-- **Can be invoked anytime**: Before all artifacts are done (if tasks exist), after partial implementation, interleaved with other actions
-- **Allows artifact updates**: If implementation reveals design issues, suggest updating artifacts - not phase-locked, work fluidly
+- Nếu cần package/release, Goal có thể build/package, kiểm tra artifact, chạy
+  clean smoke, tính checksum, chuẩn bị release notes, cảnh báo và rollback đến
+  `ready for release`. Goal phải dừng trước publish, deploy, tag, push, merge,
+  production mutation hoặc archive. Tiếp tục trong session để agent xin explicit
+  approval và tự cập nhật `PACKAGE.md`, `verification.md`, `release.md`.
+- Chỉ đề xuất `/opsx-archive <change-name>` sau khi mọi release, approval,
+  post-release smoke và strict validation bắt buộc đã hoàn tất.

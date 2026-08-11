@@ -22,9 +22,12 @@ activate a global prompt.
    silently override a higher authority.
 
 For a small extension, inherit the established surface. For a new or material
-redesign with no approved direction, present at most three structurally distinct
-directions and wait for the user's selection unless they explicitly delegate it.
-Direction selection is not final visual approval.
+redesign with no approved direction, present a manageable comparison of
+structurally distinct directions, commonly two or three. Group or offer more
+when omitting one would hide an important trade-off, then wait for the user's
+selection unless they explicitly delegate it. Interview by coherent design
+topic without a fixed question or round count. Direction selection is not final
+visual approval.
 
 ## Surface Brief
 

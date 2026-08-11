@@ -56,11 +56,11 @@ function Restore-Target {
 $configSource = Join-Path $Root 'config\oh-my-opencode-slim\sdd-personal.json'
 $sources = @(
     [pscustomobject]@{ Name = 'oh-my-opencode-slim.json'; Source = $configSource; Target = $PluginTarget; Merge = 'fixer.skills' },
-    [pscustomobject]@{ Name = 'orchestrator.md'; Source = (Join-Path $Root 'prompts\oh-my-opencode-slim\sdd-personal\orchestrator.md'); Target = $OrchestratorPromptTarget },
-    [pscustomobject]@{ Name = 'fixer.md'; Source = (Join-Path $Root 'prompts\oh-my-opencode-slim\sdd-personal\fixer.md'); Target = $FixerPromptTarget },
-    [pscustomobject]@{ Name = 'oracle.md'; Source = (Join-Path $Root 'prompts\oh-my-opencode-slim\sdd-personal\oracle.md'); Target = $OraclePromptTarget },
-    [pscustomobject]@{ Name = 'systematic-debugging.SKILL.md'; Source = (Join-Path $Root 'skills\systematic-debugging\SKILL.md'); Target = $DebuggingSkillTarget },
-    [pscustomobject]@{ Name = 'verification-before-completion.SKILL.md'; Source = (Join-Path $Root 'skills\verification-before-completion\SKILL.md'); Target = $VerificationSkillTarget }
+    [pscustomobject]@{ Name = 'orchestrator.md'; Source = (Join-Path $Root 'prompts\oh-my-opencode-slim\sdd-personal\orchestrator.md'); Target = $OrchestratorPromptTarget; Merge = $null },
+    [pscustomobject]@{ Name = 'fixer.md'; Source = (Join-Path $Root 'prompts\oh-my-opencode-slim\sdd-personal\fixer.md'); Target = $FixerPromptTarget; Merge = $null },
+    [pscustomobject]@{ Name = 'oracle.md'; Source = (Join-Path $Root 'prompts\oh-my-opencode-slim\sdd-personal\oracle.md'); Target = $OraclePromptTarget; Merge = $null },
+    [pscustomobject]@{ Name = 'systematic-debugging.SKILL.md'; Source = (Join-Path $Root 'skills\systematic-debugging\SKILL.md'); Target = $DebuggingSkillTarget; Merge = $null },
+    [pscustomobject]@{ Name = 'verification-before-completion.SKILL.md'; Source = (Join-Path $Root 'skills\verification-before-completion\SKILL.md'); Target = $VerificationSkillTarget; Merge = $null }
 )
 
 foreach ($path in @($PluginTarget, $BackupRoot) + $sources.Source) {
@@ -77,6 +77,8 @@ if (-not $?) {
 if (-not $?) {
     throw 'Agent-layer source validation failed; no global configuration was changed.'
 }
+
+Set-StrictMode -Version Latest
 
 $sourceConfig = Read-JsonFile -Path $configSource
 $targetConfig = Read-JsonFile -Path $PluginTarget
@@ -121,6 +123,7 @@ try {
             Target = $item.Target
             Backup = $backup
             BeforeSha256 = $beforeHash
+            Merge = $item.Merge
         }
     }
 

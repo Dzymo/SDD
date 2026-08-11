@@ -21,6 +21,7 @@ $requiredPaths = @(
     'PHASE-11-EVALUATION-AND-FAILURE-DRILLS.md',
     'PHASE-12-GLOBAL-ROLLOUT.md',
     'README.md',
+    'HUONG-DAN-SU-DUNG.md',
     'docs\architecture.md',
     'docs\agent-layer.md',
     'docs\openchamber-operating-guide.md',
@@ -127,7 +128,9 @@ $requiredPaths = @(
     'scripts\Test-CiWindowsOnlyRegression.ps1',
     'scripts\Test-ExecutionVerification.ps1',
     'scripts\Apply-ExecutionVerification.ps1',
+    'scripts\Test-ExecutionVerificationApply.ps1',
     'scripts\Test-ExecutionVerificationRuntime.ps1',
+    'scripts\Test-ManagedRuntimeIsolated.ps1',
     'scripts\Apply-OpenChamberOperatingGuide.ps1',
     'scripts\Test-OpenChamberOperatingGuide.ps1',
     'scripts\Test-OpenChamberOperatingGuideRuntime.ps1',
@@ -186,6 +189,12 @@ if (Test-Path -LiteralPath $workflowPath -PathType Leaf) {
     }
     if ($workflowContent -notmatch 'Test-ExecutionVerification\.ps1') {
         $failures += 'CI workflow must run the Phase 7 execution and verification fixture gate.'
+    }
+    if ($workflowContent -notmatch 'Test-ExecutionVerificationApply\.ps1') {
+        $failures += 'CI workflow must run the isolated Phase 7 apply regression gate.'
+    }
+    if ($workflowContent -notmatch 'Test-ManagedRuntimeIsolated\.ps1') {
+        $failures += 'CI workflow must run the isolated managed-runtime smoke.'
     }
     if ($workflowContent -notmatch 'Test-OpenChamberOperatingGuide\.ps1') {
         $failures += 'CI workflow must run the Phase 8 OpenChamber operating-guide fixture gate.'

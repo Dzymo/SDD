@@ -1,50 +1,72 @@
 ---
-description: Archive a completed, released OpenSpec change
+description: Rà soát evidence, phê duyệt và archive một change đã phát hành thành công
 ---
 
-Archive a completed OpenSpec change only after its release evidence is complete.
+Archive change được nêu sau command: `$ARGUMENTS`.
 
-**Store selection:** If the user names a store or the work belongs to a registered standalone OpenSpec store, run `openspec store list --json` and pass `--store <id>` to commands that read or write changes and specs. Otherwise, use the nearest local `openspec/` root.
+## Hợp Đồng Session
 
-**Input:** Optionally specify a change name, for example `/opsx-archive add-auth`. If it is omitted or ambiguous, run `openspec list --json` and use AskUserQuestion to select an active change. Never guess or auto-select.
+Contract markers: `SESSION-FIRST`, `USER-NO-FILE-EDIT`, `NEXT-ACTION`,
+`GOAL-SAFETY`, `OPENCHAMBER-ADVICE`.
 
-**Steps**
+- Never ask the user to create or edit project files. Agent tự tạo/cập nhật
+  `verification.md` và `release.md` từ câu trả lời, approval và command output.
+- Người dùng chỉ cần cung cấp lựa chọn hoặc explicit approval trong session.
+- Goal không được thực hiện publish, deploy, tag, push, merge, production
+  mutation hoặc archive. Command này chỉ chạy external action sau explicit
+  approval trong normal session và archive sau khi release cùng post-release
+  smoke thành công.
+- Cuối mỗi phản hồi quan trọng luôn có `Bước tiếp theo:` và
+  `Cách làm phù hợp:`.
 
-1. Run `openspec status --change "<name>" --json` and use its `schemaName`, `planningHome`, `changeRoot`, `artifactPaths`, and `artifacts` fields as the source of truth.
-2. If any artifact is not `done`, display the incomplete artifacts and abort. Complete them through the schema-specific `openspec instructions <artifact-id> --change "<name>" --json` flow, then rerun status. User confirmation cannot override this gate.
-3. Resolve the tasks artifact from status. If it exists and contains any `- [ ]` task, display the count and abort. Complete the tasks and their focused validation first. If no task artifact exists, confirm from status that the schema does not require one; otherwise abort and create it.
-4. Assess delta specs from `artifactPaths.specs.existingOutputPaths`. If sync is needed, show the combined delta summary and offer `Sync now`, `Archive without syncing`, or `Cancel`. Syncing remains the recommended choice, but it cannot bypass any completion, release, or verification gate.
-5. **Enforce framework release and approval gates before archive.** Resolve `release.md` and `verification.md` using `artifactPaths`; do not assume default filenames.
+## Cách Thực Hiện
 
-   **Release gate:** `release.md` must record the exact intended version, release notes, target, known warnings, rollback plan, external action, and explicit user approval for those exact values. It must also record the external action result and post-release smoke, both with exit code `0`. If the record is absent, incomplete, unapproved, stale for the recorded action, or failed, abort.
+1. Nếu input trống hoặc mơ hồ, chạy `openspec list --json` và hỏi người dùng
+   chọn change; không đoán. Xác định local root hoặc store.
+2. Chạy `openspec status --change "<name>" --json`. Dùng `changeRoot` làm gốc
+   cho hai evidence file mở rộng của SDD:
+   `<changeRoot>/verification.md` và `<changeRoot>/release.md`.
+3. Resolve tasks artifact từ status/instructions và đọc file thực tế. Nếu còn
+   bất kỳ checkbox `- [ ]`, artifact bắt buộc chưa hoàn tất, implementation chưa
+   xong hoặc focused validation chưa có exit code `0`, dừng archive và trả về
+   `/opsx-apply <name>`. Không tự thực hiện task, đánh dấu task hoàn tất, suy diễn
+   completion evidence hoặc cho phép confirmation bỏ qua gate. Chỉ được bổ sung
+   `verification.md` và `release.md` từ command output/approval đã thực sự tồn tại.
+4. Đánh giá delta specs. Nếu cần sync, khuyến nghị `/opsx-sync <name>`; chỉ
+   archive không sync khi người dùng chọn rõ và các gate khác vẫn đạt.
+5. **Enforce framework release and approval gates before archive.**
+   - `release.md` phải ghi đúng version, release notes, target, known warnings,
+     rollback plan, exact external action và explicit approval cho đúng bộ giá trị.
+   - Nếu thiếu dữ kiện, agent phỏng vấn và tự cập nhật file. Nếu external action
+     chưa được phê duyệt hoặc chưa chạy thành công, dừng; không tự phát hành.
+   - External action và post-release smoke phải có exit code `0`.
+6. **Pre-release validation gate:** sau external action, chạy:
 
-   **Pre-release validation gate:** Run `openspec validate <name> --strict --no-interactive` after the recorded external action. Record its exit code in `verification.md` or `release.md`. If it fails, is missing, or predates the external action, abort.
+   ```bash
+   openspec validate <name> --strict --no-interactive
+   ```
 
-   **Verification gate:** `verification.md` must record requirement coverage for every requirement introduced by the change. Uncovered requirements must be addressed before archive. If coverage cannot be demonstrated, abort.
-
-   **OpenSpec archive is forbidden without a successful recorded release.** A missing, incomplete, unapproved, or failed release is a release-not-yet-attempted condition, never a waiver.
-
-6. Run the portable installed-CLI archive command from the project root:
+   Tự ghi command, thời điểm và exit code vào evidence. Kết quả thiếu, stale
+   hoặc thất bại đều chặn archive.
+7. **Verification gate:** `verification.md` phải map mọi requirement của change
+   sang test hoặc evidence và ghi remaining uncertainty. Agent tự bổ sung từ kết
+   quả đã chạy; coverage không chứng minh được thì dừng.
+8. **OpenSpec archive is forbidden without a successful recorded release.**
+   Khi mọi gate đạt, chạy lệnh portable từ project root:
 
    ```powershell
    openspec archive <change-name>
    ```
 
-   The reviewed `@fission-ai/openspec@1.5.0` CLI manages archive naming and target existence. Do not create archive directories or move the change directory manually.
-7. Report the change name, schema, archive location, spec-sync decision, recorded approval, post-release smoke result, strict-validation result, and requirement-coverage result.
+   Giữ `--store <id>` khi change thuộc store. Không tạo hoặc di chuyển archive
+   directory thủ công; giữ nguyên `.openspec.yaml` để CLI quản lý.
 
-**Archive Abort Conditions**
+## Kết Thúc
 
-- Any artifact or task is incomplete.
-- Release evidence or explicit approval is absent or does not match the action.
-- The external action or post-release smoke failed.
-- Strict validation did not pass after the external action.
-- Requirement coverage is absent or incomplete.
+Tóm tắt archive location, quyết định sync, approval, release result,
+post-release smoke, strict validation và requirement coverage.
 
-**Guardrails**
-
-- Never archive a change with incomplete artifacts or tasks.
-- Never archive without a successful recorded release and its explicit user approval.
-- Never archive after failing, skipped, or stale strict pre-release validation.
-- Use only `openspec archive <change-name>` on Windows.
-- Preserve `.openspec.yaml`; the OpenSpec CLI moves the complete change directory.
+```text
+Bước tiếp theo: /opsx-explore <ý tưởng tiếp theo> hoặc /opsx-propose <change tiếp theo>
+Cách làm phù hợp: Không dùng Goal hoặc worktree chỉ để kết thúc một archive đã hoàn tất.
+```

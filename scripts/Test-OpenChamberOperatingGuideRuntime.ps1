@@ -35,7 +35,7 @@ if ($sourceHash -ne $targetHash) {
 }
 
 $prompt = Get-Content -LiteralPath $PromptPath -Raw
-foreach ($rule in @('OpenChamber recommendation', 'self-contained finish line', 'never arm, resume, change its budget', 'While a Session Goal shows Evaluating', 'Recommend MultiRun only', 'explicit user approval')) {
+foreach ($rule in @('Give one brief', 'Do not apply a fixed question count', 'writing work only', 'read-only deterministic work', 'ready for release', 'outside the Goal boundary', 'never arm, resume, change its budget', 'While a Session Goal shows Evaluating', 'Recommend MultiRun only', 'explicit user approval')) {
     if (-not $prompt.Contains($rule)) {
         throw "Active Orchestrator prompt is missing required Phase 8 rule: $rule"
     }

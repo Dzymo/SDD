@@ -14,7 +14,20 @@ Use this skill only for new user-visible surfaces, material visual redesigns, or
 3. `docs/surfaces/<surface>.md` owns the approved direction for one route, screen, flow, or artifact: task, chosen composition, first viewport, assets, and unresolved decisions.
 4. The implementation brief and code execute these authorities. They cannot silently change a higher authority. Pause for a user decision when they conflict.
 
-For an established surface, preserve its direction. For a new or materially redesigned surface, present no more than three distinct directions and obtain the user's choice before production code, unless the user explicitly delegates selection.
+For an established surface, preserve its direction. For a new or materially
+redesigned surface, present a manageable comparison of distinct directions,
+commonly two or three. Group or offer more when omitting one would hide an
+important trade-off. Obtain the user's choice before production code unless the
+user explicitly delegates selection.
+
+Interview adaptively by coherent design topic. Do not impose a fixed question,
+option, or conversational-round count. Stop when audience, task, constraints,
+direction, first viewport, required states, and completion evidence are
+decision-ready.
+
+The user makes choices in the session. The agent creates or updates
+`PRODUCT.md`, `DESIGN.md`, and the surface brief itself after confirmation; do
+not ask the user to edit those files manually.
 
 ## Surface Brief
 

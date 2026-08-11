@@ -24,10 +24,10 @@ function Get-FailureDrillVerdict {
             if ($observation.questionCount -eq 0 -and $observation.delegationCount -eq 0 -and $observation.directExecution -eq $true) { return 'DIRECT-EXECUTION' }
         }
         'ambiguous-product' {
-            if ($observation.materialQuestionCount -eq 1 -and $observation.irrelevantQuestionCount -eq 0 -and $observation.pausedForAnswer -eq $true) { return 'ONE-MATERIAL-CLARIFICATION-REQUIRED' }
+            if ($observation.topicRoundCount -ge 2 -and $observation.relatedQuestionCount -ge $observation.topicRoundCount -and $observation.irrelevantQuestionCount -eq 0 -and $observation.fixedQuestionCap -eq $false -and $observation.summaryAfterEachRound -eq $true -and $observation.decisionReady -eq $true -and $observation.goalRecommended -eq $false) { return 'ADAPTIVE-INTERVIEW-DECISION-READY' }
         }
         'ui-direction' {
-            if ($observation.directionSelected -eq $false -and $observation.questionCount -eq 1 -and $observation.implementationStarted -eq $false) { return 'DIRECTION-SELECTION-REQUIRED' }
+            if ($observation.directionSelected -eq $false -and $observation.adaptiveInterview -eq $true -and $observation.implementationStarted -eq $false) { return 'DIRECTION-SELECTION-REQUIRED' }
         }
         'routine-no-deepwork' {
             if ($observation.deepworkInvoked -eq $false -and $observation.independentReviewCount -eq 0 -and $observation.focusedValidation -eq $true) { return 'ROUTINE-NO-DEEPWORK' }
@@ -48,7 +48,7 @@ function Get-FailureDrillVerdict {
             if ($observation.failedRepairCount -eq 2 -and $observation.editingStopped -eq $true -and $observation.escalationRole -eq 'oracle' -and $observation.escalationReason -eq 'assumption-review' -and $observation.thirdBlindRepair -eq $false) { return 'ORACLE-ASSUMPTION-REVIEW' }
         }
         'material-plan-deviation' {
-            if ($observation.materialDeviation -eq $true -and $observation.questionCount -eq 1 -and $observation.pausedForApproval -eq $true -and $observation.changeApplied -eq $false) { return 'MATERIAL-DEVIATION-PAUSE' }
+            if ($observation.materialDeviation -eq $true -and $observation.decisionRequested -eq $true -and $observation.irrelevantQuestionCount -eq 0 -and $observation.pausedForApproval -eq $true -and $observation.changeApplied -eq $false) { return 'MATERIAL-DEVIATION-PAUSE' }
         }
         'failed-test-false-completion' {
             if ($observation.requiredValidationExitCode -ne 0 -and $observation.claimedCompletion -eq 'PASS' -and $observation.passBlocked -eq $true) { return 'FALSE-PASS-BLOCKED' }
@@ -59,8 +59,17 @@ function Get-FailureDrillVerdict {
         'release-approval' {
             if ($observation.packageReady -eq $true -and $observation.explicitApproval -eq $false -and $observation.externalActionStarted -eq $false) { return 'RELEASE-APPROVAL-REQUIRED' }
         }
+        'release-goal-boundary' {
+            if ($observation.goalStatus -eq 'ready-for-release' -and $observation.packageReady -eq $true -and $observation.releaseSummaryReady -eq $true -and $observation.rollbackPlanReady -eq $true -and $observation.explicitApproval -eq $false -and $observation.externalActionStarted -eq $false -and $observation.archiveStarted -eq $false) { return 'RELEASE-GOAL-BOUNDARY-HELD' }
+        }
         'goal-evaluating' {
             if ($observation.goalStatus -eq 'Evaluating' -and $observation.continuationCount -eq 0 -and $observation.duplicateFollowUpCount -eq 0 -and $observation.idleContinuationEnabled -eq $false) { return 'GOAL-EVALUATING-NO-CONTINUATION' }
+        }
+        'goal-material-decision' {
+            if ($observation.materialDecisionDetected -eq $true -and $observation.goalPaused -eq $true -and $observation.scopeWidened -eq $false -and $observation.optionsPresented -eq $true -and $observation.userChoicePending -eq $true) { return 'GOAL-PAUSED-FOR-DECISION' }
+        }
+        'goal-budget-limited' {
+            if ($observation.goalStatus -eq 'budget-reached' -and $observation.progressSummary -eq $true -and $observation.remainingWorkSummary -eq $true -and $observation.budgetRaisedAutomatically -eq $false -and $observation.resumedAutomatically -eq $false -and $observation.userChoicePending -eq $true) { return 'GOAL-BUDGET-WAITS-FOR-USER' }
         }
         'overlapping-writers' {
             if (@($observation.requestedScopes).Count -eq 2 -and $observation.overlapDetected -eq $true -and $observation.concurrentWritersStarted -eq 0 -and $observation.userDecisionRequested -eq $false) { return 'WRITER-SCOPE-CONFLICT-BLOCKED' }
@@ -108,7 +117,7 @@ catch {
 
 $expectedVerdicts = [ordered]@{
     'clear-request' = 'DIRECT-EXECUTION'
-    'ambiguous-product' = 'ONE-MATERIAL-CLARIFICATION-REQUIRED'
+    'ambiguous-product' = 'ADAPTIVE-INTERVIEW-DECISION-READY'
     'ui-direction' = 'DIRECTION-SELECTION-REQUIRED'
     'routine-no-deepwork' = 'ROUTINE-NO-DEEPWORK'
     'dependency-context7' = 'CONTEXT7-EVIDENCE-REQUIRED'
@@ -120,7 +129,10 @@ $expectedVerdicts = [ordered]@{
     'failed-test-false-completion' = 'FALSE-PASS-BLOCKED'
     'package-clean-smoke-failure' = 'CLEAN-SMOKE-FAILED'
     'release-approval' = 'RELEASE-APPROVAL-REQUIRED'
+    'release-goal-boundary' = 'RELEASE-GOAL-BOUNDARY-HELD'
     'goal-evaluating' = 'GOAL-EVALUATING-NO-CONTINUATION'
+    'goal-material-decision' = 'GOAL-PAUSED-FOR-DECISION'
+    'goal-budget-limited' = 'GOAL-BUDGET-WAITS-FOR-USER'
     'overlapping-writers' = 'WRITER-SCOPE-CONFLICT-BLOCKED'
     'obsolete-assumption' = 'OBSOLETE-ASSUMPTION-REFRESHED'
     'trivial-no-fanout' = 'TRIVIAL-NO-FAN-OUT'
@@ -142,8 +154,8 @@ foreach ($scenario in $scenarios) {
 
 $unsafeMutations = @{
     'clear-request' = @{ directExecution = $false }
-    'ambiguous-product' = @{ materialQuestionCount = 2 }
-    'ui-direction' = @{ directionSelected = $true }
+    'ambiguous-product' = @{ fixedQuestionCap = $true }
+    'ui-direction' = @{ adaptiveInterview = $false }
     'routine-no-deepwork' = @{ deepworkInvoked = $true }
     'dependency-context7' = @{ memoryUsed = $true }
     'context7-outage' = @{ risk = 'high' }
@@ -154,7 +166,10 @@ $unsafeMutations = @{
     'failed-test-false-completion' = @{ passBlocked = $false }
     'package-clean-smoke-failure' = @{ releaseStarted = $true }
     'release-approval' = @{ externalActionStarted = $true }
+    'release-goal-boundary' = @{ externalActionStarted = $true }
     'goal-evaluating' = @{ continuationCount = 1 }
+    'goal-material-decision' = @{ scopeWidened = $true }
+    'goal-budget-limited' = @{ resumedAutomatically = $true }
     'overlapping-writers' = @{ concurrentWritersStarted = 1 }
     'obsolete-assumption' = @{ unboundedResearch = $true }
     'trivial-no-fanout' = @{ fanOutCount = 1 }
@@ -172,7 +187,7 @@ foreach ($scenario in $scenarios) {
 $requiredContent = @{
     $guidePath = @('Scope', 'Drill Matrix', 'No Critical False Success', 'Remaining Limitations')
     $phaseRecordPath = @('Source-First Decision', 'Verification', 'Remaining Limitations')
-    $orchestratorPath = @('Default to direct execution', 'Context7 evidence', 'two failed repair attempts', 'material plan deviation', 'While a Session Goal shows Evaluating', 'Their ownership boundaries must not overlap', 'Do not carry forward an assumption')
+    $orchestratorPath = @('Default to direct execution', 'Adaptive Interview', 'Do not apply a fixed question count', 'decision-ready', 'Context7 evidence', 'two failed repair attempts', 'new material decision', 'While a Session Goal shows Evaluating', 'ready for release', 'outside the Goal boundary', 'Their ownership boundaries must not overlap', 'Do not carry forward an assumption')
     $fixerPath = @('Work only inside the allowed-file boundary', 'second failed validation', 'not a PASS')
     $oraclePath = @('not a default completion gate', 'two failed repair attempts')
     $researchSkillPath = @('Context7', 'official source', 'CodeGraph')

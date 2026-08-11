@@ -42,6 +42,7 @@ $phase6Path = Join-Path $Root 'PHASE-6-OPENSPEC-PROJECT-TEMPLATE.md'
 $rollbackPath = Join-Path $Root 'docs\rollback.md'
 $applyCmdPath = Join-Path $Root 'templates\project\.opencode\commands\opsx-apply.md'
 $archiveCmdPath = Join-Path $Root 'templates\project\.opencode\commands\opsx-archive.md'
+$syncCmdPath = Join-Path $Root 'templates\project\.opencode\commands\opsx-sync.md'
 $bootstrapReadmePath = Join-Path $Root 'templates\project\README.md'
 
 $phase5 = Read-RequiredText -Path $phase5Path
@@ -49,6 +50,7 @@ $phase6 = Read-RequiredText -Path $phase6Path
 $rollback = Read-RequiredText -Path $rollbackPath
 $applyCmd = Read-RequiredText -Path $applyCmdPath
 $archiveCmd = Read-RequiredText -Path $archiveCmdPath
+$syncCmd = Read-RequiredText -Path $syncCmdPath
 $bootstrapReadme = Read-RequiredText -Path $bootstrapReadmePath
 
 # --- Preset and prompt contracts -------------------------------------------------
@@ -179,6 +181,13 @@ Assert-Contains -Text $archiveCmd -Expected 'Verification gate' -Message 'opsx-a
 Assert-Contains -Text $archiveCmd -Expected 'OpenSpec archive is forbidden without a successful recorded release' -Message 'opsx-archive must forbid archive without a recorded release for public-boundary changes.'
 Assert-True -Condition (-not $archiveCmd.Contains('Proceed if user confirms')) -Message 'opsx-archive must not allow user confirmation to bypass incomplete artifacts or tasks.'
 Assert-True -Condition (-not $archiveCmd.Contains('archived as "no release"')) -Message 'opsx-archive must not offer a no-release archive path.'
+Assert-Contains -Text $archiveCmd -Expected 'checkbox `- [ ]' -Message 'opsx-archive must inspect unchecked tasks before archive.'
+Assert-Contains -Text $archiveCmd -Expected '/opsx-apply <name>' -Message 'opsx-archive must return incomplete work to opsx-apply.'
+Assert-Contains -Text $archiveCmd -Expected 'Không tự thực hiện task' -Message 'opsx-archive must not implement or mark incomplete tasks during archive.'
+
+Assert-Contains -Text $syncCmd -Expected 'giữ `--store <id>' -Message 'opsx-sync must preserve the selected store argument.'
+Assert-Contains -Text $syncCmd -Expected 'specification root do store metadata/CLI trả về' -Message 'opsx-sync must resolve the selected store specification root.'
+Assert-Contains -Text $syncCmd -Expected 'dừng `BLOCKED' -Message 'opsx-sync must fail closed when a store destination cannot be proven.'
 
 Assert-Contains -Text $bootstrapReadme -Expected 'openspec instructions <artifact-id> --change <name> --json' -Message 'Bootstrap README must document the concrete installed-CLI recovery flow.'
 Assert-True -Condition (-not $bootstrapReadme.Contains('/opsx-continue')) -Message 'Bootstrap README must not reference the missing /opsx-continue command.'

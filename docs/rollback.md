@@ -102,14 +102,23 @@ only to confirm the new advice is no longer active.
 
 ## Phase 7 Execution And Verification
 
-`Apply-ExecutionVerification.ps1` changes only the framework-owned
-Orchestrator, Fixer, and Oracle prompts plus the `systematic-debugging` and
-`verification-before-completion` skills. Its `phase-7-*` backup directory
-contains each pre-existing target and a SHA-256 manifest.
+`Apply-ExecutionVerification.ps1` changes only these framework-owned targets:
 
-To roll back, close OpenChamber and CPA GUI, restore only the named targets
-from that manifest, remove only a target whose manifest records `ABSENT` before
-apply, restart OpenChamber, then run:
+1. `C:\Users\quang\.config\opencode\oh-my-opencode-slim.json` by merging only
+   `presets.sdd-personal.fixer.skills` and preserving all unrelated config.
+2. The Orchestrator, Fixer, and Oracle prompts.
+3. The `systematic-debugging` and `verification-before-completion` skills.
+
+Its `phase-7-*` backup directory contains each pre-existing target and a
+manifest with `BeforeSha256`, `AfterSha256`, and the `fixer.skills` merge marker.
+
+To roll back, close OpenChamber and CPA GUI and use
+`Invoke-Phase12RollbackDrill.ps1` with that exact manifest. The command rejects
+any target outside its exact framework-owned allowlist, requires the current
+target to still match `AfterSha256`, validates every entry before mutation, and
+restores all staged targets to `AfterSha256` if any restore fails. Remove only a
+named target whose validated `BeforeSha256` and `Backup` are both `ABSENT`.
+Restart OpenChamber, then run:
 
 ```powershell
 PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-ExecutionVerificationRuntime.ps1

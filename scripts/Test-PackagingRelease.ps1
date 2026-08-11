@@ -232,9 +232,9 @@ finally {
 }
 
 $requiredContent = @{
-    $guidePath = @('Package Contract', 'Clean install/run', 'Explicit Release Approval', 'OpenSpec Archive And Rollback')
-    $skillPath = @('`PACKAGE.md`', 'explicit user approval', 'Never perform an external release', 'Do not bypass archive validation')
-    $promptPath = @('Package And Release', 'release-ready', 'explicit user approval', 'strict OpenSpec validation and archive')
+    $guidePath = @('Package Contract', 'Clean install/run', 'Goal Boundary', 'ready for release', 'outside the Goal boundary', 'Explicit Release Approval', 'OpenSpec Archive And Rollback')
+    $skillPath = @('`PACKAGE.md`', 'ready for release', 'outside the Goal boundary', 'explicit user approval', 'Never perform an external release', 'Do not bypass archive validation')
+    $promptPath = @('Package And Release', 'release-ready', 'ready for release', 'outside the Goal boundary', 'explicit user approval', 'strict OpenSpec validation and archive')
     $packageTemplatePath = @('Package/build command', 'Clean Environment Smoke', 'SHA-256', 'Rollback')
     $verificationTemplatePath = @('Package Evidence', 'Clean install/run', 'SHA-256')
     $releaseTemplatePath = @('Explicit User Approval', 'Exact external action', 'OpenSpec Archive', 'rollback')

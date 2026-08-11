@@ -1,8 +1,9 @@
 # Product And System Design
 
-> Optional. Keep this document only for enduring cross-change architecture,
-> integration, data, security, or operational decisions. Put change-specific
-> implementation decisions in that change's `design.md`.
+> Agent-maintained and optional. The user selects or approves material options
+> in the session; the agent records enduring cross-change architecture,
+> integration, data, security, visual, or operational decisions here. Put
+> change-specific implementation decisions in that change's `design.md`.
 
 ## Authority
 

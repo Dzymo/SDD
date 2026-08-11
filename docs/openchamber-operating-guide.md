@@ -20,6 +20,9 @@ destructive action.
 | UI direction requires a user choice | Focus Mode for detailed feedback if useful; no Goal | The user must approve a direction before implementation continues. |
 | Approved multi-step implementation with named checks | Worktree + Session Goal | Isolation avoids unrelated edits and the Goal can pursue a measurable finish line. |
 | Reproducible bug likely to need more than one repair | Worktree + Session Goal | The bug, allowed scope, and regression check can form a safe bounded objective. |
+| Read-only deterministic verification or package inspection | Session Goal may run without a new worktree | The objective is measurable and does not mutate source. |
+| Writing work in a session already inside an isolated worktree | Session Goal may continue in that worktree | Isolation already exists; do not create a second worktree. |
+| Writing work on the non-isolated checkout | Create a worktree before Goal | Automatic continuation must not mix with unrelated checkout changes. |
 | Isolation is useful but scope or completion evidence is incomplete | Worktree only | Work can be isolated without granting automatic continuation. |
 | Compare genuinely independent UI or architecture approaches | MultiRun with isolated runs | Separate worktrees prevent writers from changing the same checkout. |
 | Release preparation | Goal may run only to `ready for release` | Publishing, deploying, tagging, merging, purchasing, and deletion still need approval. |
@@ -27,6 +30,25 @@ destructive action.
 Focus Mode changes the composer, not the model, context, permissions, reasoning,
 or autonomy. On Windows the default shortcut is `Ctrl+Shift+E`. Avoid it when
 you need to keep consulting the transcript while writing.
+
+## Adaptive Interview
+
+Do not use a fixed question, option, or conversational-round count. Use the fast
+path when the objective, affected behavior, constraints, and completion evidence
+are already clear. When information is missing, interview by coherent topic and
+expand only when an answer can change product scope, architecture, UI, data,
+security, privacy, payment, cost, release, or verification.
+
+One turn may contain several closely related questions. Do not combine unrelated
+topics into a long form. After each round, summarize what is understood, what
+remains open, and why the next topic matters. Normally compare a small group of
+viable options, commonly two or three; group or offer more when hiding one would
+remove a material trade-off.
+
+Stop interviewing when the objective, users, in-scope/out-of-scope behavior,
+constraints, unresolved decisions, recommended direction, and completion
+evidence are decision-ready. Do not recommend a Goal while this interview is
+still resolving a material decision.
 
 ## Session Goals
 
@@ -38,6 +60,17 @@ Use a Session Goal only when all conditions hold:
 4. Multiple turns or repair attempts are likely.
 5. Further in-scope work is safe without another approval.
 6. The work does not include an unapproved external or destructive action.
+7. Valid blocked conditions are named.
+8. Writer ownership does not overlap another active lane.
+9. Work that writes code is in an OpenChamber-managed worktree. Goal without a
+   new worktree is limited to read-only/deterministic work or a session already
+   inside an isolated worktree.
+
+Do not use a Goal for interviewing, brainstorming, unresolved research, UI
+direction selection, plan revision, or waiting for product, data, security,
+privacy, payment, cost, credential, release, or external approval. Use a
+worktree without a Goal when isolation helps but the finish line is not yet
+decision-ready.
 
 ### Suggested Objective Template
 
@@ -73,11 +106,44 @@ Do not: deploy, merge, tag, or publish.
 
 OpenChamber audits progress after turns and can mark a Goal complete, blocked, or budget reached. A Goal is one per session. It remains active while the OpenChamber desktop app or server process is running, even if the browser tab is closed.
 
+### Pause And Blocked Conditions
+
+Pause the Goal and return to normal conversation when a new material product,
+UI, dependency, service, public-contract, schema, migration, security, privacy,
+payment, cost, credential, release-target, or external-action issue appears.
+Report completed work, remaining work, the blocker, viable options, and one
+recommendation. Never widen the Goal silently.
+
+When a Goal is blocked, evaluating, or budget-limited, do not send duplicate
+follow-ups, resume it, or increase its budget. Let the user choose whether to
+resolve the blocker, narrow the objective, resume, or stop.
+
 ### Budget And Safe Limits
 
 Set a budget large enough for the bounded objective, not for an open-ended project. Start with the default or a modest budget for one implementation and its focused checks. Pause and reassess when the task needs a material scope change, a third blind repair, a new external dependency, or approval for an external action.
 
 The framework deliberately keeps `backgroundJobs.continueOnIdle` disabled in oh-my-opencode-slim. OpenChamber Session Goals are the only automatic parent session continuation controller. Do not activate slim idle continuation, send manual `continue` messages during Goal evaluation, or add another continuation plugin.
+
+### Goal In Release
+
+A Goal may prepare a release by:
+
+- building or packaging;
+- checking that the expected artifact exists and carries the intended version;
+- installing or running it in a clean temporary environment;
+- running the minimal smoke check;
+- checking delivered contents;
+- calculating and recording SHA-256;
+- drafting release notes, known warnings, target, and rollback steps.
+
+Its terminal state is `ready for release`. The Goal must stop before publish,
+deploy, tag, push, merge, purchase, deletion, production mutation, or
+post-release archive. Present the exact version, notes, target, warnings,
+rollback plan, and external action for explicit user approval.
+
+Run the exact approved external action outside the Goal boundary. Archive only
+after that action succeeds, post-release smoke passes, and fresh strict OpenSpec
+validation passes. Do not resume or widen a Goal to cross the release boundary.
 
 ## Worktrees And MultiRun
 
@@ -99,15 +165,18 @@ Keep durable facts in the project that owns them, not in a session transcript or
     changes/<change>/        # proposal, design, tasks, verification, release
 ```
 
-Use `PRODUCT.md` for stable product intent, `DESIGN.md` for approved visual direction, and the active OpenSpec change for a bounded implementation's plan, tasks, evidence, and release record. Session notes may link to these artifacts but must not become a competing source of truth. Keep global prompts free of project-specific facts.
+Use `PRODUCT.md` for stable product intent, `DESIGN.md` for approved visual direction, and the active OpenSpec change for a bounded implementation's plan, tasks, evidence, and release record. The user supplies decisions in the session; the agent maintains these files and must not assign manual editing. Session notes may link to these artifacts but must not become a competing source of truth. Keep global prompts free of project-specific facts.
 
 ## Recommendation Format
 
-Keep advice to one short, actionable statement:
+After every completed workflow step or meaningful pause, give the user the next
+slash command or session action and one short mode recommendation. Keep the
+advice actionable:
 
 ```text
-OpenChamber recommendation: Worktree + Session Goal.
-Reason: the approved implementation has named passing checks and needs several turns.
+Bước tiếp theo: /opsx-apply add-status-endpoint
+Cách làm phù hợp: Worktree + Goal.
+Lý do: phần triển khai đã được duyệt, có nhiều bước và có kiểm tra hoàn thành rõ ràng.
 ```
 
 For a Goal, follow with one suggested self-contained objective. For normal chat, do not add advice unless it changes the next action.

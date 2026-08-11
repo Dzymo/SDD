@@ -25,7 +25,8 @@ model compliance in an unobserved future task.
 | `skills\verification-before-completion\SKILL.md` | Compact completion gate requiring fresh command output and exit-code inspection. |
 | `fixtures\phase-7\` | Deterministic feature, bug, false-PASS, and escalation records. |
 | `scripts\Test-ExecutionVerification.ps1` | Offline policy evaluator and prompt/config contract check. |
-| `scripts\Apply-ExecutionVerification.ps1` | Fail-closed controlled global apply with a per-file backup, SHA-256 manifest, and rollback on any write failure. |
+| `scripts\Apply-ExecutionVerification.ps1` | Fail-closed controlled global apply that merges only `presets.sdd-personal.fixer.skills` into the existing slim config, copies the five reviewed prompt/skill targets, records a per-file SHA-256 manifest, and rolls back on any write failure. |
+| `scripts\Test-ExecutionVerificationApply.ps1` | Isolated apply regression proving unrelated slim configuration survives the merge and a later write failure restores the original config bytes. |
 | `scripts\Test-ExecutionVerificationRuntime.ps1` | Read-only managed-runtime validation of prompts, skills, routes, and plugin initialization. |
 
 ## Source Provenance
@@ -71,6 +72,7 @@ Run from `D:\Projects\SDD`:
 
 ```powershell
 PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-ExecutionVerification.ps1
+PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-ExecutionVerificationApply.ps1
 PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-AgentLayer.ps1
 PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-FrameworkSkeleton.ps1
 ```
@@ -85,10 +87,13 @@ that an arbitrary future model response will follow every instruction.
 ## Controlled Global Activation Record
 
 The fail-closed controlled apply completed on 2026-08-05. It validated the
-Phase 7 and agent-layer source, backed up only the three reviewed prompt targets
-and two reviewed skill targets to `phase-7-20260805-180814`, verified every
-copied SHA-256, and would restore all changed targets if a copy or manifest
-write failed. It did not alter OpenChamber state or `opencode.json`.
+Phase 7 and agent-layer source, backed up the existing slim configuration plus
+the three reviewed prompt targets and two reviewed skill targets to
+`phase-7-20260805-180814`, verified every after SHA-256, and would restore all
+changed targets if a merge, copy, or manifest write failed. The slim config
+operation changes only `presets.sdd-personal.fixer.skills`; it preserves the
+existing Fixer model, unrelated Fixer fields, other agents, other presets, and
+top-level configuration. It did not alter OpenChamber state or `opencode.json`.
 
 ```powershell
 PowerShell -ExecutionPolicy Bypass -File .\scripts\Apply-ExecutionVerification.ps1

@@ -53,7 +53,10 @@ jobs:
           if ($baselineHash -ne '816D84ABF3DD5923F56DF2C52F3AB7149B46654C3FBBDE9DF8760D22823DEDFC') {
             throw "Unexpected slim npm baseline hash: $baselineHash"
           }
-          $disabledToolsPatch = Join-Path $env:GITHUB_WORKSPACE 'patches\oh-my-opencode-slim-2.2.8-disabled-tools.patch'
+          $disabledToolsPatchSource = Join-Path $env:GITHUB_WORKSPACE 'patches\oh-my-opencode-slim-2.2.8-disabled-tools.patch'
+          $disabledToolsPatch = Join-Path $env:RUNNER_TEMP 'oh-my-opencode-slim-2.2.8-disabled-tools.patch'
+          $disabledToolsPatchText = [System.IO.File]::ReadAllText($disabledToolsPatchSource).Replace("`r`n", "`n")
+          [System.IO.File]::WriteAllText($disabledToolsPatch, $disabledToolsPatchText, [System.Text.UTF8Encoding]::new($false))
           git -c core.autocrlf=false -c core.eol=lf -C $packageRoot apply --check --whitespace=nowarn $disabledToolsPatch
           if ($LASTEXITCODE -ne 0) {
             exit $LASTEXITCODE
@@ -66,7 +69,10 @@ jobs:
           if ($disabledToolsHash -ne '3D70AB6200A5AF7718BFFCF229D985A9C8E2925BA0AD7676046C274E57E65CC5') {
             throw "Unexpected disabled-tools patch hash: $disabledToolsHash"
           }
-          $observerPatch = Join-Path $env:GITHUB_WORKSPACE 'patches\oh-my-opencode-slim-2.2.8-observer-attachment.patch'
+          $observerPatchSource = Join-Path $env:GITHUB_WORKSPACE 'patches\oh-my-opencode-slim-2.2.8-observer-attachment.patch'
+          $observerPatch = Join-Path $env:RUNNER_TEMP 'oh-my-opencode-slim-2.2.8-observer-attachment.patch'
+          $observerPatchText = [System.IO.File]::ReadAllText($observerPatchSource).Replace("`r`n", "`n")
+          [System.IO.File]::WriteAllText($observerPatch, $observerPatchText, [System.Text.UTF8Encoding]::new($false))
           git -c core.autocrlf=false -c core.eol=lf -C $packageRoot apply --check --whitespace=nowarn $observerPatch
           if ($LASTEXITCODE -ne 0) {
             exit $LASTEXITCODE

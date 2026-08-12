@@ -1,0 +1,104 @@
+[
+  {
+    "name": "small-question",
+    "situation": "short-question",
+    "expected": "neither",
+    "requires": []
+  },
+  {
+    "name": "clear-bounded-fast-path",
+    "situation": "clear-bounded-request",
+    "expected": "fast-path-no-interview",
+    "requires": ["objective-clear", "scope-clear", "completion-evidence"]
+  },
+  {
+    "name": "complex-adaptive-interview",
+    "situation": "complex-unresolved-request",
+    "expected": "adaptive-interview-no-goal",
+    "requires": ["coherent-topic-rounds", "decision-ready-stop", "no-fixed-cap"]
+  },
+  {
+    "name": "long-requirements",
+    "situation": "long-structured-input",
+    "expected": "focus",
+    "requires": ["structured-input"]
+  },
+  {
+    "name": "unresolved-ui-direction",
+    "situation": "ui-direction-unresolved",
+    "expected": "focus-no-goal",
+    "requires": ["user-choice"]
+  },
+  {
+    "name": "approved-feature",
+    "situation": "approved-multi-step-implementation",
+    "expected": "worktree-goal",
+    "requires": ["self-contained-objective", "completion-evidence", "decisions-resolved", "safe-continuation", "budget", "blocked-conditions", "non-overlapping-writer", "isolated-worktree"]
+  },
+  {
+    "name": "incomplete-goal-request",
+    "situation": "approved-multi-step-implementation",
+    "expected": "missing-goal-precondition",
+    "requires": ["self-contained-objective", "completion-evidence"]
+  },
+  {
+    "name": "isolation-without-finish-line",
+    "situation": "isolation-needed-unresolved-scope",
+    "expected": "worktree-only",
+    "requires": ["isolation"]
+  },
+  {
+    "name": "readonly-verification-goal",
+    "situation": "readonly-deterministic-work",
+    "expected": "goal-only",
+    "requires": ["self-contained-objective", "completion-evidence", "decisions-resolved", "safe-continuation", "budget", "blocked-conditions", "non-overlapping-writer", "read-only"]
+  },
+  {
+    "name": "writing-without-worktree",
+    "situation": "approved-writing-no-worktree",
+    "expected": "worktree-required-before-goal",
+    "requires": ["self-contained-objective", "completion-evidence", "decisions-resolved", "safe-continuation", "budget", "blocked-conditions", "non-overlapping-writer"]
+  },
+  {
+    "name": "writing-in-existing-worktree",
+    "situation": "approved-writing-in-worktree",
+    "expected": "goal-in-existing-worktree",
+    "requires": ["self-contained-objective", "completion-evidence", "decisions-resolved", "safe-continuation", "budget", "blocked-conditions", "non-overlapping-writer", "isolated-worktree"]
+  },
+  {
+    "name": "goal-material-decision",
+    "situation": "goal-new-material-decision",
+    "expected": "pause-for-decision",
+    "requires": ["goal-active", "material-decision", "pause", "user-choice"]
+  },
+  {
+    "name": "goal-budget-limited",
+    "situation": "goal-budget-reached",
+    "expected": "no-auto-resume",
+    "requires": ["progress-summary", "remaining-work", "user-choice", "no-auto-budget", "no-auto-resume"]
+  },
+  {
+    "name": "release-preparation-goal",
+    "situation": "release-preparation",
+    "expected": "goal-to-ready-for-release",
+    "requires": ["package-evidence", "release-summary", "rollback-plan", "ready-for-release", "no-external-action", "no-archive"]
+  },
+  {
+    "name": "alternative-comparison",
+    "situation": "independent-alternatives",
+    "expected": "multirun-isolated",
+    "requires": ["comparison-value", "isolated-writers", "user-decision"]
+  },
+  {
+    "name": "unsafe-multirun",
+    "situation": "independent-alternatives",
+    "expected": "missing-multirun-precondition",
+    "requires": ["comparison-value"]
+  },
+  {
+    "name": "release-boundary",
+    "situation": "release-action",
+    "expected": "stop-for-approval",
+    "requires": ["explicit-approval"]
+  }
+]

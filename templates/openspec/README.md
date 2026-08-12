@@ -1,7 +1,9 @@
 # OpenSpec Authoring Guidance
 
-These reference templates support the default OpenSpec `spec-driven` artifact
-graph. They do not define a custom schema. For every active change, run
+These agent-maintained reference templates support the default OpenSpec
+`spec-driven` artifact graph. The user supplies decisions in the session and
+must not be asked to edit these files manually. They do not define a custom
+schema. For every active change, run
 `openspec instructions <artifact> --change <name> --json` first and use its
 returned template and resolved path as the source of truth.
 
@@ -35,5 +37,22 @@ deployment, publishing, or external write.
 - Routine inspection, focused tests, local refactors, and repairs inside the
   approved plan are not material deviations.
 
-Use `verification.md` before claiming completion. Release approval is explicit;
-after a successful release, validate strictly and archive through OpenSpec.
+The agent creates `verification.md` and `release.md` under the `changeRoot`
+returned by `openspec status`. Use verification evidence before claiming
+completion. Release approval is explicit when the change is release-applicable
+(adds or updates `PACKAGE.md`, or `proposal.md`/`design.md`/`tasks.md` specify
+package, deploy, publish, container/build artifact, tag, push, merge, release,
+or any other external write). After a successful approved external action and
+post-release smoke, validate strictly and archive through OpenSpec.
+
+For a genuine no-external-release change, the agent must still complete every
+gate (completed tasks/artifacts, full requirement coverage, fresh focused
+validation with exit code `0`, and strict `openspec validate ...` with exit
+code `0`) and record `releaseApplicable: false` plus a short reason in
+`verification.md`. User confirmation cannot bypass any gate, and a fake
+release approval or result is forbidden in either branch.
+
+A Session Goal may prepare package and release evidence only to
+`ready for release`. Publish, deploy, tag, push, merge, production mutation, and
+archive remain outside the Goal boundary and require the normal approval and
+post-release gates.

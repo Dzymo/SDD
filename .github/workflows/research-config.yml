@@ -15,6 +15,14 @@ jobs:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Validate Phase 11 evaluation and failure drills
+        shell: pwsh
+        run: ./scripts/Test-EvaluationFailureDrills.ps1
+
+      - name: Validate Phase 12 rollback drill
+        shell: pwsh
+        run: ./scripts/Test-Phase12RollbackDrill.ps1
+
       - name: Validate research MCP schema
         shell: pwsh
         run: ./scripts/Test-ResearchConfigSchema.ps1
@@ -22,6 +30,84 @@ jobs:
       - name: Validate agent layer source
         shell: pwsh
         run: ./scripts/Test-AgentLayer.ps1
+
+      - name: Validate execution and verification contracts
+        shell: pwsh
+        run: ./scripts/Test-ExecutionVerification.ps1
+
+      - name: Validate isolated execution layer apply
+        shell: pwsh
+        run: ./scripts/Test-ExecutionVerificationApply.ps1
+
+      - name: Install isolated managed runtime
+        shell: pwsh
+        run: |
+          $hostRoot = Join-Path $env:RUNNER_TEMP 'sdd-managed-runtime-host'
+          npm install --prefix $hostRoot --no-audit --no-fund opencode-ai@1.18.16 oh-my-opencode-slim@2.2.8
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
+          $packageRoot = Join-Path $hostRoot 'node_modules\oh-my-opencode-slim'
+          $distIndex = Join-Path $packageRoot 'dist\index.js'
+          $baselineHash = (Get-FileHash -LiteralPath $distIndex -Algorithm SHA256).Hash
+          if ($baselineHash -ne '816D84ABF3DD5923F56DF2C52F3AB7149B46654C3FBBDE9DF8760D22823DEDFC') {
+            throw "Unexpected slim npm baseline hash: $baselineHash"
+          }
+          $disabledToolsPatchSource = Join-Path $env:GITHUB_WORKSPACE 'patches\oh-my-opencode-slim-2.2.8-disabled-tools.patch'
+          $disabledToolsPatch = Join-Path $env:RUNNER_TEMP 'oh-my-opencode-slim-2.2.8-disabled-tools.patch'
+          $disabledToolsPatchText = [System.IO.File]::ReadAllText($disabledToolsPatchSource).Replace("`r`n", "`n")
+          [System.IO.File]::WriteAllText($disabledToolsPatch, $disabledToolsPatchText, [System.Text.UTF8Encoding]::new($false))
+          git -c core.autocrlf=false -c core.eol=lf -C $packageRoot apply --check --whitespace=nowarn $disabledToolsPatch
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
+          git -c core.autocrlf=false -c core.eol=lf -C $packageRoot apply --whitespace=nowarn $disabledToolsPatch
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
+          $disabledToolsHash = (Get-FileHash -LiteralPath $distIndex -Algorithm SHA256).Hash
+          if ($disabledToolsHash -ne '3D70AB6200A5AF7718BFFCF229D985A9C8E2925BA0AD7676046C274E57E65CC5') {
+            throw "Unexpected disabled-tools patch hash: $disabledToolsHash"
+          }
+          $observerPatchSource = Join-Path $env:GITHUB_WORKSPACE 'patches\oh-my-opencode-slim-2.2.8-observer-attachment.patch'
+          $observerPatch = Join-Path $env:RUNNER_TEMP 'oh-my-opencode-slim-2.2.8-observer-attachment.patch'
+          $observerPatchText = [System.IO.File]::ReadAllText($observerPatchSource).Replace("`r`n", "`n")
+          [System.IO.File]::WriteAllText($observerPatch, $observerPatchText, [System.Text.UTF8Encoding]::new($false))
+          git -c core.autocrlf=false -c core.eol=lf -C $packageRoot apply --check --whitespace=nowarn $observerPatch
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
+          git -c core.autocrlf=false -c core.eol=lf -C $packageRoot apply --whitespace=nowarn $observerPatch
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
+          $patchedHash = (Get-FileHash -LiteralPath $distIndex -Algorithm SHA256).Hash
+          if ($patchedHash -ne '6E6A67DF17820B6E3DCAE43BCAFD6DEA2705666A161227769AE32E2576A8989A') {
+            throw "Unexpected structured-attachment patch hash: $patchedHash"
+          }
+
+      - name: Validate isolated managed runtime
+        shell: pwsh
+        run: |
+          $hostRoot = Join-Path $env:RUNNER_TEMP 'sdd-managed-runtime-host'
+          $managed = Join-Path $hostRoot 'node_modules\.bin\opencode.cmd'
+          ./scripts/Test-ManagedRuntimeIsolated.ps1 -Managed $managed -PluginCacheSource $hostRoot
+
+      - name: Validate OpenChamber operating guide
+        shell: pwsh
+        run: ./scripts/Test-OpenChamberOperatingGuide.ps1
+
+      - name: Validate UI quality layer
+        shell: pwsh
+        run: ./scripts/Test-UIQualityLayer.ps1
+
+      - name: Validate packaging and release contracts
+        shell: pwsh
+        run: ./scripts/Test-PackagingRelease.ps1
+
+      - name: Validate strict OpenSpec project template fixture
+        shell: pwsh
+        run: ./scripts/Test-OpenSpecProjectTemplate.ps1
 
       - name: Validate Observer attachment regression source
         shell: pwsh
@@ -34,6 +120,10 @@ jobs:
       - name: Install required OpenSpec CLI
         shell: pwsh
         run: npm install --global @fission-ai/openspec@1.5.0
+
+      - name: Validate isolated OpenSpec lifecycle
+        shell: pwsh
+        run: ./scripts/Test-OpenSpecLifecycle.ps1
 
       - name: Validate OpenSpec bootstrap preflight
         shell: pwsh

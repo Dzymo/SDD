@@ -1,5 +1,9 @@
 # Product
 
+> Agent-maintained project memory. The user supplies intent, corrections, and
+> approvals in the session; the agent interviews for missing facts and updates
+> this file. Do not ask the user to fill it manually.
+
 ## Purpose
 
 <!-- What outcome does this product create, and for whom? -->

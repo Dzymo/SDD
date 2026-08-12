@@ -11,10 +11,27 @@ global OpenCode framework used through OpenChamber.
 - Target OpenCode config: `C:\Users\quang\.config\opencode`
 - Target OpenChamber config: `C:\Users\quang\.config\openchamber`
 - Distribution target: none; this is not a public project
-- Plan status: Phase 2 source skeleton, Phase 3 runtime research layer, Phase 4
-  agent-layer source and controlled global activation, and the Phase 6
-  project-local OpenSpec template are completed. Phase 5 multimedia remains
-  active and requires revalidation after its runtime dependencies change.
+- Plan status: Phases 2 and 6 are source-complete. Phases 3 and 4 are active
+  and runtime-verified. Phase 5 is active and was revalidated with its
+  preflight and live structured-attachment OCR smoke on 2026-08-05; it still
+  requires revalidation after a slim reinstall or update. Phases 7, 8, and 10
+  were controlled-applied with per-file backups and runtime-verified on
+  2026-08-05. Phase 9 is runtime-verified on 2026-08-05. Phase 11 is
+  source-complete; its offline gate covers all 21 required scenarios but is a
+  source-policy regression guard rather than live model-compliance evidence.
+  The runtime records cited above are historical active-global evidence for
+  the immutable candidate completed on 2026-08-08; the current PR head is
+  described as **source + isolated managed-runtime verified only**. The
+  active-global hash/apply/runtime verification has not been re-run for the
+  current PR head and remains a required residual gate; no global write has
+  been performed against the current PR head.
+
+Phase 12 global rollout is **complete** as of 2026-08-08 for immutable
+candidate `b75043d6097d12ac52c5bbbc3224f316c3243961`. It recorded clean-source
+and CI evidence, a no-drift diff preview, provider-backed research checks,
+fresh/existing-project smoke tests, a file-level rollback/reapply drill, and
+sanitized active-version/checksum evidence. See `PHASE-12-GLOBAL-ROLLOUT.md`
+for the completion record and its stated limitations.
 
 This file is the source of truth for framework implementation. If a later
 decision changes the architecture, model routing, safety boundary, or workflow,
@@ -202,14 +219,14 @@ Rules:
 
 ## 8. Model Routing Baseline
 
-Model routing remains provisional until Phase 1 benchmarks the exact local
-provider routes. The baseline below is the starting configuration, not a claim
-of model superiority.
+Model routing uses the active CLIProxy provider selected by Phase 1. The retired
+CPA GUI routes are historical provenance only and must not be reintroduced as a
+framework dependency or inferred from model-name suffixes.
 
 | Agent | Baseline model | Mode/variant | Role |
 |---|---|---|---|
-| Orchestrator | `cpa-gui/gpt-5.6-terra` | Effective Medium/default must be verified | Routine orchestration and decisions |
-| Oracle | `cpa-gui/gpt-5.6-sol` | Effective Medium/default must be verified | Architecture, difficult debugging, material risk, independent review |
+| Orchestrator | `cliproxy/gpt-5.6-terra` | Default `medium`; `high` is the named fallback | Routine orchestration and decisions |
+| Oracle | `cliproxy/gpt-5.6-sol` | Default `medium`; `high` is the named fallback | Architecture, difficult debugging, material risk, independent review |
 | Librarian | `minimax-coding-plan/MiniMax-M3` | `none` | Context7 and external source retrieval |
 | Explorer | `minimax-coding-plan/MiniMax-M3` | `none` | Local search and code navigation |
 | Designer | `minimax-coding-plan/MiniMax-M3` | `thinking` | Approved UI direction, implementation, and visual review |
@@ -260,7 +277,8 @@ Rules:
 3. Escalation is per task, not a permanent session-wide upgrade.
 4. XHigh work must use a fresh or narrowly scoped session, one clear question,
    explicit evidence, a findings cap, and no unapproved subagent fan-out.
-5. The framework must verify how CPA GUI model IDs map to reasoning effort.
+5. CPA GUI routes are retired from framework selection. Do not infer their old
+   suffixes or restore that provider merely to benchmark it.
 
 ## 9. Anti-Overthinking and Anti-Overengineering Policy
 
@@ -420,13 +438,20 @@ Do not import:
 
 ### 10.7 OpenSpec Explore
 
-Limit exploration to:
+Keep exploration adaptive and bounded by relevance rather than fixed counts:
 
-- one bounded pass by default;
-- at most three materially different options;
-- at most two search/retrieval batches;
-- after two conversational rounds, recommend `decide`, `formalize`, or `stop`;
-- no continuation solely to improve confidence.
+- use the fast path when the objective, affected behavior, constraints, and
+  completion evidence are already clear;
+- interview by coherent topic and expand only when an answer can change product
+  scope, architecture, UI, data, security, cost, release, or verification;
+- normally compare a small group of viable options, commonly two or three, but
+  group or reveal more when omitting one would hide a material trade-off;
+- after each round, summarize what is understood, what remains open, and why the
+  next topic matters;
+- stop when the objective, users, in-scope/out-of-scope behavior, constraints,
+  unresolved decisions, recommended direction, and completion evidence are
+  decision-ready;
+- do not continue solely to improve confidence or wording.
 
 ## 11. Research and Evidence Protocol
 
@@ -517,6 +542,19 @@ idea/context
 Use OpenSpec as the backbone. Keep its default artifact graph for the initial
 version; store optional evidence files alongside it before considering a custom
 schema.
+
+The session is the user's only authoring surface. Agents use an adaptive
+interview: they ask only about topics that can change the decision, may group
+closely related questions, summarize between rounds, and stop when the work is
+decision-ready. Options are presented in a manageable comparison rather than a
+fixed count; the user may delegate reversible low-risk technical defaults, but
+product intent, privacy, security, payment, destructive work, irreversible
+migration, release targets, and external actions remain explicit decisions.
+Agents create or update `PRODUCT.md`, `DESIGN.md`, `PACKAGE.md`, surface briefs,
+OpenSpec artifacts, verification, and release records themselves. The user is
+never assigned manual file editing. After each workflow step or meaningful
+pause, the agent names the next slash command or session action and recommends
+Focus Mode, Session Goal, worktree, MultiRun, or neither with one short reason.
 
 ### 12.2 Stage Rules
 
@@ -625,10 +663,12 @@ Mode, Session Goals, worktrees, or MultiRun.
 | Brainstorming, research, or unresolved decisions | Normal chat; Focus if useful; no Goal |
 | Approved multi-step implementation with verifiable finish line | Worktree plus Session Goal |
 | Reproducible bug with clear done criteria | Worktree plus Session Goal when multiple attempts are likely |
-| Tests/package loops with deterministic checks | Session Goal with a budget |
+| Read-only deterministic verification or package inspection | Session Goal may run without a new worktree |
+| Writing work in a session already inside an isolated worktree | Session Goal may continue in that worktree |
+| Writing work on the current non-isolated checkout | Create a worktree before recommending a Goal |
 | UI direction still needs user choice | Focus for feedback; no Goal yet |
 | Improve an existing saved plan | Normal session; do not use current `Run as goal` path |
-| Prepare release artifacts | Goal may run to `ready for release` |
+| Prepare release artifacts | Goal may run only to `ready for release` |
 | Publish, deploy, tag, merge, or purchase | Stop and request approval |
 | Compare independent UI/architecture alternatives | MultiRun with separate worktrees, only when comparison value justifies cost |
 
@@ -657,6 +697,11 @@ Recommend a Session Goal only when all are true:
 4. Multiple turns or attempts are likely.
 5. Safe in-scope work can continue without repeated approval.
 6. The objective does not include an unapproved external or destructive action.
+7. Valid blocked conditions are named.
+8. Writer ownership does not overlap another active lane.
+9. Work that writes code is in an OpenChamber-managed worktree; Goal without a
+   new worktree is limited to read-only/deterministic work or a session already
+   running in an isolated worktree.
 
 When recommending a Goal, provide:
 
@@ -666,6 +711,27 @@ When recommending a Goal, provide:
 - valid blocked conditions;
 - worktree recommendation;
 - token-budget recommendation.
+
+Do not recommend a Goal while the agent is interviewing, brainstorming,
+researching an unresolved decision, selecting a UI direction, changing a plan,
+or waiting for product, data, security, cost, credential, release, or external
+approval. Use a worktree without a Goal when isolation is useful but the finish
+line is not decision-ready.
+
+During a Goal, pause and return to normal conversation when a new material
+decision, dependency, service, public contract, schema, migration, security,
+privacy, payment, UI-direction, cost, release-target, or external-action issue
+appears. Report completed work, the blocker, options, and a recommendation. Do
+not silently widen the objective.
+
+For release preparation, a Goal may build/package, inspect the artifact, run a
+clean-environment smoke, calculate checksums, prepare release notes, collect
+warnings, and draft rollback steps. Its terminal state is `ready for release`.
+It must stop before publish, deploy, tag, push, merge, purchase, production
+mutation, or post-release archive. After the user explicitly approves the exact
+version, notes, target, warnings, rollback plan, and external action, that exact
+action runs outside the Goal boundary; archive follows only after success,
+post-release smoke, and fresh strict validation.
 
 The agent must not:
 
@@ -677,6 +743,11 @@ The agent must not:
 - send `continue` while the Goal is evaluating;
 - change Goal scope through ordinary messages without pausing first.
 
+When a Goal is blocked, evaluating, or budget-limited, do not duplicate a
+follow-up, resume it, or increase its budget. Summarize completed and remaining
+work, explain the blocker in plain language, and let the user choose whether to
+resolve, narrow, resume, or stop.
+
 After composer activation, remind the user to confirm that the Goal strip
 appears before leaving the application.
 
@@ -685,8 +756,8 @@ appears before leaving the application.
 Keep advice brief and issue it only when it changes the recommended next action.
 
 ```text
-OpenChamber recommendation: Worktree + Session Goal.
-Reason: the approved plan has a verifiable finish line and will need several turns.
+Cách làm phù hợp: Worktree + Goal.
+Lý do: kế hoạch đã được duyệt, có điểm kết thúc kiểm chứng được và cần nhiều lượt.
 ```
 
 ## 15. UI Workflow
@@ -959,11 +1030,17 @@ Complete when:
 
 Objective: make current external and local evidence available globally.
 
-Status: completed and runtime-verified on 2026-08-03. The managed OpenCode
-runtime uses the reviewed Context7 OAuth MCP and CodeGraph local MCP; Librarian
-returned versioned Context7 evidence, Explorer returned CodeGraph path/line
-evidence, and disabled-MCP fixtures established explicit fail-soft behavior.
-See `PHASE-3-RESEARCH-LAYER.md`.
+Status: source-complete; the historic 2026-08-03 runtime record is retained
+for provenance. The managed OpenCode runtime uses the reviewed Context7 OAuth
+MCP and CodeGraph local MCP; Librarian returned versioned Context7 evidence,
+Explorer returned CodeGraph path/line evidence, and disabled-MCP fixtures
+established explicit fail-soft behavior. The runtime verifier now separates
+config inspection from the prompt-based behavioral assertion; live model
+behavior under the disabled state is a manual gate, not a runtime-verified
+claim. The runtime must be re-run after any change to the verifier, the
+reviewed MCP source, the CodeGraph install, or the OpenCode version. The
+re-run is a required residual gate and has not been performed in this
+update. See `PHASE-3-RESEARCH-LAYER.md`.
 
 Tasks:
 
@@ -985,14 +1062,21 @@ Complete when:
 
 Objective: activate the lean personal orchestration preset.
 
-Status: completed on 2026-08-02. The pinned
-`oh-my-opencode-slim@2.2.8` registration, `sdd-personal` preset, targeted
-prompt replacements, and runtime/source verifiers are recorded in
-`docs/agent-layer.md`. The standalone managed CLI passes the runtime verifier,
-and the user confirmed Orchestrator, Explorer, Librarian, Oracle, Designer, and
-Fixer appear in OpenChamber after restart. Council remains disabled; Observer
-was enabled later by the verified Phase 5 structured attachment handoff.
-Phase 5 must enable Observer only after its media path is directly verified.
+Status: source-complete; historic 2026-08-02 runtime verification retained
+for provenance. The pinned `oh-my-opencode-slim@2.2.8` registration,
+`sdd-personal` preset, targeted prompt replacements, and runtime/source
+verifiers are recorded in `docs/agent-layer.md` and
+`PHASE-4-AGENT-LAYER.md`. The standalone managed CLI passed the runtime
+verifier on 2026-08-02 (before Observer was added to the verifier), and the
+user confirmed Orchestrator, Explorer, Librarian, Oracle, Designer, and Fixer
+appear in OpenChamber after restart. Council remains disabled. Observer was
+originally disabled at the Phase 4 record date and was later enabled by the
+verified Phase 5 structured attachment handoff; the runtime verifier now
+inspects Observer permissions equivalently to the other read-only agents and
+the runtime must be re-run with the updated verifier to refresh that
+evidence. The re-run is a required residual gate and has not been performed
+in this update. Phase 5 must enable Observer only after its media path is
+directly verified.
 
 Tasks:
 
@@ -1053,7 +1137,9 @@ Tasks:
 - add concise proposal, spec, design, task, verification, and release guidance;
 - add source-provenance and Context7 evidence sections;
 - add risk-based TDD and material-deviation rules;
-- generate only OpenSpec OpenCode commands;
+- keep exactly the five OpenSpec core command names, adapt their prompts for
+  session-first interviews, agent-maintained artifacts, next-command advice,
+  OpenChamber mode advice, blocked-artifact recovery, and release gates;
 - avoid custom OpenSpec schema until pilots show a need.
 
 Complete when:
@@ -1065,6 +1151,13 @@ Complete when:
 ### Phase 7 - Execution and Verification
 
 Objective: automate bounded implementation with truthful completion evidence.
+
+Status: runtime-verified on 2026-08-05. The offline evaluator and fixtures
+prove the policy contracts; the reviewed global preset prompts and skills were
+controlled-applied with per-file backup `phase-7-20260805-180814`, then
+`Test-ExecutionVerificationRuntime.ps1` passed against the managed runtime.
+This establishes the installed contract, not arbitrary future model compliance.
+See `PHASE-7-EXECUTION-AND-VERIFICATION.md`.
 
 Tasks:
 
@@ -1087,6 +1180,17 @@ Complete when:
 
 Objective: make the framework guide the user at the right moment.
 
+Status: source-only complete. The Orchestrator now contains explicit
+conditional advice for Focus Mode, Session Goals, worktrees, and MultiRun.
+`docs/openchamber-operating-guide.md`, advisory fixtures, and an offline
+evaluator document and test the user-operating contract. The runtime
+verifier hash-compares the active global Orchestrator prompt with the
+reviewed Phase 8 source before checking the required rule substrings. The
+prompt still requires the normal controlled global apply and restart before
+it is active in the managed runtime. The managed-runtime verification is a
+required residual gate and has not been re-run in this update. See
+`PHASE-8-OPENCHAMBER-OPERATING-GUIDE.md`.
+
 Tasks:
 
 - add Focus/Goal/worktree/MultiRun recommendation logic to Orchestrator;
@@ -1104,6 +1208,16 @@ Complete when:
 ### Phase 9 - UI Quality Layer
 
 Objective: support user-guided design without generic AI UI.
+
+Status: source-only complete. The framework now defines
+`PRODUCT.md`/`DESIGN.md`/surface-brief authority, contextual Impeccable and
+Taste usage, required desktop/mobile/browser/accessibility evidence, fresh
+screenshot review, and explicit human visual approval. The offline evaluator
+rejects synthetic-score proof. The source prompts and skill still require
+the normal controlled global apply and restart before they are active in
+the managed runtime. The managed-runtime verification is a required
+residual gate and has not been re-run in this update. See
+`PHASE-9-UI-QUALITY-LAYER.md`.
 
 Tasks:
 
@@ -1123,29 +1237,51 @@ Complete when:
 
 Objective: prove that deliverables, not only source code, work.
 
+Status: source-complete. The framework provides a project-local package
+contract, deterministic clean-install fixture, checksum and delivered-content
+checks, verification/release templates, explicit approval gating for external
+actions, and strict post-release OpenSpec archive rules. The offline
+evaluator and source contract pass; the historic 2026-08-04 record of the
+controlled global activation and managed-runtime verification is retained for
+provenance. The managed-runtime verification has not been re-run in this
+update and remains a required residual gate before relying on runtime
+evidence. The framework does not release any project; every external release
+remains a separately approved operation. See
+`PHASE-10-PACKAGING-AND-RELEASE.md`.
+
 Tasks:
 
-- add package-command discovery or project configuration;
-- add clean-environment install/run smoke tests;
-- add checksum and secret/file-content checks;
-- add verification and release templates;
-- enforce user approval before external release actions;
-- archive OpenSpec changes after successful release.
+- [x] add package-command discovery or project configuration;
+- [x] add clean-environment install/run smoke tests;
+- [x] add checksum and secret/file-content checks;
+- [x] add verification and release templates;
+- [x] enforce user approval before external release actions;
+- [x] archive OpenSpec changes after successful release.
 
 Complete when:
 
-- a fixture artifact installs or runs cleanly;
-- release cannot proceed without explicit approval;
-- rollback instructions are present.
+- [x] a fixture artifact installs or runs cleanly;
+- [x] release cannot proceed without explicit approval;
+- [x] rollback instructions are present.
 
 ### Phase 11 - Evaluation and Failure Drills
 
 Objective: validate behavior under realistic failure conditions.
 
+Status: source-complete. The deterministic offline evaluator derives
+outcomes for all 21 required scenarios, validates the cross-phase source
+contracts, and runs in the Windows pull-request gate. It is a source-policy
+regression guard, not live model-compliance evidence or project-native
+runtime evidence. The Context7/CodeGraph failure drills inspect the effective
+disabled configuration and the disabled-state prompt contract; live model
+behavior under the disabled state is a manual gate, not a runtime-verified
+claim. See `PHASE-11-EVALUATION-AND-FAILURE-DRILLS.md`.
+
 Required scenarios:
 
 1. Clear request requiring no question.
-2. Ambiguous product request requiring one material question.
+2. Complex product request requiring adaptive coherent-topic rounds until
+   decision-ready, without a fixed question cap or Goal.
 3. UI task requiring direction selection.
 4. Routine task that must not invoke Deepwork.
 5. Dependency requiring Context7.
@@ -1157,11 +1293,14 @@ Required scenarios:
 11. Test fails while agent tries to claim completion.
 12. Package builds but fails clean smoke test.
 13. Release requires approval.
-14. Goal is evaluating and the user sends no unnecessary continuation.
-15. Overlapping writer scopes.
-16. Long session with obsolete assumptions.
-17. Trivial task under Sol/Terra that must stop without fan-out.
-18. High-risk task where a scoped Oracle review is justified.
+14. Release Goal stops at `ready for release` without external action or archive.
+15. Goal is evaluating and the user sends no unnecessary continuation.
+16. Goal discovers a new material decision and pauses without widening scope.
+17. Goal reaches its budget and waits for user choice without auto-resume.
+18. Overlapping writer scopes.
+19. Long session with obsolete assumptions.
+20. Trivial task under Sol/Terra that must stop without fan-out.
+21. High-risk task where a scoped Oracle review is justified.
 
 Complete when:
 
@@ -1173,15 +1312,115 @@ Complete when:
 
 Objective: install the verified framework into the personal global environment.
 
-Tasks:
+Status: **complete** on 2026-08-08 for immutable candidate
+`b75043d6097d12ac52c5bbbc3224f316c3243961`. The final record in
+`PHASE-12-GLOBAL-ROLLOUT.md` contains the sanitized command outcomes,
+approvals, hashes, no-drift decisions, fresh/existing-project smoke results,
+and rollback/reapply evidence. The checklist below remains the required
+procedure for any future candidate rollout; prior evidence must not be reused
+for a changed candidate.
 
-- create final backups;
-- run dry-run or diff preview;
-- apply global configuration, prompts, skills, MCPs, and commands;
-- restart OpenCode/OpenChamber;
-- run smoke tests;
-- perform rollback drill;
-- record active versions and checksums.
+#### Execution Checklist
+
+Run this checklist in order for one immutable candidate revision. Do not use a
+successful check from an earlier revision as evidence for the candidate. Mark an
+item only with its command output, exit code, date, and relevant artifact path.
+
+1. [x] **Freeze the candidate.** Confirm the source worktree is clean, record
+   its commit SHA, and inspect the diff from the last CI-validated revision.
+   Do not start rollout from uncommitted framework source.
+2. [x] **Run the current-revision source and fixture gates.** Run the local
+   source gates in this order: `Test-FrameworkSkeleton.ps1`,
+   `Test-ResearchConfigSchema.ps1`, `Test-AgentLayer.ps1`,
+   `Test-ExecutionVerification.ps1`,
+   `Test-OpenChamberOperatingGuide.ps1`, `Test-UIQualityLayer.ps1`,
+   `Test-ObserverAttachmentRegression.ps1`,
+   `Test-CiWindowsOnlyRegression.ps1`, and
+   `Test-EvaluationFailureDrills.ps1`. Then run the isolated temporary gates:
+   `Test-ObserverAttachmentPreflight.ps1`,
+   `Test-PackagingRelease.ps1`, and
+   `Test-OpenSpecProjectTemplate.ps1`. These gates must not modify global
+   OpenCode or OpenChamber configuration; the package and Observer negative
+   gates create and remove only their own temporary fixtures, while the OpenSpec
+   fixture may retrieve the pinned CLI through `npx`.
+3. [x] **Obtain current-revision Windows CI evidence.** Push or open a pull
+   request for the candidate and require the `Research Configuration` workflow
+   to pass on that same SHA. Its copied-bootstrap preflight additionally proves
+   the exact global `@fission-ai/openspec@1.5.0` CLI and a fresh template copy.
+   A green run for an earlier SHA is not sufficient.
+4. [x] **Create the pre-apply evidence manifest and diff preview.** Record the
+   active OpenChamber and managed OpenCode versions, active plugin and patch
+   identity, MCP/auth state without credentials, framework-owned target paths,
+   and current SHA-256 values. Compare each reviewed source with its named
+   target and classify it as `MATCH`, `DRIFT`, or `ABSENT`. A `MATCH` target is
+   not reapplied. For every `DRIFT` or `ABSENT` target, record the owner,
+   approved apply script, planned backup location, expected after hash, focused
+   verifier, rollback action, restart requirement, and side effect. Never add
+   CPA GUI-managed `opencode.json`, OpenChamber state, credentials, sessions,
+   or runtime files to this manifest.
+5. [x] **Approval checkpoint.** Present the candidate SHA, source/CI evidence,
+   latest runtime evidence and the stale runtime gates still required, diff
+   preview, exact target list, backup paths, planned writes, restart, live-model
+   smoke cost, and rollback procedure. Obtain explicit user approval before
+   creating backups, changing a persistent global target, restarting
+   OpenChamber, or making a live provider request.
+6. [x] **Refresh stale runtime evidence after approval and before a write.**
+   The managed OpenCode version has changed since the recorded Phase 3 evidence,
+   so run `Test-ResearchRuntime.ps1` and perform its documented manual
+   disabled-MCP live behavioral check. Re-run any Phase 4, 5, or 7-10 runtime
+   verifier only if its source, managed version, plugin version, prompt/skill
+   target, or package patch changed after its recorded evidence. If the slim
+   package was reinstalled or updated, Phase 5 additionally requires
+   `Test-MultimediaCapabilities.ps1`,
+   `Test-ObserverAttachment.ps1 -PreflightOnly`, and the live
+   `Test-ObserverAttachment.ps1` OCR smoke. Stop before creating a backup or
+   applying a target if any required runtime or behavior gate fails.
+7. [x] **Apply only approved drift.** Close OpenChamber and CPA GUI. Create
+   timestamped file-level backups outside this repository, record before hashes,
+   and use only the reviewed phase-specific apply scripts for approved targets.
+   Do not run an apply script merely to reproduce an already matching target,
+   do not manually merge JSON, and stop immediately if a script refuses or a
+   hash check fails. The only exception is the explicit no-drift rollback
+   verification reapply in item 10; it requires its own approval and must use
+   only the named Phase 8 script and target below. Record every created manifest
+   and after hash.
+8. [x] **Restart and verify affected runtime contracts.** Restart
+   OpenChamber, run `opencode debug config` through the managed binary, and run
+   the focused runtime verifier for every changed layer. At minimum, a change to
+   the agent/preset, research MCP, multimedia patch, Phase 7 execution assets,
+   Phase 8 guidance, Phase 9 UI assets, or Phase 10 release assets requires its
+   corresponding runtime verifier. A failed verifier is a rollback trigger, not
+   a condition for a second blind apply.
+9. [x] **Run final project smokes.** In a fresh temporary project, copy
+   `templates\project`, run its `Test-OpenSpecBootstrapPreflight.ps1`, and
+   validate a minimal OpenSpec change with the pinned CLI. In one user-selected
+   existing project, run only a bounded, non-destructive smoke with named
+   project-native evidence. Record the selected project, command, result, and
+   remaining uncertainty; do not treat a fixture command as evidence for that
+   project.
+10. [x] **Prove rollback.** With explicit approval, restore the exact named
+    targets from the Phase 12 backup manifests, restart OpenChamber, and run the
+    focused verifiers that demonstrate the restoration. Reapply only the same
+    approved drift through the reviewed scripts, restart, and repeat the
+    affected runtime checks. Do not restore a directory, use destructive Git
+    commands, or modify OpenChamber state. If every approved target is `MATCH`
+    and no Phase 12 apply created a backup manifest, pause rather than treating
+    rollback as implicitly proven. The user may separately approve one
+    verification reapply of only
+    `C:\Users\quang\.config\opencode\oh-my-opencode-slim\sdd-personal\orchestrator.md`
+    through `Apply-OpenChamberOperatingGuide.ps1`. The script creates the
+    `phase-8-*` backup manifest used by this drill. Restore that one target with
+    `Invoke-Phase12RollbackDrill.ps1`, restart OpenChamber, run
+    `Test-OpenChamberOperatingGuideRuntime.ps1`, then reapply through the same
+    Phase 8 script, restart, and rerun the verifier. The target must be a
+    byte-identical `MATCH` before and after this verification reapply. Record
+    that this proves the reviewed file-level backup/restore/reapply mechanism,
+    not a behavioral reversal of differing content.
+11. [x] **Close the rollout record.** Record the candidate SHA, all command
+    outputs and exit codes, CI URL, active versions, before/after checksums,
+    backup locations, diff outcome, apply/no-op decisions, smoke results,
+    rollback result, and remaining limitations. Confirm the repository contains
+    no secret-bearing file before marking Phase 12 complete.
 
 Complete when:
 
@@ -1262,6 +1501,9 @@ The final design decisions are:
 
 ## 23. Next Action
 
-Find a structured child-attachment/message primitive that does not rely on the
-Observer model calling `read`. Do not enable Observer or PDF support; rerun
-Phase 5 gates after any slim reinstall or version update.
+Phase 12 is complete for candidate
+`b75043d6097d12ac52c5bbbc3224f316c3243961`. For any future framework candidate
+or managed-runtime change, begin a new Phase 12 rollout at checklist item 1;
+do not reuse this completion evidence or perform a global write, restart,
+provider call, or rollback drill before the new candidate reaches the explicit
+approval checkpoint at item 5.

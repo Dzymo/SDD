@@ -1,140 +1,86 @@
 ---
-description: Sync delta specs from a change to main specs
+description: Tự đồng bộ delta specs vào specification chính và tư vấn bước tiếp theo
 ---
 
-Sync delta specs from a change to main specs.
+Đồng bộ change được nêu sau command: `$ARGUMENTS`.
 
-This is an **agent-driven** operation - you will read delta specs and directly edit main specs to apply the changes. This allows intelligent merging (e.g., adding a scenario without copying the entire requirement).
+## Hợp Đồng Session
 
-**Store selection:** If the user names a store (a store is a standalone OpenSpec repo registered on this machine) or the work lives in one, run `openspec store list --json` to discover registered store ids, then pass `--store <id>` on the commands that read or write specs and changes (`new change`, `status`, `instructions`, `list`, `show`, `validate`, `archive`, `doctor`, `context`). Other commands do not take the flag. Hints printed by commands already carry the flag; keep it on follow-ups. Without a store, commands act on the nearest local `openspec/` root.
+Contract markers: `SESSION-FIRST`, `USER-NO-FILE-EDIT`, `ADAPTIVE-INTERVIEW`,
+`DECISION-READY-STOP`, `SYNC-EXACTLY-ONCE`, `NEXT-ACTION`,
+`OPENCHAMBER-ADVICE`.
 
-**Input**: Optionally specify a change name after `/opsx-sync` (e.g., `/opsx-sync add-auth`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
+- Never ask the user to create or edit project files. Agent tự đọc và cập nhật
+  specification; người dùng chỉ giải quyết điểm mơ hồ material.
+- Khi delta có nhiều cách diễn giải, phỏng vấn theo chủ đề và trình bày một nhóm
+  phương án dễ so sánh. Khuyến nghị một hướng; cho phép xem thêm nếu còn cách
+  hiểu quan trọng trước khi ghi.
+- Cuối mỗi phản hồi quan trọng luôn có `Bước tiếp theo:` và
+  `Cách làm phù hợp:`.
 
-**Steps**
+## Cách Thực Hiện
 
-1. **If no change name provided, prompt for selection**
+1. Xác định local root hoặc store trước khi chọn change và giữ nguyên lựa chọn:
+   - Local: nếu input trống hoặc mơ hồ, chạy `openspec list --json`; mọi lệnh
+     lifecycle phải bỏ `--store`.
+   - Store: chạy `openspec store list --json` để chọn ID, rồi nếu input trống
+     hoặc mơ hồ chạy `openspec list --store <id> --json`; mọi lệnh lifecycle
+     phải ghi rõ cùng một `--store <id>`.
+   Yêu cầu người dùng chọn change khi còn mơ hồ; không đoán.
+2. Chạy đúng một trong hai lệnh status và không trộn artifact store với
+   `openspec/` cục bộ:
 
-   Run `openspec list --json` to get available changes. Use the **AskUserQuestion tool** to let the user select.
-
-   Show changes that have delta specs (under `specs/` directory).
-
-   **IMPORTANT**: Do NOT guess or auto-select a change. Always let the user choose.
-
-2. **Resolve change context**
-
-   Run:
    ```bash
+   # Local
    openspec status --change "<name>" --json
+
+   # Store
+   openspec status --change "<name>" --store <id> --json
+   ```
+3. Lấy delta spec từ `artifactPaths.specs.existingOutputPaths`. Nếu không có,
+   thông báo và dừng.
+4. Với từng capability, đọc delta và resolve main-spec destination từ root thực
+   tế của local project hoặc selected store. Chỉ dùng
+   `openspec/specs/<capability>/spec.md` khi change là local. Với store, dùng
+   specification root do store metadata/CLI trả về; nếu không xác định được một
+   writable destination có bằng chứng, dừng `BLOCKED` thay vì đoán hoặc ghi vào
+   local `openspec/specs`.
+5. Tự merge theo intent:
+   - `ADDED`: thêm requirement khi chưa có. Nếu requirement tương đương đã tồn
+     tại thì coi là đã sync và không ghi lại; nếu nội dung xung đột thì dừng để
+     reconcile, không tạo bản trùng.
+   - `MODIFIED`: chỉ thay phần được nêu, giữ nội dung không liên quan.
+   - `REMOVED`: xóa toàn bộ requirement được chỉ định.
+   - `RENAMED`: đổi tên requirement từ `FROM` sang `TO`.
+6. Nếu main spec chưa tồn tại, tự tạo Purpose ngắn và Requirements từ phần
+   `ADDED`. Đây là lần cập nhật spec duy nhất: command này tự merge delta, không
+   gọi `openspec archive` để cập nhật spec và không áp dụng lại requirement đã
+   hiện diện. Nếu chạy lại, xác minh delta đã phản ánh đầy đủ rồi không ghi lần
+   hai. Ghi các path main spec đã đồng bộ vào `verification.md` để archive có
+   evidence, nhưng archive vẫn phải đối chiếu nội dung thực tế.
+7. Chạy strict validation bằng đúng một trong hai lệnh và tóm tắt requirement đã
+   thêm, sửa, xóa hoặc đổi tên:
+
+   ```bash
+   # Local
+   openspec validate <name> --strict --no-interactive
+
+   # Store
+   openspec validate <name> --store <id> --strict --no-interactive
    ```
 
-3. **Find delta specs**
+## Kết Thúc
 
-   Use `artifactPaths.specs.existingOutputPaths` from the status JSON as the list of delta spec files.
+- Nếu implementation hoặc verification còn thiếu:
 
-   Each delta spec file contains sections like:
-   - `## ADDED Requirements` - New requirements to add
-   - `## MODIFIED Requirements` - Changes to existing requirements
-   - `## REMOVED Requirements` - Requirements to remove
-   - `## RENAMED Requirements` - Requirements to rename (FROM:/TO: format)
+  ```text
+  Bước tiếp theo: /opsx-apply <change-name>
+  Cách làm phù hợp: Worktree + Goal chỉ khi còn một khối ghi code nhiều bước có finish line rõ.
+  ```
 
-   If no delta specs found, inform user and stop.
+- Nếu release evidence đã hoàn tất:
 
-4. **For each delta spec, apply changes to main specs**
-
-   For each repo-local capability delta spec path returned by the CLI:
-
-   a. **Read the delta spec** to understand the intended changes
-
-   b. **Read the main spec** at `openspec/specs/<capability>/spec.md` (may not exist yet)
-
-   c. **Apply changes intelligently**:
-
-      **ADDED Requirements:**
-      - If requirement doesn't exist in main spec → add it
-      - If requirement already exists → update it to match (treat as implicit MODIFIED)
-
-      **MODIFIED Requirements:**
-      - Find the requirement in main spec
-      - Apply the changes - this can be:
-        - Adding new scenarios (don't need to copy existing ones)
-        - Modifying existing scenarios
-        - Changing the requirement description
-      - Preserve scenarios/content not mentioned in the delta
-
-      **REMOVED Requirements:**
-      - Remove the entire requirement block from main spec
-
-      **RENAMED Requirements:**
-      - Find the FROM requirement, rename to TO
-
-   d. **Create new main spec** if capability doesn't exist yet:
-      - Create `openspec/specs/<capability>/spec.md`
-      - Add Purpose section (can be brief, mark as TBD)
-      - Add Requirements section with the ADDED requirements
-
-5. **Show summary**
-
-   After applying all changes, summarize:
-   - Which capabilities were updated
-   - What changes were made (requirements added/modified/removed/renamed)
-
-**Delta Spec Format Reference**
-
-```markdown
-## ADDED Requirements
-
-### Requirement: New Feature
-The system SHALL do something new.
-
-#### Scenario: Basic case
-- **WHEN** user does X
-- **THEN** system does Y
-
-## MODIFIED Requirements
-
-### Requirement: Existing Feature
-#### Scenario: New scenario to add
-- **WHEN** user does A
-- **THEN** system does B
-
-## REMOVED Requirements
-
-### Requirement: Deprecated Feature
-
-## RENAMED Requirements
-
-- FROM: `### Requirement: Old Name`
-- TO: `### Requirement: New Name`
-```
-
-**Key Principle: Intelligent Merging**
-
-Unlike programmatic merging, you can apply **partial updates**:
-- To add a scenario, just include that scenario under MODIFIED - don't copy existing scenarios
-- The delta represents *intent*, not a wholesale replacement
-- Use your judgment to merge changes sensibly
-
-**Output On Success**
-
-```
-## Specs Synced: <change-name>
-
-Updated main specs:
-
-**<capability-1>**:
-- Added requirement: "New Feature"
-- Modified requirement: "Existing Feature" (added 1 scenario)
-
-**<capability-2>**:
-- Created new spec file
-- Added requirement: "Another Feature"
-
-Main specs are now updated. The change remains active - archive when implementation is complete.
-```
-
-**Guardrails**
-- Read both delta and main specs before making changes
-- Preserve existing content not mentioned in delta
-- If something is unclear, ask for clarification
-- Show what you're changing as you go
-- The operation should be idempotent - running twice should give same result
+  ```text
+  Bước tiếp theo: /opsx-archive <change-name>
+  Cách làm phù hợp: Không dùng Goal cho bước archive ngắn; dừng nếu còn external action chưa được phê duyệt.
+  ```

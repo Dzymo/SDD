@@ -73,6 +73,7 @@ Assert-Equal -Actual $preset.fallback.maxRetries -Expected 1 -Message 'Model fal
 Assert-True -Condition ($preset.presets.'sdd-personal'.orchestrator.mcps.Count -eq 0) -Message 'The Orchestrator must not receive direct MCP access.'
 Assert-True -Condition (($preset.presets.'sdd-personal'.librarian.mcps -join ',') -eq 'context7') -Message 'The Librarian must receive only Context7 MCP access.'
 Assert-True -Condition (($preset.presets.'sdd-personal'.explorer.mcps -join ',') -eq 'codegraph') -Message 'The Explorer must receive only CodeGraph MCP access.'
+Assert-True -Condition ($preset.presets.'sdd-personal'.designer.skills -contains 'ui-quality') -Message 'Designer must load the Phase 9 ui-quality skill.'
 
 $expectedRoutes = @{
     orchestrator = @('cliproxy/gpt-5.6-terra', 'medium', 'high')
@@ -108,10 +109,11 @@ Assert-Equal -Actual $preset.agents.librarian.permission.webfetch -Expected 'all
 Assert-Equal -Actual $preset.agents.librarian.permission.websearch -Expected 'allow' -Message 'Librarian must be able to search documentation.'
 
 $requiredPromptRules = @{
-    'orchestrator.md' = @('at most two concurrent subagents', 'OpenChamber Advice', 'Respond in Vietnamese', 'observer_attachment', 'Do not use `task`')
+    'orchestrator.md' = @('at most two concurrent subagents', 'Adaptive Interview', 'Do not apply a fixed question count', 'decision-ready', 'OpenChamber Advice', 'writing work only', 'read-only deterministic work', 'ready for release', 'outside the Goal boundary', 'Respond in Vietnamese', 'observer_attachment', 'Do not use `task`', "Treat the session as the user's only authoring surface")
     'explorer.md' = @('one focused search batch', 'Use CodeGraph for healthy indexed structural questions', 'local evidence is unavailable', 'never infer missing paths or lines', 'Do not inventory unrelated files', 'call the shell')
     'librarian.md' = @('Context7 first', 'one fallback retrieval round', 'verified external evidence is unavailable', 'Do not use model memory as evidence')
     'observer.md' = @('structured attachments', 'MUST call `read`', 'never edit files')
+    'designer.md' = @('Authority Order', 'PRODUCT.md', 'Interview adaptively', 'synthetic quality scores', 'final visual approval', "Treat the session as the user's authoring surface")
 }
 
 foreach ($promptFile in $requiredPromptRules.Keys) {

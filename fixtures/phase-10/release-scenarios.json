@@ -1,0 +1,166 @@
+[
+  {
+    "name": "clean-package-needs-approval",
+    "package": {
+      "buildExitCode": 0,
+      "artifactPresent": true,
+      "versionMatches": true,
+      "cleanSmokeExitCode": 0,
+      "contentCheck": "clean",
+      "sha256": "recorded"
+    },
+    "release": {
+      "applicable": true,
+      "plan": {
+        "version": "1.0.0",
+        "releaseNotes": "Initial supported release",
+        "target": "approved registry",
+        "knownWarnings": "none",
+        "rollbackPlan": "deprecate the version and restore the prior release",
+        "externalAction": "publish package"
+      },
+      "externalAction": "publish package",
+      "approval": null
+    },
+    "expected": "RELEASE-APPROVAL-REQUIRED"
+  },
+  {
+    "name": "clean-package-authorized-but-not-executed",
+    "package": {
+      "buildExitCode": 0,
+      "artifactPresent": true,
+      "versionMatches": true,
+      "cleanSmokeExitCode": 0,
+      "contentCheck": "clean",
+      "sha256": "recorded"
+    },
+    "release": {
+      "applicable": true,
+      "plan": {
+        "version": "1.0.0",
+        "releaseNotes": "Initial supported release",
+        "target": "approved registry",
+        "knownWarnings": "none",
+        "rollbackPlan": "deprecate the version and restore the prior release",
+        "externalAction": "publish package"
+      },
+      "externalAction": "publish package",
+      "approval": {
+        "version": "1.0.0",
+        "releaseNotes": "Initial supported release",
+        "target": "approved registry",
+        "knownWarnings": "none",
+        "rollbackPlan": "deprecate the version and restore the prior release",
+        "externalAction": "publish package",
+        "record": "user approval captured"
+      }
+    },
+    "expected": "RELEASE-AUTHORIZED"
+  },
+  {
+    "name": "clean-smoke-failure-blocks-release",
+    "package": {
+      "buildExitCode": 0,
+      "artifactPresent": true,
+      "versionMatches": true,
+      "cleanSmokeExitCode": 1,
+      "contentCheck": "clean",
+      "sha256": "recorded"
+    },
+    "release": {
+      "applicable": true,
+      "plan": {
+        "version": "1.0.0",
+        "releaseNotes": "Initial supported release",
+        "target": "approved registry",
+        "knownWarnings": "none",
+        "rollbackPlan": "deprecate the version and restore the prior release",
+        "externalAction": "publish package"
+      },
+      "externalAction": "publish package",
+      "approval": null
+    },
+    "expected": "CLEAN-SMOKE-FAILED"
+  },
+  {
+    "name": "content-finding-blocks-release",
+    "package": {
+      "buildExitCode": 0,
+      "artifactPresent": true,
+      "versionMatches": true,
+      "cleanSmokeExitCode": 0,
+      "contentCheck": "finding",
+      "sha256": "recorded"
+    },
+    "release": {
+      "applicable": true,
+      "plan": {
+        "version": "1.0.0",
+        "releaseNotes": "Initial supported release",
+        "target": "approved registry",
+        "knownWarnings": "none",
+        "rollbackPlan": "deprecate the version and restore the prior release",
+        "externalAction": "publish package"
+      },
+      "externalAction": "publish package",
+      "approval": null
+    },
+    "expected": "CONTENT-CHECK-FAILED"
+  },
+  {
+    "name": "successful-release-can-be-archived",
+    "package": {
+      "buildExitCode": 0,
+      "artifactPresent": true,
+      "versionMatches": true,
+      "cleanSmokeExitCode": 0,
+      "contentCheck": "clean",
+      "sha256": "recorded"
+    },
+    "release": {
+      "applicable": true,
+      "plan": {
+        "version": "1.0.0",
+        "releaseNotes": "Initial supported release",
+        "target": "approved registry",
+        "knownWarnings": "none",
+        "rollbackPlan": "deprecate the version and restore the prior release",
+        "externalAction": "publish package"
+      },
+      "externalAction": "publish package",
+      "approval": {
+        "version": "1.0.0",
+        "releaseNotes": "Initial supported release",
+        "target": "approved registry",
+        "knownWarnings": "none",
+        "rollbackPlan": "deprecate the version and restore the prior release",
+        "externalAction": "publish package",
+        "record": "user approval captured"
+      },
+      "externalResult": {
+        "exitCode": 0,
+        "postReleaseSmokeExitCode": 0
+      },
+      "openspec": {
+        "strictValidationExitCode": 0,
+        "archiveExitCode": 0
+      }
+    },
+    "expected": "RELEASE-ARCHIVED"
+  },
+  {
+    "name": "non-release-archived",
+    "release": {
+      "applicable": false,
+      "noReleaseReason": "This internal workflow change has no package, deployment, publication, or external write; only verification and OpenSpec archive evidence are required.",
+      "verification": {
+        "exitCode": 0
+      },
+      "openspec": {
+        "strictValidationExitCode": 0,
+        "archiveExitCode": 0
+      }
+    },
+    "expected": "NON-RELEASE-ARCHIVED"
+  }
+]

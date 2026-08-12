@@ -70,7 +70,7 @@ function New-MockManagedCli {
 $credentialSentinel = 'CREDENTIAL_SENTINEL_DO_NOT_LEAK'
 $validConfig = '{ "agent": { "orchestrator": { "prompt": "observer_attachment" }, "observer": { "model": "minimax-coding-plan/MiniMax-M3", "prompt": "structured attachments" } } }'
 $validModels = '{ "id": "MiniMax-M3", "status": "active", "attachment": true, "input": { "image": true } }'
-$validCredentials = 'MiniMax Token Plan'
+$validCredentials = 'MiniMax Token Plan minimax.io api'
 $smoke = Join-Path $Root 'scripts\Test-ObserverAttachment.ps1'
 $powerShellExecutable = if ($PSVersionTable.PSEdition -eq 'Core') {
     'pwsh.exe'
@@ -94,34 +94,39 @@ try {
     $workspace = Join-Path $tempRoot 'workspace'
     New-Item -ItemType Directory -Path $workspace -Force | Out-Null
 
-    Assert-PreflightFailure -Name 'Missing managed binary' -SmokeArguments @('-Managed', (Join-Path $tempRoot 'missing.exe'), '-Workspace', $workspace, '-PreflightOnly') -ExpectedMessage 'Managed OpenCode binary not found:' -CredentialSentinel $credentialSentinel
+    $mockPreflightArguments = @('-PreflightOnly', '-SkipRuntimePatchPreflightForMock')
+
+    Assert-PreflightFailure -Name 'Missing managed binary' -SmokeArguments (@('-Managed', (Join-Path $tempRoot 'missing.exe'), '-Workspace', $workspace) + $mockPreflightArguments) -ExpectedMessage 'Managed OpenCode binary not found:' -CredentialSentinel $credentialSentinel
 
     New-MockManagedCli -Path $mock -Config $validConfig -Credentials $validCredentials -Models $validModels
-    Assert-PreflightFailure -Name 'Missing workspace' -SmokeArguments @('-Managed', $mock, '-Workspace', (Join-Path $tempRoot 'missing-workspace'), '-PreflightOnly') -ExpectedMessage 'Smoke workspace not found:' -CredentialSentinel $credentialSentinel
+    Assert-PreflightFailure -Name 'Missing workspace' -SmokeArguments (@('-Managed', $mock, '-Workspace', (Join-Path $tempRoot 'missing-workspace')) + $mockPreflightArguments) -ExpectedMessage 'Smoke workspace not found:' -CredentialSentinel $credentialSentinel
 
     New-MockManagedCli -Path $mock -Config $validConfig -Credentials $validCredentials -Models $validModels -FailDebug
-    Assert-PreflightFailure -Name 'Failed runtime config command' -SmokeArguments @('-Managed', $mock, '-Workspace', $workspace, '-PreflightOnly') -ExpectedMessage 'Managed OpenCode preflight command failed: debug config' -CredentialSentinel $credentialSentinel
+    Assert-PreflightFailure -Name 'Failed runtime config command' -SmokeArguments (@('-Managed', $mock, '-Workspace', $workspace) + $mockPreflightArguments) -ExpectedMessage 'Managed OpenCode preflight command failed: debug config' -CredentialSentinel $credentialSentinel
 
     New-MockManagedCli -Path $mock -Config '{' -Credentials $validCredentials -Models $validModels
-    Assert-PreflightFailure -Name 'Invalid runtime config' -SmokeArguments @('-Managed', $mock, '-Workspace', $workspace, '-PreflightOnly') -ExpectedMessage 'Managed OpenCode did not return valid effective JSON.' -CredentialSentinel $credentialSentinel
+    Assert-PreflightFailure -Name 'Invalid runtime config' -SmokeArguments (@('-Managed', $mock, '-Workspace', $workspace) + $mockPreflightArguments) -ExpectedMessage 'Managed OpenCode did not return valid effective JSON.' -CredentialSentinel $credentialSentinel
 
     New-MockManagedCli -Path $mock -Config '{ "agent": { "orchestrator": { "prompt": "observer_attachment" } } }' -Credentials $validCredentials -Models $validModels
-    Assert-PreflightFailure -Name 'Disabled Observer' -SmokeArguments @('-Managed', $mock, '-Workspace', $workspace, '-PreflightOnly') -ExpectedMessage 'Observer is not enabled in the effective managed runtime.' -CredentialSentinel $credentialSentinel
+    Assert-PreflightFailure -Name 'Disabled Observer' -SmokeArguments (@('-Managed', $mock, '-Workspace', $workspace) + $mockPreflightArguments) -ExpectedMessage 'Observer is not enabled in the effective managed runtime.' -CredentialSentinel $credentialSentinel
 
     New-MockManagedCli -Path $mock -Config '{ "agent": { "orchestrator": { "prompt": "observer_attachment" }, "observer": { "model": "other/model", "prompt": "structured attachments" } } }' -Credentials $validCredentials -Models $validModels
-    Assert-PreflightFailure -Name 'Wrong Observer model' -SmokeArguments @('-Managed', $mock, '-Workspace', $workspace, '-PreflightOnly') -ExpectedMessage 'Observer is not routed to MiniMax-M3 in the effective managed runtime.' -CredentialSentinel $credentialSentinel
+    Assert-PreflightFailure -Name 'Wrong Observer model' -SmokeArguments (@('-Managed', $mock, '-Workspace', $workspace) + $mockPreflightArguments) -ExpectedMessage 'Observer is not routed to MiniMax-M3 in the effective managed runtime.' -CredentialSentinel $credentialSentinel
 
     New-MockManagedCli -Path $mock -Config '{ "agent": { "orchestrator": { "prompt": "path-only" }, "observer": { "model": "minimax-coding-plan/MiniMax-M3", "prompt": "structured attachments" } } }' -Credentials $validCredentials -Models $validModels
-    Assert-PreflightFailure -Name 'Missing Orchestrator contract' -SmokeArguments @('-Managed', $mock, '-Workspace', $workspace, '-PreflightOnly') -ExpectedMessage 'The effective Orchestrator prompt does not route images through observer_attachment.' -CredentialSentinel $credentialSentinel
+    Assert-PreflightFailure -Name 'Missing Orchestrator contract' -SmokeArguments (@('-Managed', $mock, '-Workspace', $workspace) + $mockPreflightArguments) -ExpectedMessage 'The effective Orchestrator prompt does not route images through observer_attachment.' -CredentialSentinel $credentialSentinel
 
     New-MockManagedCli -Path $mock -Config '{ "agent": { "orchestrator": { "prompt": "observer_attachment" }, "observer": { "model": "minimax-coding-plan/MiniMax-M3", "prompt": "path only" } } }' -Credentials $validCredentials -Models $validModels
-    Assert-PreflightFailure -Name 'Missing Observer contract' -SmokeArguments @('-Managed', $mock, '-Workspace', $workspace, '-PreflightOnly') -ExpectedMessage 'The effective Observer prompt does not accept structured attachments.' -CredentialSentinel $credentialSentinel
+    Assert-PreflightFailure -Name 'Missing Observer contract' -SmokeArguments (@('-Managed', $mock, '-Workspace', $workspace) + $mockPreflightArguments) -ExpectedMessage 'The effective Observer prompt does not accept structured attachments.' -CredentialSentinel $credentialSentinel
+
+    New-MockManagedCli -Path $mock -Config $validConfig -Credentials 'MiniMax Token Plan minimax.io' -Models $validModels
+    Assert-PreflightFailure -Name 'Provider name without credential' -SmokeArguments (@('-Managed', $mock, '-Workspace', $workspace) + $mockPreflightArguments) -ExpectedMessage 'No MiniMax credential is available to the managed OpenCode runtime.' -CredentialSentinel $credentialSentinel
 
     New-MockManagedCli -Path $mock -Config $validConfig -Credentials $credentialSentinel -Models $validModels
-    Assert-PreflightFailure -Name 'Missing MiniMax credential' -SmokeArguments @('-Managed', $mock, '-Workspace', $workspace, '-PreflightOnly') -ExpectedMessage 'No MiniMax credential is available to the managed OpenCode runtime.' -CredentialSentinel $credentialSentinel
+    Assert-PreflightFailure -Name 'Missing MiniMax credential' -SmokeArguments (@('-Managed', $mock, '-Workspace', $workspace) + $mockPreflightArguments) -ExpectedMessage 'No MiniMax credential is available to the managed OpenCode runtime.' -CredentialSentinel $credentialSentinel
 
     New-MockManagedCli -Path $mock -Config $validConfig -Credentials $validCredentials -Models '{ "id": "MiniMax-M3", "status": "inactive", "attachment": false, "input": { "image": false } }'
-    Assert-PreflightFailure -Name 'Inactive M3 image route' -SmokeArguments @('-Managed', $mock, '-Workspace', $workspace, '-PreflightOnly') -ExpectedMessage 'MiniMax-M3 is not an active image-attachment route.' -CredentialSentinel $credentialSentinel
+    Assert-PreflightFailure -Name 'Inactive M3 image route' -SmokeArguments (@('-Managed', $mock, '-Workspace', $workspace) + $mockPreflightArguments) -ExpectedMessage 'MiniMax-M3 is not an active image-attachment route.' -CredentialSentinel $credentialSentinel
 
     'Observer OCR preflight negative tests: PASS'
 }

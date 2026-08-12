@@ -105,7 +105,9 @@
             "variant": "none"
           }
         ],
-        "skills": [],
+        "skills": [
+          "ui-quality"
+        ],
         "mcps": []
       },
       "fixer": {
@@ -119,7 +121,10 @@
             "variant": "thinking"
           }
         ],
-        "skills": [],
+        "skills": [
+          "systematic-debugging",
+          "verification-before-completion"
+        ],
         "mcps": []
       },
       "observer": {

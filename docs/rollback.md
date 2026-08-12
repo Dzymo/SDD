@@ -42,18 +42,135 @@ state.
 
 ## Phase 5 Multimedia Layer
 
-Phase 5 leaves one temporary package-cache hotfix active. Restore only the
-matching backup copy, then restart OpenChamber and run
-`Test-AgentLayerRuntime.ps1`:
+Phase 5 presently has two temporary package-cache hotfixes active. They modify
+the same bundled file in a strict hash chain:
 
-1. `C:\Users\quang\.cache\opencode\packages\oh-my-opencode-slim@2.2.8\node_modules\oh-my-opencode-slim\dist\index.js`
-   from backup `20260802-204959` removes the temporary type guard.
+1. Official npm `dist\index.js`:
+   `816D84ABF3DD5923F56DF2C52F3AB7149B46654C3FBBDE9DF8760D22823DEDFC`.
+2. The disabled-tools type guard produces:
+   `3D70AB6200A5AF7718BFFCF229D985A9C8E2925BA0AD7676046C274E57E65CC5`.
+3. The structured attachment patch produces:
+   `6E6A67DF17820B6E3DCAE43BCAFD6DEA2705666A161227769AE32E2576A8989A`.
 
-The temporary Observer configuration was already restored from backup
-`20260802-205142`; no global multimedia activation is currently active.
+The only runtime target is
+`C:\Users\quang\.cache\opencode\packages\oh-my-opencode-slim@2.2.8\node_modules\oh-my-opencode-slim\dist\index.js`.
+The npm package does not publish separate distribution files for the affected
+hook or tool code. Therefore, roll back in reverse order rather than treating
+the patches as independent files:
 
-The package-cache patch can also be superseded by a reviewed reinstall or
-version upgrade. Do not restore an entire cache directory.
+1. Close OpenChamber and CPA GUI. Follow the file-level rollback block in
+   `patches\oh-my-opencode-slim-2.2.8-observer-attachment.patch`, using the
+   exact timestamped backup directory printed during its pre-apply step. It
+   verifies the current 6E6A... hash and backup 3D70... hash before restoring.
+   This disables structured image handoff while retaining the type guard.
+2. Only after the target is back at 3D70..., restore the disabled-tools backup
+   `C:\Users\quang\.local\share\opencode\framework-backups\20260802-204959`
+   according to `patches\oh-my-opencode-slim-2.2.8-disabled-tools.patch` if the
+   type guard must also be removed. Verify the resulting 816D... hash.
+3. Restart OpenChamber and run `Test-AgentLayerRuntime.ps1`. The Observer smoke
+   must fail closed after step 1 because its required 6E6A... hash is absent.
+
+The temporary Observer configuration JSON was already restored from backup
+`20260802-205142`; the global preset no longer carries a temporary
+`disabled_tools` modification. With both runtime patches active, the structured
+attachment route is the live multimedia activation.
+
+A reviewed reinstall or version upgrade may supersede both cache patches. Safe
+reapply is baseline 816D... to disabled-tools 3D70... to structured attachment
+6E6A..., with a fresh file-level backup before each write. Stop on any other
+hash, re-derive the patch against that artifact, and never restore an entire
+cache directory.
+
+## Phase 8 OpenChamber Operating Guide
+
+`Apply-OpenChamberOperatingGuide.ps1` changes only
+`C:\Users\quang\.config\opencode\oh-my-opencode-slim\sdd-personal\orchestrator.md`.
+Its timestamped `phase-8-*` backup directory contains a copy of that prompt and
+a `manifest.json` with before/source/after SHA-256 values.
+
+To roll back, close OpenChamber and CPA GUI, restore only the backed-up
+`orchestrator.md` to that same target, restart OpenChamber, then run:
+
+```powershell
+PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-AgentLayerRuntime.ps1
+```
+
+Do not restore the backup directory, modify `opencode.json`, or alter
+OpenChamber settings, sessions, Goals, or worktrees. A pre-Phase-8 prompt will
+intentionally fail `Test-OpenChamberOperatingGuideRuntime.ps1`; use that result
+only to confirm the new advice is no longer active.
+
+## Phase 7 Execution And Verification
+
+`Apply-ExecutionVerification.ps1` changes only these framework-owned targets:
+
+1. `C:\Users\quang\.config\opencode\oh-my-opencode-slim.json` by merging only
+   `presets.sdd-personal.fixer.skills` and preserving all unrelated config.
+2. The Orchestrator, Fixer, and Oracle prompts.
+3. The `systematic-debugging` and `verification-before-completion` skills.
+
+Its `phase-7-*` backup directory contains each pre-existing target and a
+manifest with `BeforeSha256`, `AfterSha256`, and the `fixer.skills` merge marker.
+
+To roll back, close OpenChamber and CPA GUI and use
+`Invoke-Phase12RollbackDrill.ps1` with that exact manifest. The command rejects
+any target outside its exact framework-owned allowlist, requires the current
+target to still match `AfterSha256`, validates every entry before mutation, and
+restores all staged targets to `AfterSha256` if any restore fails. Remove only a
+named target whose validated `BeforeSha256` and `Backup` are both `ABSENT`.
+Restart OpenChamber, then run:
+
+```powershell
+PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-ExecutionVerificationRuntime.ps1
+```
+
+Do not restore a parent directory, edit `opencode.json`, or alter OpenChamber
+state. A pre-Phase-7 target intentionally fails the Phase 7 runtime verifier.
+
+## Phase 9 UI Quality Layer
+
+`Apply-UIQualityLayer.ps1` changes only these framework-owned targets:
+
+1. `C:\Users\quang\.config\opencode\oh-my-opencode-slim.json` by merging only
+   `presets.sdd-personal.designer.skills`.
+2. `C:\Users\quang\.config\opencode\oh-my-opencode-slim\sdd-personal\designer.md`.
+3. `C:\Users\quang\.config\opencode\oh-my-opencode-slim\sdd-personal\observer.md`.
+4. `C:\Users\quang\.config\opencode\skills\ui-quality\SKILL.md`.
+
+Its timestamped `phase-9-*` backup includes existing target copies and a
+manifest with before/source/after SHA-256 values. To roll back, close
+OpenChamber and CPA GUI, restore only each existing backed-up file to its named
+target, and remove only a named target whose manifest records `ABSENT` before
+the apply. Restart OpenChamber, then run:
+
+```powershell
+PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-AgentLayerRuntime.ps1
+```
+
+Do not restore a directory, modify `opencode.json`, or alter OpenChamber state.
+
+## Phase 10 Packaging And Release
+
+`Apply-PackagingRelease.ps1` changes only these framework-owned global targets:
+
+1. `C:\Users\quang\.config\opencode\oh-my-opencode-slim\sdd-personal\orchestrator.md`.
+2. `C:\Users\quang\.config\opencode\skills\package-and-release\SKILL.md`.
+
+Its timestamped `phase-10-*` backup directory records each pre-existing target
+and before/source/after SHA-256 values in `manifest.json`. To roll back the
+framework behavior, close OpenChamber and CPA GUI, restore only each named
+target from that manifest, remove only a named target whose prior hash is
+`ABSENT`, restart OpenChamber, then run:
+
+```powershell
+PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-PackagingReleaseRuntime.ps1
+```
+
+This restores framework instructions only; it does not reverse an external
+release. For a released project, use the project-specific rollback procedure
+recorded in its approved `PACKAGE.md` and `release.md`, with separate user
+approval for any external action. Never restore directories or OpenChamber
+state.
 
 ## Future Global Configuration Rollback
 

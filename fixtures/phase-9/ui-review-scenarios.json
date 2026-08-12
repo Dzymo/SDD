@@ -1,0 +1,95 @@
+[
+  {
+    "name": "selected-direction-awaits-human-approval",
+    "authority": {
+      "product": "present",
+      "design": "present",
+      "surfaceBrief": "approved",
+      "fidelity": "preserved"
+    },
+    "machineChecks": {
+      "desktop": { "exitCode": 0, "evidence": "artifacts/onboarding-desktop-1440.png" },
+      "mobile": { "exitCode": 0, "evidence": "artifacts/onboarding-mobile-390.png" },
+      "browser": { "exitCode": 0, "evidence": "checkout smoke; console and network inspected" },
+      "accessibility": { "exitCode": 0, "evidence": "keyboard, labels, contrast, and reduced-motion review" }
+    },
+    "review": {
+      "independent": true,
+      "desktopScreenshot": "artifacts/onboarding-desktop-1440.png",
+      "mobileScreenshot": "artifacts/onboarding-mobile-390.png",
+      "status": "closed"
+    },
+    "humanApproval": "pending",
+    "expected": "READY-FOR-HUMAN-APPROVAL"
+  },
+  {
+    "name": "selected-direction-has-explicit-human-approval",
+    "authority": {
+      "product": "present",
+      "design": "present",
+      "surfaceBrief": "approved",
+      "fidelity": "preserved"
+    },
+    "machineChecks": {
+      "desktop": { "exitCode": 0, "evidence": "artifacts/settings-desktop-1440.png" },
+      "mobile": { "exitCode": 0, "evidence": "artifacts/settings-mobile-390.png" },
+      "browser": { "exitCode": 0, "evidence": "settings flow and browser errors inspected" },
+      "accessibility": { "exitCode": 0, "evidence": "automated scan plus keyboard review" }
+    },
+    "review": {
+      "independent": true,
+      "desktopScreenshot": "artifacts/settings-desktop-1440.png",
+      "mobileScreenshot": "artifacts/settings-mobile-390.png",
+      "status": "closed"
+    },
+    "humanApproval": "approved",
+    "expected": "UI-APPROVED"
+  },
+  {
+    "name": "synthetic-score-is-not-proof",
+    "proof": "synthetic-score",
+    "authority": {
+      "product": "present",
+      "design": "present",
+      "surfaceBrief": "approved",
+      "fidelity": "preserved"
+    },
+    "machineChecks": {
+      "desktop": { "exitCode": 0, "evidence": "artifacts/desktop.png" },
+      "mobile": { "exitCode": 0, "evidence": "artifacts/mobile.png" },
+      "browser": { "exitCode": 0, "evidence": "browser check" },
+      "accessibility": { "exitCode": 0, "evidence": "accessibility check" }
+    },
+    "review": {
+      "independent": true,
+      "desktopScreenshot": "artifacts/desktop.png",
+      "mobileScreenshot": "artifacts/mobile.png",
+      "status": "closed"
+    },
+    "humanApproval": "approved",
+    "expected": "SYNTHETIC-SCORE-REJECTED"
+  },
+  {
+    "name": "missing-mobile-evidence-cannot-reach-review",
+    "authority": {
+      "product": "present",
+      "design": "present",
+      "surfaceBrief": "approved",
+      "fidelity": "preserved"
+    },
+    "machineChecks": {
+      "desktop": { "exitCode": 0, "evidence": "artifacts/profile-desktop-1440.png" },
+      "mobile": { "exitCode": 0, "evidence": "" },
+      "browser": { "exitCode": 0, "evidence": "profile flow checked" },
+      "accessibility": { "exitCode": 0, "evidence": "keyboard review" }
+    },
+    "review": {
+      "independent": true,
+      "desktopScreenshot": "artifacts/profile-desktop-1440.png",
+      "mobileScreenshot": "",
+      "status": "closed"
+    },
+    "humanApproval": "pending",
+    "expected": "MISSING-MACHINE-EVIDENCE"
+  }
+]

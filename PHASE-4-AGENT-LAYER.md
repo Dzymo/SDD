@@ -1,14 +1,17 @@
 # Phase 4 Agent Layer
 
-Date: 2026-08-02
+Date: 2026-08-02 (historical record), updated 2026-08-05
 
 ## Result
 
 The standalone managed OpenChamber OpenCode binary loads the pinned
 `oh-my-opencode-slim@2.2.8` plugin and the `sdd-personal` preset. The default
 agent is Orchestrator. Explorer, Librarian, Oracle, Designer, and Fixer are
-registered; Council and Observer are disabled. After restart, the user confirmed
-these six required agents appear in the OpenChamber UI.
+registered; Council remains disabled. After restart, the user confirmed these
+six required agents appear in the OpenChamber UI. Observer was originally
+disabled in this phase and was later enabled by the verified Phase 5 structured
+attachment handoff; the runtime verification recorded here is the post-Phase 5
+state.
 
 The implementation deliberately does not alter the CPA GUI-managed
 `opencode.json`, its sidecar, any OpenChamber configuration/state, or provider
@@ -44,12 +47,27 @@ Protected backup: `C:\Users\quang\.local\share\opencode\framework-backups\202608
 | Source routes, fallback chains, permissions, prompts, and feature flags are valid | `scripts\Test-AgentLayer.ps1` | PASS |
 | Research source schema remains valid | `scripts\Test-ResearchConfigSchema.ps1` | PASS |
 | Framework contains only reviewed source and no credential markers | `scripts\Test-FrameworkSkeleton.ps1` | PASS |
-| Managed OpenCode loads the plugin, expected primary routes, active agents, no default MCPs, and read-only runtime permission denials | `scripts\Test-AgentLayerRuntime.ps1` | PASS |
+| Managed OpenCode loads the plugin, expected primary routes, active agents, no default MCPs, and read-only runtime permission denials for Explorer, Librarian, Oracle, and Observer | `scripts\Test-AgentLayerRuntime.ps1` | PASS (historical 2026-08-02 record, before Observer was added to the verifier) |
 
 The runtime verifier establishes enforced permission policy and model primary
 routes. The plugin stores fallback variants in its internal ordered model chain,
 so those pairs are verified from the reviewed source rather than inferred from
 `opencode debug config` output.
+
+### Historic Context
+
+The original 2026-08-02 verification recorded in this document proved the
+plugin-load, default-agent, model-route, and `Explorer`, `Librarian`, and
+`Oracle` permission checks. Observer was disabled at that time. Phase 5 later
+enabled Observer through the verified structured attachment handoff
+(`PHASE-5-MULTIMEDIA.md`), and the runtime verifier was updated to inspect
+Observer permissions equivalently to the other read-only agents. Effective
+2026-08-05, the verifier requires denial of `edit`, `bash`, `task`, and
+`external_directory` for Observer alongside Explorer, Librarian, and Oracle.
+The 2026-08-02 historic record is retained for provenance; the runtime
+**must be re-run** through `Test-AgentLayerRuntime.ps1` after the updated
+verifier is applied in order to refresh the equivalent Observer evidence. The
+re-run has not been performed in this update and is a required residual gate.
 
 ## Restart and Rollback
 

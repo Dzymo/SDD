@@ -1,0 +1,26 @@
+{
+  "taskId": "F-FAIL-001",
+  "kind": "feature",
+  "brief": {
+    "observableOutcome": "A focused feature is implemented.",
+    "allowedFiles": ["src/feature.ts"],
+    "interfacesAndInvariants": "Existing callers remain compatible.",
+    "acceptanceCriteria": "The focused test passes.",
+    "focusedValidation": "npm test -- feature",
+    "forbiddenScopeChanges": "No dependencies.",
+    "expectedFinalReport": "Validation exit code."
+  },
+  "worker": {
+    "role": "fixer",
+    "model": "minimax-coding-plan/MiniMax-M3"
+  },
+  "attempts": [
+    {
+      "number": 1,
+      "validations": [
+        { "command": "npm test -- feature", "output": "FAIL  src/feature.test.ts\n  expected focused feature to be implemented\nTests: 1 failed, 1 total", "exitCode": 1 }
+      ]
+    }
+  ],
+  "completion": "PASS"
+}

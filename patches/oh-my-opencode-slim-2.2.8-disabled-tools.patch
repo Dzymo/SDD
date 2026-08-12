@@ -1,6 +1,6 @@
---- dist/index.js
-+++ dist/index.js
-@@
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -39943,4 +39943,5 @@
 -function minimumExpectedToolCount(disabledTools = []) {
 -  const disabledBaselineTools = new Set(disabledTools.filter((toolName) => BASELINE_TOOL_NAMES.has(toolName)));
 +function minimumExpectedToolCount(disabledTools = []) {

@@ -1,0 +1,36 @@
+{
+  "taskId": "B-ESCALATE-001",
+  "kind": "bug",
+  "brief": {
+    "observableOutcome": "The failing import resolves correctly.",
+    "allowedFiles": ["src/importer.ts", "tests/importer.test.ts"],
+    "interfacesAndInvariants": "Import behavior remains unchanged for valid paths.",
+    "acceptanceCriteria": "The importer regression test passes.",
+    "focusedValidation": "npm test -- importer",
+    "forbiddenScopeChanges": "No dependency upgrade.",
+    "expectedFinalReport": "Attempt outputs and escalation status."
+  },
+  "worker": {
+    "role": "fixer",
+    "model": "minimax-coding-plan/MiniMax-M3"
+  },
+  "attempts": [
+    {
+      "number": 1,
+      "validations": [
+        { "command": "npm test -- importer", "output": "FAIL  src/importer.test.ts\n  expected failing import to resolve correctly\nTests: 1 failed, 1 total", "exitCode": 1 }
+      ]
+    },
+    {
+      "number": 2,
+      "validations": [
+        { "command": "npm test -- importer", "output": "FAIL  src/importer.test.ts\n  expected failing import to resolve correctly\nTests: 1 failed, 1 total", "exitCode": 1 }
+      ]
+    }
+  ],
+  "escalation": {
+    "role": "oracle",
+    "reason": "assumption-review"
+  },
+  "completion": "ESCALATE"
+}

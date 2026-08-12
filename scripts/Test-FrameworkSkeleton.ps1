@@ -8,6 +8,7 @@ if ([string]::IsNullOrWhiteSpace($Root)) {
 }
 
 $requiredPaths = @(
+    'PACKAGE.md',
     'PLAN.md',
     'PHASE-2-FRAMEWORK-SKELETON.md',
     'PHASE-3-RESEARCH-LAYER.md',
@@ -113,6 +114,8 @@ $requiredPaths = @(
     'fixtures\phase-10\clean-package\package.json',
     'fixtures\phase-10\clean-package\index.js',
     'fixtures\phase-11\failure-drills.json',
+    'release-candidates\v0.1.0-rc.1.json',
+    'release-candidates\v0.1.0.json',
     'scripts\Test-FrameworkSkeleton.ps1',
     'scripts\Test-ResearchConfigSchema.ps1',
     'scripts\Apply-ResearchMcp.ps1',
@@ -232,13 +235,13 @@ if (Test-Path -LiteralPath $workflowPath -PathType Leaf) {
 
 $releaseWorkflowPath = Join-Path $Root '.github\workflows\release-candidate.yml'
 if (-not (Test-Path -LiteralPath $releaseWorkflowPath -PathType Leaf)) {
-    $failures += 'Release candidate workflow is missing.'
+    $failures += 'Release workflow is missing.'
 }
 else {
     $releaseWorkflowContent = Get-Content -LiteralPath $releaseWorkflowPath -Raw
-    foreach ($requiredMarker in @('workflow_dispatch:', 'contents: write', 'New-ReleaseCandidatePackage.ps1', 'Test-ReleaseCandidateAssets.ps1', 'gh release create', '--prerelease', '--cleanup-tag')) {
+    foreach ($requiredMarker in @('workflow_dispatch:', 'contents: write', 'New-ReleaseCandidatePackage.ps1', 'Test-ReleaseCandidateAssets.ps1', "'release', 'create'", '$plan.prerelease', '$releaseArguments += ''--prerelease''', '--cleanup-tag')) {
         if (-not $releaseWorkflowContent.Contains($requiredMarker)) {
-            $failures += "Release candidate workflow is missing required marker: $requiredMarker"
+            $failures += "Release workflow is missing required marker: $requiredMarker"
         }
     }
 }

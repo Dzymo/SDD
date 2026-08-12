@@ -110,7 +110,7 @@ jobs:
         shell: pwsh
         run: ./scripts/Test-PackagingRelease.ps1
 
-      - name: Validate release candidate packaging
+      - name: Validate RC and stable release packaging
         shell: pwsh
         run: ./scripts/Test-ReleaseCandidate.ps1
 

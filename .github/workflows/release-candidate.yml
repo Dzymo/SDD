@@ -1,24 +1,24 @@
-name: Release Candidate
+name: Release
 
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: Approved release-candidate version
+        description: Approved release version
         required: true
-        default: v0.1.0-rc.1
+        default: v0.1.0
         type: string
 
 permissions:
   contents: write
 
 concurrency:
-  group: release-candidate-${{ inputs.version }}
+  group: release-${{ inputs.version }}
   cancel-in-progress: false
 
 jobs:
-  release-candidate:
-    name: Package and publish release candidate
+  release:
+    name: Package and publish approved release
     runs-on: windows-latest
     env:
       GH_TOKEN: ${{ github.token }}
@@ -42,10 +42,11 @@ jobs:
           $outputDirectory = Join-Path $env:RUNNER_TEMP 'release-assets'
           New-Item -ItemType Directory -Path $outputDirectory | Out-Null
           ./scripts/New-ReleaseCandidatePackage.ps1 -Version $version -OutputDirectory $outputDirectory
-          ./scripts/Test-ReleaseCandidateAssets.ps1 -AssetDirectory $outputDirectory -Version $version -ExpectedTargetSha $plan.targetSha -RunSmoke
+          ./scripts/Test-ReleaseCandidateAssets.ps1 -AssetDirectory $outputDirectory -Version $version -ExpectedTargetSha $plan.targetSha -ExpectedPrerelease $plan.prerelease -RunSmoke
           "target_sha=$($plan.targetSha)" >> $env:GITHUB_OUTPUT
           "output_directory=$outputDirectory" >> $env:GITHUB_OUTPUT
           "notes_path=$(Join-Path $outputDirectory "sdd-$version-release-notes.md")" >> $env:GITHUB_OUTPUT
+          "prerelease=$($plan.prerelease.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
 
       - name: Reject an existing release or tag
         id: preflight
@@ -62,7 +63,7 @@ jobs:
           }
           "safe_to_cleanup=true" >> $env:GITHUB_OUTPUT
 
-      - name: Publish GitHub prerelease
+      - name: Publish GitHub release
         id: publish
         shell: pwsh
         run: |
@@ -73,11 +74,20 @@ jobs:
             (Join-Path $outputDirectory "sdd-$version-source.zip.sha256"),
             (Join-Path $outputDirectory "sdd-$version-release-manifest.json")
           )
-          gh release create $version @assets `
-            --target '${{ steps.package.outputs.target_sha }}' `
-            --title "SDD $version" `
-            --notes-file '${{ steps.package.outputs.notes_path }}' `
-            --prerelease
+          $releaseArguments = @(
+            'release', 'create', $version
+          ) + $assets + @(
+            '--target', '${{ steps.package.outputs.target_sha }}',
+            '--title', "SDD $version",
+            '--notes-file', '${{ steps.package.outputs.notes_path }}'
+          )
+          if ('${{ steps.package.outputs.prerelease }}' -eq 'true') {
+            $releaseArguments += '--prerelease'
+          }
+          & gh @releaseArguments
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
 
       - name: Download and verify published assets
         shell: pwsh
@@ -90,9 +100,11 @@ jobs:
             -AssetDirectory $downloadDirectory `
             -Version $version `
             -ExpectedTargetSha '${{ steps.package.outputs.target_sha }}' `
+            -ExpectedPrerelease ('${{ steps.package.outputs.prerelease }}' -eq 'true') `
             -RunSmoke
           $release = gh release view $version --json tagName,isPrerelease,targetCommitish,url | ConvertFrom-Json
-          if ($release.tagName -cne $version -or $release.isPrerelease -ne $true) {
+          $expectedPrerelease = '${{ steps.package.outputs.prerelease }}' -eq 'true'
+          if ($release.tagName -cne $version -or $release.isPrerelease -ne $expectedPrerelease) {
             throw 'Published GitHub release metadata is invalid.'
           }
           if ($release.targetCommitish -cne '${{ steps.package.outputs.target_sha }}') {
@@ -100,7 +112,7 @@ jobs:
           }
           "Post-release published-asset smoke: PASS"
 
-      - name: Roll back failed prerelease
+      - name: Roll back failed release
         if: failure() && steps.preflight.outputs.safe_to_cleanup == 'true'
         shell: pwsh
         run: |

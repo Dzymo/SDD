@@ -20,6 +20,15 @@ The active OpenSpec change records actual commands and results in
 `changeRoot` comes from OpenSpec status. The framework does not prescribe a
 package manager or add a package dependency.
 
+Release plans may represent either a prerelease such as `v1.2.0-rc.1` or a
+stable version such as `v1.2.0`. The plan records an explicit Boolean
+`prerelease`; it must be `true` exactly when the version has an `-rc.N` suffix.
+Packaging embeds this value in both manifests, and the release workflow adds
+GitHub's prerelease flag only when the approved plan requires it. A stable
+promotion may intentionally package the same immutable target SHA as an
+accepted RC, but that payload decision and any excluded later commits must be
+stated in `PACKAGE.md`, release notes, and known warnings.
+
 ## Package Gate
 
 Before a release can be ready, collect fresh evidence for every gate:

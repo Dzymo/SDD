@@ -6,6 +6,8 @@ param(
     [string]$Version,
     [Parameter(Mandatory = $true)]
     [string]$ExpectedTargetSha,
+    [Parameter(Mandatory = $true)]
+    [bool]$ExpectedPrerelease,
     [switch]$RunSmoke
 )
 
@@ -50,10 +52,17 @@ Assert-True -Condition ($actualHash -ceq $Matches[1]) -Message "Artifact SHA-256
 
 $externalManifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
 Assert-True -Condition ([string]$externalManifest.version -ceq $Version) -Message 'External manifest version mismatch.'
+$externalPrerelease = $externalManifest.PSObject.Properties['prerelease']
+if ($null -eq $externalPrerelease) {
+    Assert-True -Condition ($ExpectedPrerelease -and $Version -match '-rc\.\d+$') -Message 'External manifest is missing prerelease metadata.'
+}
+else {
+    Assert-True -Condition ([bool]$externalPrerelease.Value -eq $ExpectedPrerelease) -Message 'External manifest prerelease mismatch.'
+}
 Assert-True -Condition ([string]$externalManifest.targetSha -ceq $ExpectedTargetSha) -Message 'External manifest target SHA mismatch.'
 Assert-True -Condition ([string]$externalManifest.artifact -ceq $artifactName) -Message 'External manifest artifact name mismatch.'
 
-$tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) "sdd-rc-assets-$([guid]::NewGuid().ToString('N'))"
+$tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) "sdd-release-assets-$([guid]::NewGuid().ToString('N'))"
 try {
     New-Item -ItemType Directory -Path $tempRoot | Out-Null
     Expand-Archive -LiteralPath $artifactPath -DestinationPath $tempRoot
@@ -61,6 +70,13 @@ try {
     Assert-True -Condition (Test-Path -LiteralPath $internalManifestPath -PathType Leaf) -Message 'Packaged source is missing RELEASE-MANIFEST.json.'
     $internalManifest = Get-Content -LiteralPath $internalManifestPath -Raw | ConvertFrom-Json
     Assert-True -Condition ([string]$internalManifest.version -ceq $Version) -Message 'Internal manifest version mismatch.'
+    $internalPrerelease = $internalManifest.PSObject.Properties['prerelease']
+    if ($null -eq $internalPrerelease) {
+        Assert-True -Condition ($ExpectedPrerelease -and $Version -match '-rc\.\d+$') -Message 'Internal manifest is missing prerelease metadata.'
+    }
+    else {
+        Assert-True -Condition ([bool]$internalPrerelease.Value -eq $ExpectedPrerelease) -Message 'Internal manifest prerelease mismatch.'
+    }
     Assert-True -Condition ([string]$internalManifest.targetSha -ceq $ExpectedTargetSha) -Message 'Internal manifest target SHA mismatch.'
     Assert-True -Condition (($internalManifest | ConvertTo-Json -Depth 10 -Compress) -ceq ($externalManifest | ConvertTo-Json -Depth 10 -Compress)) -Message 'Internal and external release manifests differ.'
 
@@ -76,7 +92,7 @@ try {
         }
     }
 
-    [Console]::WriteLine('Release candidate asset verification: PASS')
+    [Console]::WriteLine('Release asset verification: PASS')
 }
 finally {
     if (Test-Path -LiteralPath $tempRoot) {

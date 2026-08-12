@@ -57,6 +57,27 @@ Record a pre-apply manifest that contains only sanitized metadata:
 | Diff decision | `MATCH`, `DRIFT`, or `ABSENT` for every framework-owned target. |
 | Apply decision | Owner, approved script, backup location, expected after hash, verifier, restart need, and rollback action for each non-match. |
 
+Run the read-only preflight before any backup, persistent write, or restart.
+It reports candidate SHA, worktree state, active OpenChamber/CPA GUI/OpenCode
+processes, the Phase 5 package hash, semantic managed-config comparisons, file
+hashes, drift classification, and a fail-closed verdict:
+
+```powershell
+PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-GlobalApplyReadiness.ps1 -Text
+```
+
+`NO_APPLY_REQUIRED` means every managed target already matches and no apply
+script should run. `READY_FOR_GLOBAL_APPLY` means supported drift exists and all
+write preconditions are satisfied. `BLOCKED` is a stop condition. Use
+`-OutputPath <existing-parent>\preflight.json` when a sanitized machine-readable
+record is required; without `-OutputPath`, the script writes no file and emits
+the JSON report to standard output unless `-Text` is selected.
+
+Use only a fresh operation-specific backup manifest whose complete target set is
+framework-allowlisted and matches the approved write set. Never reuse a mixed
+staging/global manifest or a manifest containing custom temporary targets as a
+Phase 12 rollback basis.
+
 The independent pre-apply comparison is the authoritative dry-run. Do not treat
 an apply script's `-WhatIf` behavior as the complete preview, and do not use
 `-WhatIf` with `Apply-ResearchMcp.ps1` because it does not implement

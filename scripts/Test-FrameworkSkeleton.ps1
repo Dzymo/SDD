@@ -150,6 +150,8 @@ $requiredPaths = @(
     'scripts\Test-EvaluationFailureDrills.ps1',
     'scripts\Invoke-Phase12RollbackDrill.ps1',
     'scripts\Test-Phase12RollbackDrill.ps1',
+    'scripts\Test-GlobalApplyReadiness.ps1',
+    'scripts\Test-GlobalApplyReadinessRegression.ps1',
     '.github\workflows\research-config.yml'
 )
 
@@ -223,6 +225,9 @@ if (Test-Path -LiteralPath $workflowPath -PathType Leaf) {
     }
     if ($workflowContent -notmatch 'Test-Phase12RollbackDrill\.ps1') {
         $failures += 'CI workflow must run the Phase 12 rollback drill regression gate.'
+    }
+    if ($workflowContent -notmatch 'Test-GlobalApplyReadinessRegression\.ps1') {
+        $failures += 'CI workflow must run the global apply readiness preflight regression gate.'
     }
     if ($workflowContent -notmatch 'Test-OpenSpecProjectTemplate\.ps1') {
         $failures += 'CI workflow must run the strict OpenSpec project template fixture validator.'

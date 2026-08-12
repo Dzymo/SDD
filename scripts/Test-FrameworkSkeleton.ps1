@@ -125,6 +125,9 @@ $requiredPaths = @(
     'scripts\Test-ObserverAttachmentPreflight.ps1',
     'scripts\Test-OpenSpecProjectTemplate.ps1',
     'scripts\Test-OpenSpecLifecycle.ps1',
+    'scripts\Test-ReleaseCandidate.ps1',
+    'scripts\Test-ReleaseCandidateAssets.ps1',
+    'scripts\New-ReleaseCandidatePackage.ps1',
     'scripts\CiWindowsOnly.psm1',
     'scripts\Test-CiWindowsOnlyRegression.ps1',
     'scripts\Test-ExecutionVerification.ps1',
@@ -222,6 +225,19 @@ if (Test-Path -LiteralPath $workflowPath -PathType Leaf) {
         $failures += 'CI workflow must run the isolated OpenSpec lifecycle behavioral gate.'
     }
 
+}
+
+$releaseWorkflowPath = Join-Path $Root '.github\workflows\release-candidate.yml'
+if (-not (Test-Path -LiteralPath $releaseWorkflowPath -PathType Leaf)) {
+    $failures += 'Release candidate workflow is missing.'
+}
+else {
+    $releaseWorkflowContent = Get-Content -LiteralPath $releaseWorkflowPath -Raw
+    foreach ($requiredMarker in @('workflow_dispatch:', 'contents: write', 'New-ReleaseCandidatePackage.ps1', 'Test-ReleaseCandidateAssets.ps1', 'gh release create', '--prerelease', '--cleanup-tag')) {
+        if (-not $releaseWorkflowContent.Contains($requiredMarker)) {
+            $failures += "Release candidate workflow is missing required marker: $requiredMarker"
+        }
+    }
 }
 
 $workflowDirectory = Join-Path $Root '.github\workflows'

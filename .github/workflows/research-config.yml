@@ -108,6 +108,10 @@ jobs:
         shell: pwsh
         run: ./scripts/Test-PackagingRelease.ps1
 
+      - name: Validate release candidate packaging
+        shell: pwsh
+        run: ./scripts/Test-ReleaseCandidate.ps1
+
       - name: Validate strict OpenSpec project template fixture
         shell: pwsh
         run: ./scripts/Test-OpenSpecProjectTemplate.ps1

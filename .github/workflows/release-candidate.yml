@@ -1,0 +1,120 @@
+name: Release Candidate
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Approved release-candidate version
+        required: true
+        default: v0.1.0-rc.1
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-candidate-${{ inputs.version }}
+  cancel-in-progress: false
+
+jobs:
+  release-candidate:
+    name: Package and publish release candidate
+    runs-on: windows-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_VERSION: ${{ inputs.version }}
+    steps:
+      - name: Check out release workflow source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Package approved target
+        id: package
+        shell: pwsh
+        run: |
+          $version = $env:RELEASE_VERSION
+          $planPath = Join-Path $PWD "release-candidates\$version.json"
+          if (-not (Test-Path -LiteralPath $planPath -PathType Leaf)) {
+            throw "Approved release plan not found: $planPath"
+          }
+          $plan = Get-Content -LiteralPath $planPath -Raw | ConvertFrom-Json
+          $outputDirectory = Join-Path $env:RUNNER_TEMP 'release-assets'
+          New-Item -ItemType Directory -Path $outputDirectory | Out-Null
+          ./scripts/New-ReleaseCandidatePackage.ps1 -Version $version -OutputDirectory $outputDirectory
+          ./scripts/Test-ReleaseCandidateAssets.ps1 -AssetDirectory $outputDirectory -Version $version -ExpectedTargetSha $plan.targetSha -RunSmoke
+          "target_sha=$($plan.targetSha)" >> $env:GITHUB_OUTPUT
+          "output_directory=$outputDirectory" >> $env:GITHUB_OUTPUT
+          "notes_path=$(Join-Path $outputDirectory "sdd-$version-release-notes.md")" >> $env:GITHUB_OUTPUT
+
+      - name: Reject an existing release or tag
+        id: preflight
+        shell: pwsh
+        run: |
+          $version = $env:RELEASE_VERSION
+          gh release view $version *> $null
+          if ($LASTEXITCODE -eq 0) {
+            throw "Release already exists: $version"
+          }
+          $tag = git ls-remote --tags origin "refs/tags/$version"
+          if (-not [string]::IsNullOrWhiteSpace(($tag | Out-String))) {
+            throw "Tag already exists: $version"
+          }
+          "safe_to_cleanup=true" >> $env:GITHUB_OUTPUT
+
+      - name: Publish GitHub prerelease
+        id: publish
+        shell: pwsh
+        run: |
+          $version = $env:RELEASE_VERSION
+          $outputDirectory = '${{ steps.package.outputs.output_directory }}'
+          $assets = @(
+            (Join-Path $outputDirectory "sdd-$version-source.zip"),
+            (Join-Path $outputDirectory "sdd-$version-source.zip.sha256"),
+            (Join-Path $outputDirectory "sdd-$version-release-manifest.json")
+          )
+          gh release create $version @assets `
+            --target '${{ steps.package.outputs.target_sha }}' `
+            --title "SDD $version" `
+            --notes-file '${{ steps.package.outputs.notes_path }}' `
+            --prerelease
+
+      - name: Download and verify published assets
+        shell: pwsh
+        run: |
+          $version = $env:RELEASE_VERSION
+          $downloadDirectory = Join-Path $env:RUNNER_TEMP 'published-assets'
+          New-Item -ItemType Directory -Path $downloadDirectory | Out-Null
+          gh release download $version --dir $downloadDirectory
+          ./scripts/Test-ReleaseCandidateAssets.ps1 `
+            -AssetDirectory $downloadDirectory `
+            -Version $version `
+            -ExpectedTargetSha '${{ steps.package.outputs.target_sha }}' `
+            -RunSmoke
+          $release = gh release view $version --json tagName,isPrerelease,targetCommitish,url | ConvertFrom-Json
+          if ($release.tagName -cne $version -or $release.isPrerelease -ne $true) {
+            throw 'Published GitHub release metadata is invalid.'
+          }
+          if ($release.targetCommitish -cne '${{ steps.package.outputs.target_sha }}') {
+            throw "Release target mismatch: $($release.targetCommitish)"
+          }
+          "Post-release published-asset smoke: PASS"
+
+      - name: Roll back failed prerelease
+        if: failure() && steps.preflight.outputs.safe_to_cleanup == 'true'
+        shell: pwsh
+        run: |
+          $version = $env:RELEASE_VERSION
+          gh release view $version *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release delete $version --yes --cleanup-tag
+          }
+          else {
+            $tag = git ls-remote --tags origin "refs/tags/$version"
+            if (-not [string]::IsNullOrWhiteSpace(($tag | Out-String))) {
+              git push origin ":refs/tags/$version"
+              if ($LASTEXITCODE -ne 0) {
+                throw "Failed to remove orphan release tag: $version"
+              }
+            }
+          }

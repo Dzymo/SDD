@@ -1,0 +1,18 @@
+{
+  "version": "v0.1.0-rc.1",
+  "title": "SDD v0.1.0-rc.1",
+  "targetSha": "a431be0064dc5b84abc31bb60fcbb94eaa185661",
+  "target": "GitHub prerelease in Dzymo/SDD",
+  "releaseNotes": [
+    "Complete the Phase 7-12 workflow, verification, UI-quality, packaging, failure-drill, and rollout contracts.",
+    "Fix OpenSpec local/store lifecycle propagation and prevent sync/archive double application.",
+    "Add behavioral OpenSpec 1.5.0 lifecycle coverage and guarded release/no-release archive paths.",
+    "Run Research Configuration automatically after merges through the push trigger on main."
+  ],
+  "knownWarnings": [
+    "This candidate is source-verified and isolated-managed-runtime verified; it is not active-global certification for this SHA.",
+    "Live provider behavior and exhaustive UI/accessibility coverage remain outside the release workflow."
+  ],
+  "rollbackPlan": "Delete GitHub release v0.1.0-rc.1 and tag v0.1.0-rc.1. No deployment, registry publication, or active-global write needs reversal.",
+  "externalAction": "Create tag v0.1.0-rc.1 at a431be0064dc5b84abc31bb60fcbb94eaa185661 and publish a GitHub prerelease in Dzymo/SDD with sdd-v0.1.0-rc.1-source.zip, its SHA-256 file, and the release manifest."
+}

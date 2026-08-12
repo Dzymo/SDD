@@ -125,6 +125,9 @@ $requiredPaths = @(
     'scripts\Test-ObserverAttachmentPreflight.ps1',
     'scripts\Test-OpenSpecProjectTemplate.ps1',
     'scripts\Test-OpenSpecLifecycle.ps1',
+    'scripts\Test-ReleaseCandidate.ps1',
+    'scripts\Test-ReleaseCandidateAssets.ps1',
+    'scripts\New-ReleaseCandidatePackage.ps1',
     'scripts\CiWindowsOnly.psm1',
     'scripts\Test-CiWindowsOnlyRegression.ps1',
     'scripts\Test-ExecutionVerification.ps1',
@@ -182,6 +185,9 @@ if (Test-Path -LiteralPath $workflowPath -PathType Leaf) {
     if ($workflowContent -notmatch '(?ms)^\s*push:\s*\r?\n\s*branches:\s*\r?\n\s*-\s*main\s*$') {
         $failures += 'CI workflow must run automatically on pushes to main.'
     }
+    if ($workflowContent -notmatch '(?ms)uses:\s*actions/checkout@[^\r\n]+\r?\n\s*with:\s*\r?\n\s*fetch-depth:\s*0\s*$') {
+        $failures += 'CI workflow must fetch full history for immutable release-target packaging.'
+    }
     if ($workflowContent -notmatch '@fission-ai/openspec@1\.5\.0') {
         $failures += 'OpenSpec bootstrap CI check must install @fission-ai/openspec@1.5.0.'
     }
@@ -222,6 +228,19 @@ if (Test-Path -LiteralPath $workflowPath -PathType Leaf) {
         $failures += 'CI workflow must run the isolated OpenSpec lifecycle behavioral gate.'
     }
 
+}
+
+$releaseWorkflowPath = Join-Path $Root '.github\workflows\release-candidate.yml'
+if (-not (Test-Path -LiteralPath $releaseWorkflowPath -PathType Leaf)) {
+    $failures += 'Release candidate workflow is missing.'
+}
+else {
+    $releaseWorkflowContent = Get-Content -LiteralPath $releaseWorkflowPath -Raw
+    foreach ($requiredMarker in @('workflow_dispatch:', 'contents: write', 'New-ReleaseCandidatePackage.ps1', 'Test-ReleaseCandidateAssets.ps1', 'gh release create', '--prerelease', '--cleanup-tag')) {
+        if (-not $releaseWorkflowContent.Contains($requiredMarker)) {
+            $failures += "Release candidate workflow is missing required marker: $requiredMarker"
+        }
+    }
 }
 
 $workflowDirectory = Join-Path $Root '.github\workflows'

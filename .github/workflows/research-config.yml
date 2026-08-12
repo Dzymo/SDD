@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
 
       - name: Validate Phase 11 evaluation and failure drills
         shell: pwsh
@@ -107,6 +109,10 @@ jobs:
       - name: Validate packaging and release contracts
         shell: pwsh
         run: ./scripts/Test-PackagingRelease.ps1
+
+      - name: Validate release candidate packaging
+        shell: pwsh
+        run: ./scripts/Test-ReleaseCandidate.ps1
 
       - name: Validate strict OpenSpec project template fixture
         shell: pwsh

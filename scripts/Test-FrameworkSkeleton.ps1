@@ -179,6 +179,9 @@ if (Test-Path -LiteralPath $templateCommands -PathType Container) {
 $workflowPath = Join-Path $Root '.github\workflows\research-config.yml'
 if (Test-Path -LiteralPath $workflowPath -PathType Leaf) {
     $workflowContent = Get-Content -LiteralPath $workflowPath -Raw
+    if ($workflowContent -notmatch '(?ms)^\s*push:\s*\r?\n\s*branches:\s*\r?\n\s*-\s*main\s*$') {
+        $failures += 'CI workflow must run automatically on pushes to main.'
+    }
     if ($workflowContent -notmatch '@fission-ai/openspec@1\.5\.0') {
         $failures += 'OpenSpec bootstrap CI check must install @fission-ai/openspec@1.5.0.'
     }

@@ -124,6 +124,7 @@ $requiredPaths = @(
     'scripts\Test-ObserverAttachmentRegression.ps1',
     'scripts\Test-ObserverAttachmentPreflight.ps1',
     'scripts\Test-OpenSpecProjectTemplate.ps1',
+    'scripts\Test-OpenSpecLifecycle.ps1',
     'scripts\CiWindowsOnly.psm1',
     'scripts\Test-CiWindowsOnlyRegression.ps1',
     'scripts\Test-ExecutionVerification.ps1',
@@ -213,6 +214,9 @@ if (Test-Path -LiteralPath $workflowPath -PathType Leaf) {
     }
     if ($workflowContent -notmatch 'Test-OpenSpecProjectTemplate\.ps1') {
         $failures += 'CI workflow must run the strict OpenSpec project template fixture validator.'
+    }
+    if ($workflowContent -notmatch 'Test-OpenSpecLifecycle\.ps1') {
+        $failures += 'CI workflow must run the isolated OpenSpec lifecycle behavioral gate.'
     }
 
 }

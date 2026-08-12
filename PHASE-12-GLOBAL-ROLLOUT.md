@@ -10,7 +10,13 @@ sanitized completion evidence for candidate
 
 The rollout applies one immutable, CI-validated framework candidate to the
 personal managed environment. It does not publish, deploy, tag, push, merge,
-modify OpenChamber state, or perform a project release.
+modify OpenChamber state, or perform a project release. The completion
+evidence in this file is historical active-global evidence for that immutable
+candidate and its earlier Phase 8 activations; it must not be reused for any
+later PR head. The current PR head is source-verified and isolated
+managed-runtime-verified only; the active-global hash/apply/runtime
+verification has not been re-run against the current PR head, and no global
+write has been performed for the current PR head.
 
 ## Safety Boundary
 

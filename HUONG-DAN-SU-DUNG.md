@@ -112,13 +112,19 @@ openspec store list --json
 Dùng ID trả về ở mọi lệnh đọc hoặc ghi change/spec, ví dụ:
 
 ```powershell
+openspec list --store <store-id> --json
+openspec new change <change-name> --store <store-id> --json
 openspec status --change <change-name> --store <store-id> --json
 openspec instructions apply --change <change-name> --store <store-id> --json
 openspec validate <change-name> --store <store-id> --strict --no-interactive
-openspec archive <change-name> --store <store-id>
+openspec archive <change-name> --store <store-id> --skip-specs --yes
+openspec archive <change-name> --store <store-id> --yes
 ```
 
-Giữ `--store <store-id>` ở các lệnh tiếp theo mà CLI gợi ý. Các slash command
+Lệnh archive đầu dùng khi `/opsx-sync` đã merge delta; lệnh thứ hai dùng khi
+delta chưa sync để OpenSpec cập nhật main spec đúng một lần. Lệnh local bỏ hoàn
+toàn `--store <store-id>`. Giữ cùng một store ID ở mọi lệnh tiếp theo mà CLI gợi
+ý. Các slash command
 `/opsx-*` cũng thực hiện bước chọn store khi bạn nêu store hoặc change thuộc
 store; không trộn artifact của store với `openspec/` cục bộ.
 
@@ -350,6 +356,11 @@ Command đọc delta spec từ path do `openspec status` trả về và áp dụ
 `ADDED`, `MODIFIED`, `REMOVED`, `RENAMED` vào `openspec/specs/`. Nếu không chỉ
 định change, command phải yêu cầu bạn chọn; không nên đoán change cần sync.
 
+`/opsx-sync` là lần merge delta thủ công duy nhất. Khi archive change đã sync,
+phải dùng `openspec archive <change-name> --skip-specs --yes`; nếu chưa sync,
+không merge thủ công trong archive mà dùng
+`openspec archive <change-name> --yes` để CLI cập nhật spec một lần.
+
 Việc sync không thay thế cổng hoàn thành, verification, release hay archive.
 
 ## 10. Đóng Gói
@@ -410,8 +421,9 @@ chỉ thực hiện rollback khi bạn chỉ đạo.
 ## 12. Archive Change
 
 Archive chỉ thực hiện khi mọi artifact/task hoàn tất, requirement coverage đầy
-đủ, release evidence và approval hợp lệ, external action/post-release smoke
-thành công, và strict validation chạy sau external action.
+đủ, strict validation tươi chạy sau external action (nhánh release) hoặc sau
+fresh focused validation (nhánh no-external-release), và `releaseApplicable`
+được quyết định từ evidence thực tế.
 
 Có slash command sau:
 
@@ -420,15 +432,36 @@ Có slash command sau:
 ```
 
 Command SDD đã được điều chỉnh để dùng trực tiếp CLI portable trên Windows và
-không tự tạo thư mục archive:
+không tự tạo thư mục archive. Source guard chính áp dụng hai nhánh:
+
+- **Release-applicable** khi change đụng `PACKAGE.md`, package/deploy/
+  publish/tag/push/merge/external write trong proposal/design/tasks, hoặc
+  `release.md` đã ghi external action/result. Yêu cầu version/notes/target/
+  warnings/rollback/exact external action + approval cùng bộ giá trị, external
+  action thành công, post-release smoke `0`, và strict validation `0`.
+- **No-external-release** chỉ hợp lệ khi không có release indicator và đã
+  hoàn tất mọi gate: completed tasks/artifacts, full requirement coverage,
+  fresh focused validation `0`, strict validation `0`, và
+  `releaseApplicable: false` kèm reason trong `verification.md`. User
+  confirmation không thể vượt gate; ghi giả `RELEASED-OK` hoặc fake
+  approval/result là cấm.
+
+Cả hai nhánh chọn đúng một trong bốn lệnh portable sau dựa trên root và
+trạng thái sync, luôn dùng `--yes` (và `--skip-specs` nếu đã sync):
 
 ```powershell
 openspec validate <change-name> --strict --no-interactive
-openspec archive <change-name>
+openspec archive <change-name> --skip-specs --yes
+# Hoặc, nếu delta chưa sync:
+openspec archive <change-name> --yes
 ```
 
+Với store, giữ cùng `--store <store-id>` trên validate và archive. Lệnh local
+bỏ hoàn toàn `--store`.
+
 Không tự tạo thư mục archive hoặc di chuyển change directory thủ công. Không
-archive change bị fail, cancelled, unapproved hoặc mới chỉ "ready for release".
+archive change bị fail, cancelled, unapproved, hoặc thiếu gate trong bất kỳ
+nhánh nào.
 
 ## 13. Bảng Lệnh Tham Khảo Nhanh
 
@@ -444,7 +477,8 @@ archive change bị fail, cancelled, unapproved hoặc mới chỉ "ready for re
 | `openspec instructions <id> --change <name> --json` | Hoàn thành artifact thiếu | Dùng `id` do `status` trả về. |
 | `openspec instructions apply --change <name> --json` | Xem context và trạng thái apply | `ready`/`in_progress` mới có thể triển khai. |
 | `openspec validate <name> --strict --no-interactive` | Trước khi kết luận/archive | Exit code phải là `0`. |
-| `openspec archive <name>` | Lưu trữ change sau release | Chỉ chạy sau toàn bộ cổng archive. |
+| `openspec archive <name> --skip-specs --yes` | Lưu trữ change đã sync | Không áp dụng delta lần hai. |
+| `openspec archive <name> --yes` | Lưu trữ change chưa sync | Để OpenSpec cập nhật main spec đúng một lần. |
 
 ## 14. Xử Lý Sự Cố Thường Gặp
 
@@ -458,7 +492,7 @@ archive change bị fail, cancelled, unapproved hoặc mới chỉ "ready for re
 | Goal hết budget hoặc bị block | Agent tóm tắt phần đã xong/còn lại và blocker; bạn chọn giải quyết, thu nhỏ, resume hoặc dừng. Agent không tự tăng budget hay resume. |
 | Cần thay đổi API, dependency, data, security hoặc release target | Agent đưa phương án, xin quyết định rõ ràng, rồi tự cập nhật proposal/spec/design. |
 | Artifact chạy trong source tree nhưng không chạy sạch | Agent giữ change active, sửa package contract/artifact và làm lại clean-environment smoke. |
-| Archive trên Windows gặp `ResourceExists` | Không tạo thư mục tay; chạy `openspec archive <change-name>` trực tiếp sau khi qua toàn bộ gate. |
+| Archive trên Windows gặp `ResourceExists` | Không tạo thư mục tay; chạy archive noninteractive đúng nhánh sync sau khi qua toàn bộ gate. |
 
 ## 15. Tiêu Chí Hoàn Thành Của Một Change
 

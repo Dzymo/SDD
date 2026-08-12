@@ -62,6 +62,18 @@ output is authoritative for each artifact's current structure.
 The framework's `templates/openspec/` references are not copied with this
 bootstrap; use them from the framework checkout only as concise guidance.
 
+For a registered store, select the ID with `openspec store list --json`, then
+include that same ID explicitly on every lifecycle command. Local commands omit
+`--store`:
+
+```powershell
+openspec list --store <store-id> --json
+openspec new change <change-name> --store <store-id> --json
+openspec status --change <change-name> --store <store-id> --json
+openspec instructions apply --change <change-name> --store <store-id> --json
+openspec validate <change-name> --store <store-id> --strict --no-interactive
+```
+
 For a new project that does not copy this bootstrap, generate the same core
 integration with:
 
@@ -102,21 +114,44 @@ This is a documented upstream `core` profile limitation, not a custom
 command added by this bootstrap.
 
 On Windows PowerShell, the adapted `/opsx-archive` command uses the portable
-installed CLI directly and never creates archive directories manually:
+installed CLI directly and never creates archive directories manually. If
+`/opsx-sync` already merged the delta, skip the second spec update; otherwise
+let archive update the main specs once:
 
 ```powershell
-openspec archive <change-name>
+openspec archive <change-name> --skip-specs --yes
+openspec archive <change-name> --yes
 ```
+
+For a store-backed change, use
+`openspec archive <change-name> --store <store-id> --skip-specs --yes` after
+sync, or `openspec archive <change-name> --store <store-id> --yes` when archive
+must apply the delta once.
 
 ## Release, Approval, And Pre-Release Validation
 
 Before archive, the adapted `/opsx-archive` prompt takes `changeRoot` from the
 status JSON and uses `<changeRoot>/release.md` and
-`<changeRoot>/verification.md`. It refuses to archive without a successful
-recorded release, exact approval, complete requirement coverage, successful
-post-release smoke, and fresh strict validation. The bootstrap does not add an
-additional archive command; it relies on the installed CLI and the adapted
-prompt's gate so an unapproved release cannot archive.
+`<changeRoot>/verification.md`. It distinguishes two source-enforced branches:
+
+- `release-applicable` is mandatory when the change adds or updates
+  `PACKAGE.md`, when `proposal.md`/`design.md`/`tasks.md`/`release.md` already
+  describe any package/deploy/publish/tag/push/merge/external write, or when an
+  existing `release.md` records an external action or result. The branch
+  requires exact approval of the same version, release notes, target,
+  warnings, rollback plan, and external action; successful external action
+  and post-release smoke with exit code `0`; and fresh strict validation.
+- `no-external-release` is permitted only when no release indicator exists
+  and every other gate is met: completed tasks/artifacts, full requirement
+  coverage, fresh focused validation with exit code `0`, strict OpenSpec
+  validation with exit code `0`, and a recorded `releaseApplicable: false`
+  plus short reason in `verification.md`. User confirmation cannot bypass
+  any gate in either branch, and a fake release approval or result is
+  forbidden.
+
+The bootstrap does not add an additional archive command; both branches
+rely on the installed CLI and the adapted prompt's gate so an unapproved or
+incomplete release cannot archive.
 
 ## Package And Release
 
@@ -130,7 +165,8 @@ Packaging is not a release authorization. Before any publish, deploy, tag,
 push, merge, or other external write, obtain and record explicit user approval
 for the exact version, release notes, target/environment, known warnings,
 rollback plan, and external action. After the approved action and post-release
-smoke succeed, run strict validation and `openspec archive <change-name>`.
+smoke succeed, run strict validation and the applicable noninteractive archive
+form above.
 Do not archive a failed, cancelled, or unapproved release.
 
 A Goal may prepare package and release evidence only to `ready for release`.

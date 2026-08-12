@@ -19,6 +19,12 @@ global OpenCode framework used through OpenChamber.
   2026-08-05. Phase 9 is runtime-verified on 2026-08-05. Phase 11 is
   source-complete; its offline gate covers all 21 required scenarios but is a
   source-policy regression guard rather than live model-compliance evidence.
+  The runtime records cited above are historical active-global evidence for
+  the immutable candidate completed on 2026-08-08; the current PR head is
+  described as **source + isolated managed-runtime verified only**. The
+  active-global hash/apply/runtime verification has not been re-run for the
+  current PR head and remains a required residual gate; no global write has
+  been performed against the current PR head.
 
 Phase 12 global rollout is **complete** as of 2026-08-08 for immutable
 candidate `b75043d6097d12ac52c5bbbc3224f316c3243961`. It recorded clean-source

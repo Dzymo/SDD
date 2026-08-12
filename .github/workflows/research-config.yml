@@ -121,6 +121,10 @@ jobs:
         shell: pwsh
         run: npm install --global @fission-ai/openspec@1.5.0
 
+      - name: Validate isolated OpenSpec lifecycle
+        shell: pwsh
+        run: ./scripts/Test-OpenSpecLifecycle.ps1
+
       - name: Validate OpenSpec bootstrap preflight
         shell: pwsh
         run: |

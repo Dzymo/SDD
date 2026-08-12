@@ -24,11 +24,14 @@ Contract markers: `SESSION-FIRST`, `USER-NO-FILE-EDIT`, `ADAPTIVE-INTERVIEW`,
 
 ## Cách Thực Hiện
 
-1. Xác định scope OpenSpec. Mặc định dùng `openspec/` gần nhất. Nếu người dùng
-   nêu store hoặc change thuộc store, chạy `openspec store list --json` và giữ
-   `--store <id>` cho các lệnh tiếp theo.
-2. Đọc `PRODUCT.md`, `DESIGN.md`, surface brief liên quan và
-   `openspec list --json` nếu chúng tồn tại.
+1. Xác định scope OpenSpec và giữ nguyên lựa chọn đó trong toàn bộ command:
+   - Local: dùng `openspec/` gần nhất, chạy `openspec list --json` và không thêm
+     `--store` vào bất kỳ lệnh lifecycle nào.
+   - Store: chạy `openspec store list --json` để chọn ID, sau đó chạy
+     `openspec list --store <id> --json`. Mọi lệnh lifecycle tiếp theo phải ghi
+     rõ cùng một `--store <id>`; không dựa vào root gần nhất.
+2. Đọc `PRODUCT.md`, `DESIGN.md`, surface brief liên quan và output của lệnh
+   `openspec list` đã chọn ở bước 1.
 3. Nếu `PRODUCT.md` thiếu hoặc chỉ còn comment template, bắt đầu bằng thông tin
    định hướng tối thiểu rồi mở rộng theo câu trả lời. Chỉ hỏi thêm khi thông tin
    có thể thay đổi phạm vi, UI, dữ liệu, bảo mật, chi phí, release hoặc cách kiểm
@@ -42,9 +45,18 @@ Contract markers: `SESSION-FIRST`, `USER-NO-FILE-EDIT`, `ADAPTIVE-INTERVIEW`,
 6. Khi có quyết định bền vững, tự cập nhật `DESIGN.md`. Với UI mới hoặc redesign
    đáng kể, sau khi người dùng chọn hướng, tự tạo/cập nhật
    `docs/surfaces/<surface>.md`.
-7. Nếu đang khám phá một change, lấy path thật bằng
-   `openspec status --change "<name>" --json`, đọc artifact hiện có và tự cập
-   nhật proposal/spec/design/tasks sau khi người dùng xác nhận thay đổi.
+7. Nếu đang khám phá một change, lấy path thật bằng đúng một trong hai lệnh:
+
+   ```bash
+   # Local
+   openspec status --change "<name>" --json
+
+   # Store
+   openspec status --change "<name>" --store <id> --json
+   ```
+
+   Đọc artifact hiện có và tự cập nhật proposal/spec/design/tasks sau khi người
+   dùng xác nhận thay đổi.
 
 ## Giới Hạn
 

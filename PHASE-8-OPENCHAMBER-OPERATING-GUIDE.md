@@ -13,9 +13,14 @@ user operating guide; and deterministic advisory fixtures.
 It does not change OpenChamber settings, arm Goals, create worktrees, enable
 permissions, or add a continuation loop. The controlled prompt apply completed
 on 2026-08-05 with backup `phase-8-20260805-180815`; that runtime result is
-historical evidence for the previous prompt. The amended prompt requires a new
-controlled apply, restart, and runtime verifier before its behavior is treated
-as active.
+historical evidence for the previous immutable Phase 12 candidate
+`b75043d6097d12ac52c5bbbc3224f316c3243961` (and its earlier Phase 8
+activations on 2026-08-07 and 2026-08-08 captured in the Phase 12 record). The
+amended prompt requires a new controlled apply, restart, and runtime verifier
+before its behavior is treated as active. The current PR head is
+source-verified and isolated managed-runtime-verified only; the active-global
+hash/apply/runtime verification has not been re-run against the current PR
+head, and no global write has been performed for the current PR head.
 
 ## Delivered Assets
 

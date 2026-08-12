@@ -22,8 +22,11 @@ Contract markers: `SESSION-FIRST`, `USER-NO-FILE-EDIT`, `ADAPTIVE-INTERVIEW`,
 
 1. Nếu input trống, hỏi người dùng muốn xây dựng hoặc sửa điều gì. Từ mô tả đã
    hiểu, đề xuất tên kebab-case và xác nhận nếu tên có thể gây hiểu nhầm.
-2. Xác định local OpenSpec root hoặc store. Với store, chạy
-   `openspec store list --json` và giữ `--store <id>` ở các lệnh được hỗ trợ.
+2. Xác định local OpenSpec root hoặc store và giữ nguyên lựa chọn đó. Local dùng
+   `openspec list --json` và mọi lệnh lifecycle bên dưới phải bỏ `--store`.
+   Với store, chạy `openspec store list --json`, chọn ID, rồi chạy
+   `openspec list --store <id> --json`; mọi lệnh lifecycle bên dưới phải ghi rõ
+   cùng một `--store <id>`.
 3. Đọc `PRODUCT.md`. Nếu thiếu, chỉ có comment template hoặc thiếu product fact
    cần cho change, phỏng vấn người dùng rồi tự tạo/cập nhật file. Không yêu cầu
    người dùng mở hoặc điền file.
@@ -31,33 +34,54 @@ Contract markers: `SESSION-FIRST`, `USER-NO-FILE-EDIT`, `ADAPTIVE-INTERVIEW`,
    đưa một nhóm nhỏ hướng khác biệt để dễ so sánh, khuyến nghị một hướng và cho
    phép xem thêm khi còn lựa chọn quan trọng. Sau lựa chọn, tự cập nhật
    `DESIGN.md` và surface brief liên quan.
-5. Nếu change chưa tồn tại, chạy:
+5. Nếu change chưa tồn tại, chạy đúng một trong hai lệnh:
 
    ```bash
-   openspec new change "<name>"
+   # Local
+   openspec new change "<name>" --json
+
+   # Store
+   openspec new change "<name>" --store <id> --json
    ```
 
    Nếu đã tồn tại, hỏi tiếp tục change đó hay tạo tên khác.
-6. Chạy `openspec status --change "<name>" --json`. Dùng `planningHome`,
-   `changeRoot`, `artifactPaths`, `actionContext`, `applyRequires` và danh sách
-   `artifacts` làm nguồn sự thật; không đoán path.
+6. Chạy đúng một trong hai lệnh status:
+
+   ```bash
+   # Local
+   openspec status --change "<name>" --json
+
+   # Store
+   openspec status --change "<name>" --store <id> --json
+   ```
+
+   Dùng `planningHome`, `changeRoot`, `artifactPaths`, `actionContext`,
+   `applyRequires` và danh sách `artifacts` làm nguồn sự thật; không đoán path.
 7. Theo thứ tự dependency, với mỗi artifact `ready`, chạy:
 
    ```bash
+   # Local
    openspec instructions <artifact-id> --change "<name>" --json
+
+   # Store
+   openspec instructions <artifact-id> --change "<name>" --store <id> --json
    ```
 
    Đọc dependency/context files, áp dụng `context`, `rules`, `template` và
    `instruction`, rồi tự ghi vào `resolvedOutputPath`. Với API/dependency bên
    ngoài, lấy evidence theo phiên bản và đưa quyết định vào artifact phù hợp.
-8. Sau mỗi artifact, chạy lại status. Tiếp tục đến khi mọi `applyRequires` đều
-   `done`. Nếu thiếu một quyết định quan trọng, tiếp tục phỏng vấn theo chủ đề
-   đến khi mục tiêu, phạm vi, ràng buộc và cách kiểm chứng đủ rõ; không giao việc
-   sửa file cho người dùng.
+8. Sau mỗi artifact, chạy lại đúng lệnh status local hoặc store ở bước 6. Tiếp
+   tục đến khi mọi `applyRequires` đều `done`. Nếu thiếu một quyết định quan
+   trọng, tiếp tục phỏng vấn theo chủ đề đến khi mục tiêu, phạm vi, ràng buộc và
+   cách kiểm chứng đủ rõ; không giao việc sửa file cho người dùng.
 9. Chạy strict validation và tự sửa lỗi artifact trong phạm vi đã thống nhất:
 
    ```bash
+   # Local
    openspec validate <name> --strict --no-interactive
+
+   # Store
+   openspec validate <name> --store <id> --strict --no-interactive
    ```
 
 ## Kết Thúc

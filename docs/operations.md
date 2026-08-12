@@ -376,7 +376,10 @@ CI jobs. Phase 12 global rollout is **complete** for candidate
 `b75043d6097d12ac52c5bbbc3224f316c3243961`; its managed-runtime and
 provider-backed evidence is recorded in `PHASE-12-GLOBAL-ROLLOUT.md`. A future
 framework candidate or managed-runtime change requires a new local Phase 12
-evidence run before its approved global write.
+evidence run before its approved global write. The current PR head is
+source-verified and isolated managed-runtime-verified only; the active-global
+hash/apply/runtime verification has not been re-run against the current PR
+head, and no global write has been performed for the current PR head.
 
 The `main` branch requires the `Validate research MCP schema (Windows)` check
 before merge. Branch protection also requires branches to be current before

@@ -21,19 +21,31 @@ Contract markers: `SESSION-FIRST`, `USER-NO-FILE-EDIT`, `ADAPTIVE-INTERVIEW`,
 
 ## Cách Thực Hiện
 
-1. Chọn change từ input hoặc ngữ cảnh. Nếu mơ hồ, chạy `openspec list --json`
-   và hỏi người dùng chọn; luôn thông báo change đang dùng.
-2. Xác định local root hoặc store, rồi chạy:
+1. Chọn local root hoặc store trước khi chọn change và giữ nguyên lựa chọn đó:
+   - Local: nếu mơ hồ, chạy `openspec list --json`; mọi lệnh lifecycle sau đó
+     phải bỏ `--store`.
+   - Store: chạy `openspec store list --json` để chọn ID, rồi nếu mơ hồ chạy
+     `openspec list --store <id> --json`; mọi lệnh lifecycle sau đó phải ghi rõ
+     cùng một `--store <id>`.
+   Luôn thông báo change đang dùng.
+2. Chạy đúng cặp lệnh cho root đã chọn:
 
    ```bash
+   # Local
    openspec status --change "<name>" --json
    openspec instructions apply --change "<name>" --json
+
+   # Store
+   openspec status --change "<name>" --store <id> --json
+   openspec instructions apply --change "<name>" --store <id> --json
    ```
 
 3. Nếu apply trả về `blocked`, profile core provides no built-in continuation surface.
    Agent tự phục hồi, không giao người dùng sửa file:
    - Đọc từng artifact `not_done` từ status.
-   - Chạy `openspec instructions <artifact-id> --change "<name>" --json`.
+   - Chạy `openspec instructions <artifact-id> --change "<name>" --json` cho
+     local hoặc `openspec instructions <artifact-id> --change "<name>" --store
+     <id> --json` cho store.
    - Đọc mọi `contextFiles`, tự ghi đúng `resolvedOutputPath`, rồi chạy lại status.
    - Lặp đến khi apply là `ready` hoặc `in_progress`.
    - Chỉ phỏng vấn người dùng khi thiếu một quyết định material.
@@ -50,9 +62,19 @@ Contract markers: `SESSION-FIRST`, `USER-NO-FILE-EDIT`, `ADAPTIVE-INTERVIEW`,
    cập nhật artifact sau quyết định của người dùng. Không yêu cầu họ sửa file.
 8. Với bug hồi quy hoặc hành vi rủi ro, tạo focused regression check khi phù hợp.
    Sau hai lần sửa thất bại, dừng blind repair và đánh giá lại root cause.
-9. Sau task cuối, chạy project-native checks và strict validation. Tạo hoặc cập
-   nhật `<changeRoot>/verification.md` với command, exit code, requirement
-   coverage và remaining uncertainty.
+9. Sau task cuối, chạy project-native checks và strict validation bằng đúng một
+   trong hai lệnh:
+
+   ```bash
+   # Local
+   openspec validate <name> --strict --no-interactive
+
+   # Store
+   openspec validate <name> --store <id> --strict --no-interactive
+   ```
+
+   Tạo hoặc cập nhật `<changeRoot>/verification.md` với command, exit code,
+   requirement coverage và remaining uncertainty.
 
 ## Kết Thúc
 
@@ -68,5 +90,10 @@ Contract markers: `SESSION-FIRST`, `USER-NO-FILE-EDIT`, `ADAPTIVE-INTERVIEW`,
   `ready for release`. Goal phải dừng trước publish, deploy, tag, push, merge,
   production mutation hoặc archive. Tiếp tục trong session để agent xin explicit
   approval và tự cập nhật `PACKAGE.md`, `verification.md`, `release.md`.
-- Chỉ đề xuất `/opsx-archive <change-name>` sau khi mọi release, approval,
-  post-release smoke và strict validation bắt buộc đã hoàn tất.
+- Chỉ đề xuất `/opsx-archive <change-name>` khi evidence thực tế xác nhận nhánh
+  archive phù hợp: release-applicable nếu change đụng package/deploy/publish/
+  tag/push/merge/external write và đã đủ version/notes/target/rollback/approval/
+  external result/post-release smoke; no-external-release nếu change thật sự
+  không có release indicator và đã đủ completed tasks/artifacts, full
+  requirement coverage, fresh focused validation, strict validation và ghi
+  `releaseApplicable: false` cùng reason trong `verification.md`.

@@ -17,7 +17,10 @@ description: Package an application and prepare or execute a release only with c
 3. Keep the command, intended version, expected artifact, clean-environment
    smoke check, content exclusions, and rollback procedure in
    `<changeRoot>/verification.md` and `<changeRoot>/release.md`, where
-   `changeRoot` comes from `openspec status --change <name> --json`.
+   `changeRoot` comes from `openspec status --change <name> --json` for a local
+   change or `openspec status --change <name> --store <id> --json` for the
+   selected store. Preserve the same store ID on later instructions,
+   validation, and archive commands.
 
 ## Package Gate
 
@@ -61,3 +64,23 @@ normal OpenSpec strict validation and archive only after that successful
 release record. Do not bypass archive validation. If the external action or
 post-release check fails, report `BLOCKED`, preserve the active change, and use
 the recorded rollback plan; do not archive it.
+
+## Archive Branch Decision
+
+Release applicability is decided from real evidence, not from a default
+expectation. A change is release-applicable when it adds or updates
+`PACKAGE.md`, when `proposal.md`, `design.md`, or `tasks.md` describe package,
+deploy, publish, container/build artifact, tag, push, merge, release, or any
+other external write, or when `release.md` already records an external action
+or result. In every such case the release branch is mandatory and cannot be
+downgraded to no-external-release in order to skip approval or post-release
+gates.
+
+For a genuine no-external-release change, the same archive prompt must still
+verify completed tasks/artifacts, full requirement coverage, fresh focused
+validation with exit code `0`, and strict `openspec validate` with exit code
+`0`, and it must record `releaseApplicable: false` plus a short reason in
+`verification.md`. User confirmation cannot bypass any gate, and a fake
+release approval or result is forbidden. Both branches converge on the same
+Phase 1 archive command (one of the four `--skip-specs --yes`/`--yes`
+variants keyed by store vs local root and sync vs unsync).

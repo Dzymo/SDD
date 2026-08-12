@@ -18,7 +18,13 @@ delivered-content rules without contacting a registry.
 
 It does not publish, deploy, tag, push, merge, call a registry, or write a
 global target. Global activation remains a separate controlled operation and an
-actual project release always needs a fresh explicit user approval.
+actual project release always needs a fresh explicit user approval. The
+2026-08-05 active-global runtime record is the historical evidence for the
+previous immutable Phase 12 candidate
+`b75043d6097d12ac52c5bbbc3224f316c3243961`. The current PR head is
+source-verified and isolated managed-runtime-verified only; the active-global
+hash/apply/runtime verification has not been re-run against the current PR
+head, and no global write has been performed for the current PR head.
 
 ## Delivered Assets
 

@@ -28,27 +28,66 @@ function Invoke-NativeChecked {
 function Get-ReleaseVerdict {
     param([object]$Scenario)
 
-    $package = $Scenario.package
-    if ($package.buildExitCode -ne 0) { return 'PACKAGE-BUILD-FAILED' }
-    if ($package.artifactPresent -ne $true) { return 'ARTIFACT-MISSING' }
-    if ($package.versionMatches -ne $true) { return 'VERSION-MISMATCH' }
-    if ($package.cleanSmokeExitCode -ne 0) { return 'CLEAN-SMOKE-FAILED' }
-    if ($package.contentCheck -ne 'clean') { return 'CONTENT-CHECK-FAILED' }
-    if ([string]::IsNullOrWhiteSpace($package.sha256)) { return 'CHECKSUM-MISSING' }
-
     $release = $Scenario.release
-    if ([string]::IsNullOrWhiteSpace($release.externalAction)) { return 'EXTERNAL-ACTION-MISSING' }
-    foreach ($field in @('version', 'releaseNotes', 'target', 'knownWarnings', 'rollbackPlan', 'externalAction', 'record')) {
-        if ($null -eq $release.approval -or [string]::IsNullOrWhiteSpace($release.approval.$field)) {
-            return 'RELEASE-APPROVAL-REQUIRED'
-        }
+    if ($null -eq $release -or $null -eq $release.applicable) {
+        return 'RELEASE-APPLICABILITY-MISSING'
     }
-    if ($release.approval.externalAction -ne $release.externalAction) { return 'RELEASE-APPROVAL-REQUIRED' }
-    if ($null -eq $release.externalResult) { return 'RELEASE-AUTHORIZED' }
-    if ($release.externalResult.exitCode -ne 0 -or $release.externalResult.postReleaseSmokeExitCode -ne 0) { return 'EXTERNAL-RELEASE-FAILED' }
-    if ($null -eq $release.openspec -or $release.openspec.strictValidationExitCode -ne 0) { return 'ARCHIVE-BLOCKED' }
-    if ($release.openspec.archiveExitCode -ne 0) { return 'ARCHIVE-FAILED' }
-    return 'RELEASE-ARCHIVED'
+
+    $exactFields = @('version', 'releaseNotes', 'target', 'knownWarnings', 'rollbackPlan', 'externalAction')
+
+    if ($release.applicable -eq $true) {
+        $packageProp = $Scenario.PSObject.Properties['package']
+        if ($null -eq $packageProp -or $null -eq $packageProp.Value) { return 'PACKAGE-MISSING' }
+        $package = $packageProp.Value
+        if ($package.buildExitCode -ne 0) { return 'PACKAGE-BUILD-FAILED' }
+        if ($package.artifactPresent -ne $true) { return 'ARTIFACT-MISSING' }
+        if ($package.versionMatches -ne $true) { return 'VERSION-MISMATCH' }
+        if ($package.cleanSmokeExitCode -ne 0) { return 'CLEAN-SMOKE-FAILED' }
+        if ($package.contentCheck -ne 'clean') { return 'CONTENT-CHECK-FAILED' }
+        if ([string]::IsNullOrWhiteSpace($package.sha256)) { return 'CHECKSUM-MISSING' }
+
+        if ($null -eq $release.plan) { return 'RELEASE-PLAN-MISSING' }
+        foreach ($f in $exactFields) {
+            $val = $release.plan.$f
+            if ($null -eq $val -or [string]::IsNullOrWhiteSpace([string]$val)) {
+                return 'RELEASE-PLAN-INCOMPLETE'
+            }
+        }
+        if ($null -eq $release.approval) { return 'RELEASE-APPROVAL-REQUIRED' }
+        foreach ($f in $exactFields) {
+            $val = $release.approval.$f
+            if ($null -eq $val -or [string]::IsNullOrWhiteSpace([string]$val)) {
+                return 'RELEASE-APPROVAL-REQUIRED'
+            }
+        }
+        foreach ($f in $exactFields) {
+            if ([string]$release.plan.$f -cne [string]$release.approval.$f) {
+                return 'RELEASE-APPROVAL-REQUIRED'
+            }
+        }
+        if ([string]::IsNullOrWhiteSpace([string]$release.externalAction)) { return 'EXTERNAL-ACTION-MISSING' }
+        if ([string]$release.approval.externalAction -cne [string]$release.externalAction) { return 'RELEASE-APPROVAL-REQUIRED' }
+        if ($null -eq $release.externalResult) { return 'RELEASE-AUTHORIZED' }
+        if ($release.externalResult.exitCode -ne 0 -or $release.externalResult.postReleaseSmokeExitCode -ne 0) { return 'EXTERNAL-RELEASE-FAILED' }
+        if ($null -eq $release.openspec -or $release.openspec.strictValidationExitCode -ne 0) { return 'ARCHIVE-BLOCKED' }
+        if ($release.openspec.archiveExitCode -ne 0) { return 'ARCHIVE-FAILED' }
+        return 'RELEASE-ARCHIVED'
+    }
+    elseif ($release.applicable -eq $false) {
+        # Package evidence is intentionally not inspected for non-release scenarios;
+        # only the no-release guards defined by the policy apply.
+        if ([string]::IsNullOrWhiteSpace([string]$release.noReleaseReason)) { return 'NON-RELEASE-REASON-MISSING' }
+        if ($null -ne $release.externalAction -and -not [string]::IsNullOrWhiteSpace([string]$release.externalAction)) { return 'NON-RELEASE-EXTERNAL-ACTION-FORBIDDEN' }
+        if ($null -ne $release.approval) { return 'NON-RELEASE-APPROVAL-FORBIDDEN' }
+        if ($null -ne $release.externalResult) { return 'NON-RELEASE-EXTERNAL-RESULT-FORBIDDEN' }
+        if ($null -eq $release.verification -or $release.verification.exitCode -ne 0) { return 'NON-RELEASE-VERIFICATION-FAILED' }
+        if ($null -eq $release.openspec -or $release.openspec.strictValidationExitCode -ne 0) { return 'ARCHIVE-BLOCKED' }
+        if ($release.openspec.archiveExitCode -ne 0) { return 'ARCHIVE-FAILED' }
+        return 'NON-RELEASE-ARCHIVED'
+    }
+    else {
+        return 'RELEASE-APPLICABILITY-INVALID'
+    }
 }
 
 # Verdict expectations and fixed scenario coverage are owned by code.
@@ -58,6 +97,7 @@ $requiredPhase10Scenarios = [ordered]@{
     'clean-smoke-failure-blocks-release'         = @{ expected = 'CLEAN-SMOKE-FAILED' }
     'content-finding-blocks-release'             = @{ expected = 'CONTENT-CHECK-FAILED' }
     'successful-release-can-be-archived'         = @{ expected = 'RELEASE-ARCHIVED' }
+    'non-release-archived'                       = @{ expected = 'NON-RELEASE-ARCHIVED' }
 }
 
 function Test-Phase10ScenarioSet {
@@ -158,6 +198,172 @@ $clone = $mutatedJson | ConvertFrom-Json
 $clonedVerdict = Get-ReleaseVerdict -Scenario $clone
 Assert-True -Condition ($clonedVerdict -ceq 'RELEASE-AUTHORIZED') -Message 'Phase 10 gate must reject an authorized-but-unexecuted release as RELEASE-AUTHORIZED (not RELEASE-ARCHIVED).'
 
+# Negative mutation: any single field mismatch between plan and approval must be blocked (never archived).
+$exactMismatchFields = @('version', 'releaseNotes', 'target', 'knownWarnings', 'rollbackPlan', 'externalAction')
+$archivedSource = @($scenarios | Where-Object { [string]$_.name -eq 'successful-release-can-be-archived' })[0]
+foreach ($f in $exactMismatchFields) {
+    $mutated = $archivedSource | ConvertTo-Json -Depth 20 | ConvertFrom-Json
+    $oldApproval = $mutated.release.approval
+    $newApproval = [PSCustomObject]@{}
+    foreach ($prop in $oldApproval.PSObject.Properties) {
+        if ($prop.Name -eq $f) {
+            $newApproval | Add-Member -NotePropertyName $prop.Name -NotePropertyValue ([string]$prop.Value + ' (mismatched)') -Force
+        }
+        else {
+            $newApproval | Add-Member -NotePropertyName $prop.Name -NotePropertyValue $prop.Value -Force
+        }
+    }
+    $mutated.release.approval = $newApproval
+    $verdict = Get-ReleaseVerdict -Scenario $mutated
+    Assert-True -Condition ($verdict -cne 'RELEASE-ARCHIVED' -and $verdict -cne 'NON-RELEASE-ARCHIVED') -Message "Phase 10 gate must block approved release with mismatched field '$f'; got '$verdict'."
+}
+
+# Negative mutation: a release scenario that flips applicable to false while keeping external action must be rejected.
+$downgradeClone = $archivedSource | ConvertTo-Json -Depth 20 | ConvertFrom-Json
+$downgradeClone.release.applicable = $false
+$downgradeVerdict = Get-ReleaseVerdict -Scenario $downgradeClone
+Assert-True -Condition ($downgradeVerdict -cne 'NON-RELEASE-ARCHIVED' -and $downgradeVerdict -cne 'RELEASE-ARCHIVED') -Message "Phase 10 gate must reject a release scenario that downgrades to non-release; got '$downgradeVerdict'."
+
+# Negative mutation: non-release fixtures that violate the non-release contract must be rejected.
+$nonReleaseSource = @($scenarios | Where-Object { [string]$_.name -eq 'non-release-archived' })[0]
+
+$nonReleaseMutations = [ordered]@{
+    'non-release with externalAction set' = {
+        $m = $nonReleaseSource | ConvertTo-Json -Depth 20 | ConvertFrom-Json
+        $m.release | Add-Member -NotePropertyName 'externalAction' -NotePropertyValue 'publish package' -Force
+        return $m
+    }
+    'non-release with approval set' = {
+        $m = $nonReleaseSource | ConvertTo-Json -Depth 20 | ConvertFrom-Json
+        $m.release | Add-Member -NotePropertyName 'approval' -NotePropertyValue ([PSCustomObject]@{
+            version = '1.0.0'
+            releaseNotes = 'x'
+            target = 'x'
+            knownWarnings = 'x'
+            rollbackPlan = 'x'
+            externalAction = 'x'
+        }) -Force
+        return $m
+    }
+    'non-release with externalResult set' = {
+        $m = $nonReleaseSource | ConvertTo-Json -Depth 20 | ConvertFrom-Json
+        $m.release | Add-Member -NotePropertyName 'externalResult' -NotePropertyValue ([PSCustomObject]@{ exitCode = 0; postReleaseSmokeExitCode = 0 }) -Force
+        return $m
+    }
+    'non-release with empty noReleaseReason' = {
+        $m = $nonReleaseSource | ConvertTo-Json -Depth 20 | ConvertFrom-Json
+        $m.release.noReleaseReason = ''
+        return $m
+    }
+    'non-release with failing verification' = {
+        $m = $nonReleaseSource | ConvertTo-Json -Depth 20 | ConvertFrom-Json
+        $m.release.verification.exitCode = 1
+        return $m
+    }
+    'non-release with failing strict validation' = {
+        $m = $nonReleaseSource | ConvertTo-Json -Depth 20 | ConvertFrom-Json
+        $m.release.openspec.strictValidationExitCode = 1
+        return $m
+    }
+    'non-release with failing archive' = {
+        $m = $nonReleaseSource | ConvertTo-Json -Depth 20 | ConvertFrom-Json
+        $m.release.openspec.archiveExitCode = 1
+        return $m
+    }
+}
+foreach ($label in $nonReleaseMutations.Keys) {
+    $builder = $nonReleaseMutations[$label]
+    $cloneNR = & $builder
+    $verdictNR = Get-ReleaseVerdict -Scenario $cloneNR
+    Assert-True -Condition ($verdictNR -cne 'NON-RELEASE-ARCHIVED' -and $verdictNR -cne 'RELEASE-ARCHIVED') -Message "Phase 10 gate must reject $label; got '$verdictNR'."
+}
+
+# Positive mutation: the no-release fixture scenario with no package evidence still resolves to NON-RELEASE-ARCHIVED.
+$nonReleaseBareVerdict = Get-ReleaseVerdict -Scenario $nonReleaseSource
+Assert-True -Condition ($nonReleaseBareVerdict -ceq 'NON-RELEASE-ARCHIVED') -Message "Phase 10 gate must archive a non-release scenario with no package evidence; got '$nonReleaseBareVerdict'."
+
+# Negative mutation: adding malformed/failing package data to a no-release scenario must NOT change the no-release verdict
+# because package evidence is intentionally inapplicable when release.applicable is false.
+$nonReleasePackageBypassMutations = [ordered]@{
+    'non-release with package buildExitCode=1' = {
+        $m = $nonReleaseSource | ConvertTo-Json -Depth 20 | ConvertFrom-Json
+        $m | Add-Member -NotePropertyName 'package' -NotePropertyValue ([PSCustomObject]@{
+            buildExitCode = 1
+            artifactPresent = $true
+            versionMatches = $true
+            cleanSmokeExitCode = 0
+            contentCheck = 'clean'
+            sha256 = 'recorded'
+        }) -Force
+        return $m
+    }
+    'non-release with package artifactPresent=false' = {
+        $m = $nonReleaseSource | ConvertTo-Json -Depth 20 | ConvertFrom-Json
+        $m | Add-Member -NotePropertyName 'package' -NotePropertyValue ([PSCustomObject]@{
+            buildExitCode = 0
+            artifactPresent = $false
+            versionMatches = $true
+            cleanSmokeExitCode = 0
+            contentCheck = 'clean'
+            sha256 = 'recorded'
+        }) -Force
+        return $m
+    }
+    'non-release with package contentCheck=finding' = {
+        $m = $nonReleaseSource | ConvertTo-Json -Depth 20 | ConvertFrom-Json
+        $m | Add-Member -NotePropertyName 'package' -NotePropertyValue ([PSCustomObject]@{
+            buildExitCode = 0
+            artifactPresent = $true
+            versionMatches = $true
+            cleanSmokeExitCode = 0
+            contentCheck = 'finding'
+            sha256 = 'recorded'
+        }) -Force
+        return $m
+    }
+    'non-release with package sha256 empty' = {
+        $m = $nonReleaseSource | ConvertTo-Json -Depth 20 | ConvertFrom-Json
+        $m | Add-Member -NotePropertyName 'package' -NotePropertyValue ([PSCustomObject]@{
+            buildExitCode = 0
+            artifactPresent = $true
+            versionMatches = $true
+            cleanSmokeExitCode = 0
+            contentCheck = 'clean'
+            sha256 = ''
+        }) -Force
+        return $m
+    }
+}
+foreach ($label in $nonReleasePackageBypassMutations.Keys) {
+    $builder = $nonReleasePackageBypassMutations[$label]
+    $clone = & $builder
+    $verdict = Get-ReleaseVerdict -Scenario $clone
+    Assert-True -Condition ($verdict -ceq 'NON-RELEASE-ARCHIVED') -Message "Phase 10 gate must keep the no-release verdict when $label (package is inapplicable for non-release); got '$verdict'."
+}
+
+# Negative mutation: a release-applicable scenario with missing package must be rejected deterministically,
+# never error under StrictMode or property access. Explicit null guard on $Scenario.package is required.
+$releaseSource = @($scenarios | Where-Object { [string]$_.name -eq 'clean-package-needs-approval' })[0]
+$releaseWithoutPackageJson = $releaseSource | ConvertTo-Json -Depth 20
+$releaseWithoutPackageJson = $releaseWithoutPackageJson -replace '"package":\s*\{[^}]*\},?\s*', ''
+$releaseWithoutPackage = $releaseWithoutPackageJson | ConvertFrom-Json
+Assert-True -Condition ($null -eq $releaseWithoutPackage.package) -Message 'Test setup: release-applicable scenario with package stripped must expose no package field.'
+
+$strictModeVerdict = $null
+$strictModeThrew = $false
+try {
+    Set-StrictMode -Version 2.0
+    $strictModeVerdict = Get-ReleaseVerdict -Scenario $releaseWithoutPackage
+}
+catch {
+    $strictModeThrew = $true
+}
+finally {
+    Set-StrictMode -Off
+}
+Assert-True -Condition (-not $strictModeThrew) -Message 'Phase 10 gate must reject a release-applicable scenario with missing package without throwing under StrictMode.'
+Assert-True -Condition ($strictModeVerdict -ceq 'PACKAGE-MISSING') -Message "Phase 10 gate must reject a release-applicable scenario with missing package as PACKAGE-MISSING; got '$strictModeVerdict'."
+
 foreach ($required in @('node', 'npm')) {
     $command = Get-Command -Name $required -ErrorAction SilentlyContinue
     Assert-True -Condition ($null -ne $command) -Message "Phase 10 clean-package fixture requires '$required' on PATH."
@@ -233,7 +439,7 @@ finally {
 
 $requiredContent = @{
     $guidePath = @('Package Contract', 'Clean install/run', 'Goal Boundary', 'ready for release', 'outside the Goal boundary', 'Explicit Release Approval', 'OpenSpec Archive And Rollback')
-    $skillPath = @('`PACKAGE.md`', 'ready for release', 'outside the Goal boundary', 'explicit user approval', 'Never perform an external release', 'Do not bypass archive validation')
+    $skillPath = @('`PACKAGE.md`', 'ready for release', 'outside the Goal boundary', 'explicit user approval', 'Never perform an external release', 'Do not bypass archive validation', 'openspec status --change <name> --store <id> --json', 'Preserve the same store ID')
     $promptPath = @('Package And Release', 'release-ready', 'ready for release', 'outside the Goal boundary', 'explicit user approval', 'strict OpenSpec validation and archive')
     $packageTemplatePath = @('Package/build command', 'Clean Environment Smoke', 'SHA-256', 'Rollback')
     $verificationTemplatePath = @('Package Evidence', 'Clean install/run', 'SHA-256')

@@ -39,8 +39,18 @@ deployment, publishing, or external write.
 
 The agent creates `verification.md` and `release.md` under the `changeRoot`
 returned by `openspec status`. Use verification evidence before claiming
-completion. Release approval is explicit; after a successful release, validate
-strictly and archive through OpenSpec.
+completion. Release approval is explicit when the change is release-applicable
+(adds or updates `PACKAGE.md`, or `proposal.md`/`design.md`/`tasks.md` specify
+package, deploy, publish, container/build artifact, tag, push, merge, release,
+or any other external write). After a successful approved external action and
+post-release smoke, validate strictly and archive through OpenSpec.
+
+For a genuine no-external-release change, the agent must still complete every
+gate (completed tasks/artifacts, full requirement coverage, fresh focused
+validation with exit code `0`, and strict `openspec validate ...` with exit
+code `0`) and record `releaseApplicable: false` plus a short reason in
+`verification.md`. User confirmation cannot bypass any gate, and a fake
+release approval or result is forbidden in either branch.
 
 A Session Goal may prepare package and release evidence only to
 `ready for release`. Publish, deploy, tag, push, merge, production mutation, and

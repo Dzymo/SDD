@@ -81,16 +81,20 @@ no detector or synthetic score becomes a second design authority or release gate
 Phase 9 is **source-only complete**; the managed-runtime verification is a
 required residual gate that has not been re-run in this update.
 
+Phase 12 global rollout is **complete** for immutable candidate
+`b75043d6097d12ac52c5bbbc3224f316c3243961` as of 2026-08-08. Its sanitized
+completion evidence remains separate from framework source and is recorded in
+`PHASE-12-GLOBAL-ROLLOUT.md`; it does not establish future model compliance or
+arbitrary project-specific runtime correctness. The current PR head is
+source-verified and isolated managed-runtime-verified only; the active-global
+hash/apply/runtime verification has not been re-run against the current PR
+head, and no global write has been performed for the current PR head.
+
 Phase 11 adds one deterministic cross-phase regression gate. It evaluates fixed
 normal and failure observations against the existing Orchestrator, Fixer, Oracle,
 research, Goal, and release boundaries. It is not an agent, continuation loop,
 runtime simulator, or alternate release authority. The offline evaluator is a
 source-policy regression guard; it does not prove live model compliance.
-Phase 12 global rollout is **complete** for immutable candidate
-`b75043d6097d12ac52c5bbbc3224f316c3243961` as of 2026-08-08. Its sanitized
-completion evidence remains separate from framework source and is recorded in
-`PHASE-12-GLOBAL-ROLLOUT.md`; it does not establish future model compliance or
-arbitrary project-specific runtime correctness.
 
 ## Provenance
 

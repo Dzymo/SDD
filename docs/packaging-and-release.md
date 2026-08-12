@@ -76,13 +76,34 @@ rollback plan when the user directs it, and retain the active OpenSpec change.
 
 ## OpenSpec Archive And Rollback
 
-Archive only after the external action and post-release smoke both succeed. Run
-normal strict OpenSpec validation first, then use the platform-native command:
+Release applicability is decided from real evidence (added or updated
+`PACKAGE.md`, or `proposal.md`/`design.md`/`tasks.md` specifying package,
+deploy, publish, container/build artifact, tag, push, merge, release, or any
+other external write, or an existing `release.md` with an external action or
+result). The release-applicable branch is mandatory whenever any of those
+indicators is present; it cannot be downgraded to no-external-release to bypass
+the approval and post-release gates.
+
+For a release-applicable change, archive only after the external action and
+post-release smoke both succeed. Run normal strict OpenSpec validation first.
+If `/opsx-sync` already merged the delta, skip spec application during archive;
+otherwise let archive apply it exactly once:
 
 ```powershell
 openspec validate <change-name> --strict --no-interactive
-openspec archive <change-name>
+openspec archive <change-name> --skip-specs --yes
+# Or, when the delta has not been synced:
+openspec archive <change-name> --yes
 ```
+
+For a selected store, preserve the same explicit store ID on validation and on
+either archive branch: `--store <store-id>`. Local commands omit `--store`.
+
+A genuine no-external-release change still requires completed tasks/artifacts,
+full requirement coverage, fresh focused validation with exit code `0`, strict
+OpenSpec validation with exit code `0`, and a recorded `releaseApplicable:
+false` plus reason in `verification.md`. User confirmation cannot bypass any
+gate, and a fake release approval or result is forbidden.
 
 Do not bypass validation or archive a failed, cancelled, or merely
 release-ready change. The project-specific rollback procedure remains in

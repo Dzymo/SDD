@@ -185,6 +185,9 @@ if (Test-Path -LiteralPath $workflowPath -PathType Leaf) {
     if ($workflowContent -notmatch '(?ms)^\s*push:\s*\r?\n\s*branches:\s*\r?\n\s*-\s*main\s*$') {
         $failures += 'CI workflow must run automatically on pushes to main.'
     }
+    if ($workflowContent -notmatch '(?ms)uses:\s*actions/checkout@[^\r\n]+\r?\n\s*with:\s*\r?\n\s*fetch-depth:\s*0\s*$') {
+        $failures += 'CI workflow must fetch full history for immutable release-target packaging.'
+    }
     if ($workflowContent -notmatch '@fission-ai/openspec@1\.5\.0') {
         $failures += 'OpenSpec bootstrap CI check must install @fission-ai/openspec@1.5.0.'
     }

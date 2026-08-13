@@ -248,6 +248,10 @@ try {
     }
     $orchestratorCount = @($allMatchTargets | Where-Object { $_.name -eq 'orchestrator.md' }).Count
     Assert-True -Condition ($orchestratorCount -eq 1) -Message "All-match scenario reported orchestrator.md $orchestratorCount times; expected once."
+    $orchestratorTarget = @($allMatchTargets | Where-Object { $_.name -eq 'orchestrator.md' })[0]
+    Assert-True -Condition ($orchestratorTarget.phase -eq '7, 8, 10') -Message "Orchestrator target phase metadata is incomplete: $($orchestratorTarget.phase)"
+    Assert-True -Condition ($orchestratorTarget.applyScripts -contains 'Apply-ExecutionVerification.ps1') -Message 'Orchestrator target metadata must include the Phase 7 apply script.'
+    Assert-True -Condition ($orchestratorTarget.verifiers -contains 'Test-ExecutionVerificationRuntime.ps1') -Message 'Orchestrator target metadata must include the Phase 7 runtime verifier.'
     Assert-True -Condition ($allMatchResult.Report.phaseFivePackage.match -eq 'MATCH') -Message "All-match scenario did not report Phase 5 MATCH."
     Assert-True -Condition ($allMatchResult.Report.processState.blocked -eq $false) -Message "All-match scenario reported blocked processes when none were simulated."
 

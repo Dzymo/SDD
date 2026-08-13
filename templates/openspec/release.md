@@ -1,8 +1,13 @@
 # Release
 
+This file is required only for a release-applicable change. A genuine
+no-external-release change records `releaseApplicable: false` and its reason in
+`verification.md`; it must not create fake approval or release-result evidence.
+
 ## Explicit User Approval
 
 - Approved version:
+- Approved release type / prerelease Boolean:
 - Approved release notes:
 - Approved target/environment:
 - Approved known warnings:

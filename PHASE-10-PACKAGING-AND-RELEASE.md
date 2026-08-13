@@ -19,12 +19,10 @@ delivered-content rules without contacting a registry.
 It does not publish, deploy, tag, push, merge, call a registry, or write a
 global target. Global activation remains a separate controlled operation and an
 actual project release always needs a fresh explicit user approval. The
-2026-08-05 active-global runtime record is the historical evidence for the
-previous immutable Phase 12 candidate
-`b75043d6097d12ac52c5bbbc3224f316c3243961`. The current PR head is
-source-verified and isolated managed-runtime-verified only; the active-global
-hash/apply/runtime verification has not been re-run against the current PR
-head, and no global write has been performed for the current PR head.
+2026-08-05 active-global runtime record is historical evidence for Phase 12
+candidate `b75043d6097d12ac52c5bbbc3224f316c3243961`. Later active runtime
+verification passed, and the clean `e5bb0ed...` readiness preflight found the
+Phase 10 targets matched reviewed source. No reapply was required.
 
 ## Delivered Assets
 
@@ -57,7 +55,7 @@ and text for prohibited delivered material. It does not use a registry.
 | Artifact is independently runnable | Clean fixture and `Test-PackagingRelease.ps1` | Packed local artifact installs into a new temporary environment and returns its expected smoke value. | Established for the framework fixture. |
 | Checksum and delivered-content checks are required | Evaluator and release scenarios | SHA-256 is computed; prohibited names/content are scanned; a content finding blocks the scenario. | Established for source policy. |
 | Release requires explicit approval | Release scenarios and Orchestrator/skill contract | Passing package with no approval is classified `RELEASE-APPROVAL-REQUIRED`. | Established for source policy. |
-| Archive follows only a successful release | Release scenarios | A successful external result, post-release smoke, strict validation, and archive command are all required for `RELEASE-ARCHIVED`. | Established for source policy. |
+| Archive follows the applicable branch | Release scenarios | A release-applicable change needs a successful external result, post-release smoke, strict validation, and archive command for `RELEASE-ARCHIVED`. A genuine no-external-release change needs full coverage, focused validation, strict validation, and `releaseApplicable: false` evidence for `NON-RELEASE-ARCHIVED`. | Established for source policy. |
 
 The evaluator's content patterns are a bounded guard, not proof that every
 possible sensitive value is absent. Participating projects must use their own

@@ -5,9 +5,25 @@ OpenChamber. Khung dẫn dắt một thay đổi từ ý tưởng, đặc tả, 
 chứng đến chuẩn bị phát hành; đồng thời giữ quyền quyết định sản phẩm và quyền
 phát hành ở người dùng.
 
-Đây là kho mã nguồn cấu hình và tài liệu nội bộ tại `D:\Projects\SDD`, không
-phải gói npm, extension marketplace hay sản phẩm đa người dùng. Tài liệu dùng
-framework trong một dự án nằm tại [HUONG-DAN-SU-DUNG.md](HUONG-DAN-SU-DUNG.md).
+Đây là source repository của một framework cá nhân tại `D:\Projects\SDD`.
+Mã nguồn và source-release asset được lưu công khai trên GitHub, nhưng runtime,
+credential và cấu hình active vẫn thuộc môi trường riêng của chủ sở hữu. Đây
+không phải gói npm, extension marketplace hay sản phẩm đa người dùng. Tài liệu
+dùng framework trong một dự án nằm tại
+[HUONG-DAN-SU-DUNG.md](HUONG-DAN-SU-DUNG.md).
+
+## Trạng Thái Phiên Bản
+
+| Bề mặt | Trạng thái |
+|---|---|
+| Stable source release | `v0.1.0`, phát hành ngày 2026-08-12 từ payload bất biến `a431be0064dc5b84abc31bb60fcbb94eaa185661`. |
+| Nhánh phát triển đang được kiểm chứng | Commit `e5bb0ed775a6c1340089a0f299c6699ac533bf20` bổ sung global apply readiness preflight và đã qua CI. |
+| Runtime cá nhân | Không được đóng gói trong release; phải được kiểm tra và áp dụng riêng theo runbook. |
+
+Stable `v0.1.0` cố ý giữ nguyên payload đã được chấp nhận từ RC. Vì vậy các
+release-automation commit và global-readiness preflight được thêm sau payload
+SHA không nằm trong ZIP stable. Khi đọc tài liệu trên nhánh mới hơn, hãy kiểm tra
+file/lệnh có thực sự tồn tại trong bản source đang dùng.
 
 ## Mục Tiêu
 
@@ -40,8 +56,8 @@ thay đổi có rủi ro:
   -> tasks.md
   -> mã nguồn + kiểm thử
   -> verification.md
-  -> gói phát hành
-  -> release.md
+  -> gói phát hành + release.md (khi có external release)
+  -> hoặc releaseApplicable: false (khi thực sự không có external release)
   -> OpenSpec archive
 ```
 
@@ -148,10 +164,12 @@ người dùng. Điểm đánh giá tổng hợp hoặc detector sạch không p
 
 ### Hỗ Trợ Đa Phương Tiện
 
-Observer dùng route MiniMax M3 để phân tích ảnh, video, screenshot, sơ đồ và
-OCR bằng structured attachment. Route GPT hiện được quản lý như text-only;
-framework không quảng cáo khả năng PDF qua M3. Tài liệu PDF cần đi qua text
-extraction, chuyển trang thành ảnh hoặc một route PDF đã được xác minh.
+Metadata của MiniMax M3 có khai báo khả năng image/video, nhưng structured
+attachment đã được framework triển khai và smoke-test hiện chỉ hỗ trợ PNG,
+JPEG, GIF và WebP cho ảnh, screenshot, sơ đồ và OCR. Chưa công bố verified video
+handoff. Route GPT hiện được quản lý như text-only; framework không quảng cáo
+khả năng PDF qua M3. Tài liệu PDF cần đi qua text extraction, chuyển trang thành
+ảnh hoặc một route PDF đã được xác minh.
 
 ### Kiểm Chứng, Đóng Gói Và Phát Hành
 
@@ -164,7 +182,10 @@ extraction, chuyển trang thành ảnh hoặc một route PDF đã được xá
   sẵn sàng phát hành.
 - Mọi publish, deploy, tag, push, merge hay external write cần phê duyệt rõ ràng
   cho đúng version, release notes, target, cảnh báo, rollback plan và hành động.
-- Chỉ archive OpenSpec sau khi external action và post-release smoke thành công.
+- Change có external release chỉ được archive sau khi external action và
+  post-release smoke thành công. Change thực sự không có external release chỉ
+  được archive sau focused verification, strict validation và bản ghi
+  `releaseApplicable: false` có lý do.
 
 ### An Toàn Vận Hành
 
@@ -172,8 +193,13 @@ extraction, chuyển trang thành ảnh hoặc một route PDF đã được xá
   được sao chép vào kho này.
 - Mỗi thay đổi cấu hình toàn cục cần xác định owner, target, cơ chế ghi được hỗ
   trợ, backup theo file, checksum, lệnh xác minh và rollback trước khi áp dụng.
-- GitHub Actions chạy các source gate và fixture offline trên Windows cho pull
-  request; gate không thay thế việc xác minh runtime của dự án.
+- Trước mọi backup, persistent write hoặc restart của runtime toàn cục, chạy
+  read-only global readiness preflight. `NO_APPLY_REQUIRED` nghĩa là không chạy
+  apply; `READY_FOR_GLOBAL_APPLY` chỉ cho phép supported drift; `BLOCKED` phải
+  dừng. Target bắt buộc bị `ABSENT` hiện luôn là `BLOCKED`.
+- GitHub Actions chạy source gate và fixture offline trên Windows cho pull
+  request, push vào `main` và manual dispatch; gate không thay thế việc xác minh
+  runtime của dự án.
 - Các evaluation/failure drill cố định bảo vệ các ranh giới như không false PASS,
   không silent fallback, không fan-out vô hạn và không release không phê duyệt.
 
@@ -233,11 +259,19 @@ Phê duyệt phát hành rõ ràng của người dùng
 | Tài liệu | Nội dung |
 |---|---|
 | [HUONG-DAN-SU-DUNG.md](HUONG-DAN-SU-DUNG.md) | Hướng dẫn sử dụng theo toàn bộ vòng đời một dự án. |
+| [CHANGELOG.md](CHANGELOG.md) | Tóm tắt thay đổi theo phiên bản và ranh giới stable/development. |
+| [PACKAGE.md](PACKAGE.md) | Hợp đồng đóng gói và phát hành của chính repository SDD. |
 | [docs/architecture.md](docs/architecture.md) | Kiến trúc, ownership và ranh giới source/runtime. |
 | [docs/operations.md](docs/operations.md) | Vận hành framework, kiểm tra, apply và rollback. |
+| [docs/rollback.md](docs/rollback.md) | Quy trình rollback theo phase, target và manifest. |
+| [docs/agent-layer.md](docs/agent-layer.md) | Agent, model routing, permission và runtime verification. |
+| [docs/model-evals.md](docs/model-evals.md) | Kết quả benchmark model và giới hạn bằng chứng. |
 | [docs/openchamber-operating-guide.md](docs/openchamber-operating-guide.md) | Khi dùng Focus Mode, Session Goal, worktree và MultiRun. |
 | [docs/ui-quality-layer.md](docs/ui-quality-layer.md) | Bằng chứng chất lượng UI và quy trình phê duyệt thị giác. |
 | [docs/packaging-and-release.md](docs/packaging-and-release.md) | Hợp đồng đóng gói, release gate và archive. |
+| [docs/evaluation-and-failure-drills.md](docs/evaluation-and-failure-drills.md) | Phạm vi và cách chạy failure drill offline. |
+| [PHASE-12-GLOBAL-ROLLOUT.md](PHASE-12-GLOBAL-ROLLOUT.md) | Readiness preflight, controlled apply và rollback cho runtime toàn cục. |
+| [release-candidates/v0.1.0-stable-readiness.md](release-candidates/v0.1.0-stable-readiness.md) | Bằng chứng phát hành stable `v0.1.0` và giới hạn còn lại. |
 | [PLAN.md](PLAN.md) | Kế hoạch triển khai, quyết định và bằng chứng theo phase. |
 
 ## Giới Hạn Cố Ý

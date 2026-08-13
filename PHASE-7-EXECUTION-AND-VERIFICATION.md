@@ -13,11 +13,11 @@ passed against the managed runtime.
 
 The source and runtime evidence establish the installed contract, not arbitrary
 model compliance in an unobserved future task. The 2026-08-05 active-global
-runtime record is the historical evidence for the previous immutable Phase 12
-candidate `b75043d6097d12ac52c5bbbc3224f316c3243961`. The current PR head is
-source-verified and isolated managed-runtime-verified only; the active-global
-hash/apply/runtime verification has not been re-run against the current PR
-head, and no global write has been performed for the current PR head.
+runtime record remains historical evidence for Phase 12 candidate
+`b75043d6097d12ac52c5bbbc3224f316c3243961`. Later active runtime verification
+passed and the clean `e5bb0ed...` readiness preflight found every Phase 7 target
+matched reviewed source, so no reapply was required. This target/hash refresh
+does not replace focused verification in future project work.
 
 ## Delivered Assets
 

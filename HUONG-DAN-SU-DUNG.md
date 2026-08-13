@@ -9,6 +9,15 @@ Nguyên tắc sử dụng: bạn chỉ giao tiếp với agent trong session. Kh
 artifact. Agent phải phỏng vấn, đưa phương án và khuyến nghị, sau đó tự tạo hoặc
 cập nhật file từ quyết định đã xác nhận.
 
+## Phạm Vi Phiên Bản
+
+Stable source release hiện tại là `v0.1.0`, phát hành từ payload
+`a431be0064dc5b84abc31bb60fcbb94eaa185661`. Nhánh phát triển mới hơn có thể chứa
+release automation và global-readiness tooling chưa nằm trong ZIP stable. Trước
+khi dùng một script được nhắc trong tài liệu mới nhất, agent phải xác nhận script
+đó tồn tại trong bản source đang dùng; không tự sao chép lệnh từ nhánh mới vào
+stable payload.
+
 ## 1. Điều Kiện Trước Khi Bắt Đầu
 
 Chuẩn bị các điều kiện sau trên máy Windows trước khi dùng workflow có slash
@@ -335,6 +344,8 @@ Agent tự điền `<changeRoot>/verification.md` với:
 - Kết quả strict validation.
 - Từng lệnh đã chạy, exit code/kết quả và phạm vi lệnh chứng minh.
 - Mapping từng requirement sang test hoặc bằng chứng trực tiếp.
+- Quyết định `releaseApplicable: true` hoặc `false`; nếu là `false`, phải có lý
+  do dựa trên phạm vi thực tế và không được dùng để bỏ qua release gate.
 - Package evidence nếu có artifact.
 - Điều chưa được chứng minh hoặc kiểm tra chưa khả dụng.
 
@@ -388,8 +399,10 @@ kiện sau đều có bằng chứng mới:
   credential material.
 - SHA-256 của chính artifact đã kiểm tra được ghi lại.
 
-Agent ghi kết quả vào `<changeRoot>/verification.md` và
-`<changeRoot>/release.md` của change.
+Agent luôn ghi kết quả vào `<changeRoot>/verification.md`. Chỉ tạo hoặc cập nhật
+`<changeRoot>/release.md` khi change có package, deploy, publish hoặc external
+write; change no-external-release ghi `releaseApplicable: false` và lý do trong
+`verification.md`.
 
 ## 11. Phát Hành Có Phê Duyệt
 
@@ -511,3 +524,30 @@ Một change chỉ có thể được coi là hoàn thành khi tất cả điề
 Sau release thành công và archive, chi tiết active change được lưu bởi OpenSpec;
 `PRODUCT.md`, `DESIGN.md` và specification chính vẫn là bộ nhớ bền vững để bắt
 đầu thay đổi tiếp theo.
+
+## 16. Kiểm Tra Trước Khi Cập Nhật Runtime SDD Toàn Cục
+
+Phần này chỉ dành cho người vận hành source repository SDD mới hơn stable
+`v0.1.0`; dự án tham gia thông thường không chạy global apply. Trước mọi backup,
+persistent write hoặc restart runtime, chạy preflight chỉ đọc:
+
+```powershell
+PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-GlobalApplyReadiness.ps1 -Text
+```
+
+Diễn giải kết quả:
+
+| Verdict | Hành động |
+|---|---|
+| `NO_APPLY_REQUIRED` | Mọi managed target đã khớp; không chạy apply script. |
+| `READY_FOR_GLOBAL_APPLY` | Chỉ có supported drift và mọi write precondition đã đạt; tiếp tục đúng runbook, backup và phạm vi đã phê duyệt. |
+| `BLOCKED` | Dừng; xử lý đúng nguyên nhân được report trước khi cân nhắc lại. |
+
+Target bắt buộc bị `ABSENT` hiện là `BLOCKED`, không phải trạng thái bootstrap
+hay apply-ready. Nếu cần report JSON đã khử dữ liệu nhạy cảm, chỉ dùng
+`-OutputPath <existing-parent>\preflight.json`; khi không truyền `-OutputPath`,
+script không ghi file report.
+
+Preflight không thay thế provider-backed research/OCR check, runtime verifier,
+backup manifest, explicit approval hoặc rollback drill được yêu cầu bởi
+[PHASE-12-GLOBAL-ROLLOUT.md](PHASE-12-GLOBAL-ROLLOUT.md).

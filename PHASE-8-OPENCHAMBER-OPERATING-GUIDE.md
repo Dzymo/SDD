@@ -4,9 +4,9 @@ Date: 2026-08-04
 
 ## Status
 
-Phase 8 is **source-amended** for adaptive interviews and the completed Goal
+Phase 8 is **runtime-verified** for adaptive interviews and the completed Goal
 release boundary. The reviewed Orchestrator prompt contract, advisory guide,
-fixtures, and offline evaluator must pass before activation. It adds bounded
+fixtures, and offline evaluator pass. It adds bounded
 Orchestrator advice for Focus Mode, Session Goals, worktrees, and MultiRun; a
 user operating guide; and deterministic advisory fixtures.
 
@@ -15,12 +15,10 @@ permissions, or add a continuation loop. The controlled prompt apply completed
 on 2026-08-05 with backup `phase-8-20260805-180815`; that runtime result is
 historical evidence for the previous immutable Phase 12 candidate
 `b75043d6097d12ac52c5bbbc3224f316c3243961` (and its earlier Phase 8
-activations on 2026-08-07 and 2026-08-08 captured in the Phase 12 record). The
-amended prompt requires a new controlled apply, restart, and runtime verifier
-before its behavior is treated as active. The current PR head is
-source-verified and isolated managed-runtime-verified only; the active-global
-hash/apply/runtime verification has not been re-run against the current PR
-head, and no global write has been performed for the current PR head.
+activations on 2026-08-07 and 2026-08-08 captured in the Phase 12 record).
+Later active runtime verification passed, and the clean `e5bb0ed...` readiness
+preflight found the shared Orchestrator target matched reviewed source. No
+reapply was required.
 
 ## Delivered Assets
 
@@ -103,8 +101,10 @@ PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-OpenChamberOperatingGuid
 Orchestrator prompt with the reviewed Phase 8 source before checking the
 required rule substrings. A hash mismatch is a fail-closed condition that
 means a manual edit drifted the active prompt from the reviewed source.
-The previous runtime step passed on 2026-08-05. It has not been re-run for the
-adaptive interview and release-Goal amendment.
+The active runtime verifier passed after the adaptive interview and release-Goal
+amendment. The later clean-SHA readiness preflight also found the target
+byte-identical to reviewed source. Rerun after any actual prompt apply or
+relevant managed runtime change.
 
 Do not edit `C:\Users\quang\.config\openchamber`, OpenChamber session state, or
 `opencode.json` for this phase. After controlled activation, manually exercise:

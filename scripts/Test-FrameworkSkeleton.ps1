@@ -22,6 +22,7 @@ $requiredPaths = @(
     'PHASE-11-EVALUATION-AND-FAILURE-DRILLS.md',
     'PHASE-12-GLOBAL-ROLLOUT.md',
     'README.md',
+    'CHANGELOG.md',
     'HUONG-DAN-SU-DUNG.md',
     'docs\architecture.md',
     'docs\agent-layer.md',

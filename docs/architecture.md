@@ -2,9 +2,10 @@
 
 ## Scope
 
-This repository is the private source layer for a personal OpenCode workflow.
-OpenChamber remains the control plane; oh-my-opencode-slim provides the lean
-agent-routing layer activated by Phase 4; OpenSpec remains project-local.
+This repository is the publicly hosted source layer for a personal OpenCode
+workflow whose installed runtime remains private. OpenChamber remains the
+control plane; oh-my-opencode-slim provides the lean agent-routing layer;
+OpenSpec remains project-local.
 
 ```text
 OpenChamber
@@ -12,7 +13,7 @@ OpenChamber
        |
        v
 OpenCode and oh-my-opencode-slim
-   global agent preset and prompts; future skills and commands
+   global agent preset, prompts, reviewed skills, and project command templates
        |
        +-- Context7 and CodeGraph evidence (Phase 3)
        +-- project-local OpenSpec artifacts
@@ -61,8 +62,8 @@ The Orchestrator remains the routing and reconciliation authority, Fixer remains
 the M3 write worker, Oracle remains read-only and risk-triggered, and
 project-native commands remain the only runtime correctness proof. The Phase 7
 offline evaluator validates policy records; it is not a second task engine.
-Phase 7 is **source-only complete**; the managed-runtime verification is a
-required residual gate that has not been re-run in this update.
+Phase 7 is **runtime-verified**. The later clean-SHA readiness preflight found
+its active targets byte-identical to reviewed source, so no reapply was needed.
 
 Phase 8 adds advisory prompt and guide contracts only. OpenChamber remains the
 sole owner of Focus Mode, Session Goals, worktree lifecycle, and MultiRun.
@@ -70,25 +71,32 @@ Session Goals remain the sole automatic parent-session continuation controller;
 slim idle continuation and the slim worktree skill stay disabled. The runtime
 verifier hash-compares the active global Orchestrator prompt with the reviewed
 Phase 8 source before checking the required rule substrings. Phase 8 is
-**source-only complete**; the managed-runtime verification is a required
-residual gate that has not been re-run in this update.
+**runtime-verified**; later target/hash readiness found the shared Orchestrator
+target matched reviewed source, so no reapply was needed.
 
 Phase 9 adds a UI evidence contract to the existing Designer and Observer lanes.
 `PRODUCT.md`, `DESIGN.md`, and an approved project-local surface brief are the
 authority chain for material UI work. Project-native browser/accessibility checks,
 fresh screenshot review, and explicit user visual approval are distinct evidence;
 no detector or synthetic score becomes a second design authority or release gate.
-Phase 9 is **source-only complete**; the managed-runtime verification is a
-required residual gate that has not been re-run in this update.
+Phase 9 is **runtime-verified**. The later readiness preflight found all Phase 9
+targets matched. This validates installed contracts, not an arbitrary rendered
+project UI.
 
 Phase 12 global rollout is **complete** for immutable candidate
 `b75043d6097d12ac52c5bbbc3224f316c3243961` as of 2026-08-08. Its sanitized
-completion evidence remains separate from framework source and is recorded in
-`PHASE-12-GLOBAL-ROLLOUT.md`; it does not establish future model compliance or
-arbitrary project-specific runtime correctness. The current PR head is
-source-verified and isolated managed-runtime-verified only; the active-global
-hash/apply/runtime verification has not been re-run against the current PR
-head, and no global write has been performed for the current PR head.
+completion evidence remains recorded in `PHASE-12-GLOBAL-ROLLOUT.md`; it does
+not establish future model compliance or arbitrary project-specific runtime
+correctness. A later read-only preflight on clean commit `e5bb0ed...` passed CI
+and found all 14 managed targets plus the Phase 5 package matched reviewed
+source, yielding `NO_APPLY_REQUIRED`. That refresh is target/hash evidence only;
+provider-backed and manual behavior evidence remains a separate rollout gate.
+
+The repository release workflow packages an immutable approved source SHA,
+supports both RC and stable metadata, verifies downloaded assets, and rolls back
+a release/tag created by a failed run. Stable `v0.1.0` intentionally contains
+the accepted `a431be0...` payload and not the later release-automation or
+readiness-preflight commits.
 
 Phase 11 adds one deterministic cross-phase regression gate. It evaluates fixed
 normal and failure observations against the existing Orchestrator, Fixer, Oracle,

@@ -219,13 +219,13 @@ function Get-FrameworkOwnedTargets {
         },
         @{
             Name = 'orchestrator.md'
-            Phase = '8, 10'
-            Owner = 'Phase 8 OpenChamber + Phase 10 packaging (shared)'
+            Phase = '7, 8, 10'
+            Owner = 'Phase 7 execution + Phase 8 OpenChamber + Phase 10 packaging (shared)'
             RelativeTargetPath = 'oh-my-opencode-slim\sdd-personal\orchestrator.md'
             RelativeSourcePath = 'prompts\oh-my-opencode-slim\sdd-personal\orchestrator.md'
             ComparisonType = 'raw'
-            ApplyScripts = @('Apply-OpenChamberOperatingGuide.ps1', 'Apply-PackagingRelease.ps1')
-            Verifiers = @('Test-OpenChamberOperatingGuideRuntime.ps1', 'Test-PackagingReleaseRuntime.ps1')
+            ApplyScripts = @('Apply-ExecutionVerification.ps1', 'Apply-OpenChamberOperatingGuide.ps1', 'Apply-PackagingRelease.ps1')
+            Verifiers = @('Test-ExecutionVerificationRuntime.ps1', 'Test-OpenChamberOperatingGuideRuntime.ps1', 'Test-PackagingReleaseRuntime.ps1')
             RollbackSupported = $true
             ManagedSourceKey = $null
             MergeSpec = @()

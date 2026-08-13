@@ -28,6 +28,10 @@ jobs:
         shell: pwsh
         run: ./scripts/Test-Phase12RollbackDrill.ps1
 
+      - name: Validate global apply readiness preflight regression
+        shell: pwsh
+        run: ./scripts/Test-GlobalApplyReadinessRegression.ps1
+
       - name: Validate research MCP schema
         shell: pwsh
         run: ./scripts/Test-ResearchConfigSchema.ps1
@@ -110,7 +114,7 @@ jobs:
         shell: pwsh
         run: ./scripts/Test-PackagingRelease.ps1
 
-      - name: Validate release candidate packaging
+      - name: Validate RC and stable release packaging
         shell: pwsh
         run: ./scripts/Test-ReleaseCandidate.ps1
 

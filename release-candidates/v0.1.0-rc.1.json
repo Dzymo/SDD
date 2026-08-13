@@ -1,6 +1,7 @@
 {
   "version": "v0.1.0-rc.1",
   "title": "SDD v0.1.0-rc.1",
+  "prerelease": true,
   "targetSha": "a431be0064dc5b84abc31bb60fcbb94eaa185661",
   "target": "GitHub prerelease in Dzymo/SDD",
   "releaseNotes": [

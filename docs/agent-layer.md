@@ -2,10 +2,11 @@
 
 ## Purpose
 
-Phase 4 activates the private, lean `oh-my-opencode-slim` preset for the
-managed OpenChamber OpenCode runtime. The preset is source-controlled here and
-applied only to user-owned OpenCode configuration files. It never changes the
-CPA GUI-managed `opencode.json`, its state sidecar, or OpenChamber state.
+Phase 4 activates the lean `oh-my-opencode-slim` preset for the owner's private
+managed OpenChamber OpenCode runtime. The reviewed source is publicly hosted,
+but activation applies only to user-owned OpenCode configuration files. It
+never changes the CPA GUI-managed `opencode.json`, its state sidecar, or
+OpenChamber state.
 
 ## Reviewed Sources
 

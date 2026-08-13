@@ -39,17 +39,19 @@ function Invoke-NativeChecked {
     }
 }
 
-Assert-True -Condition ($Version -match '^v\d+\.\d+\.\d+-rc\.\d+$') -Message "Invalid release-candidate version: $Version"
+Assert-True -Condition ($Version -match '^v\d+\.\d+\.\d+(?:-rc\.\d+)?$') -Message "Invalid release version: $Version"
 
 $planPath = Join-Path $Root "release-candidates\$Version.json"
 Assert-True -Condition (Test-Path -LiteralPath $planPath -PathType Leaf) -Message "Release plan not found: $planPath"
 $plan = Get-Content -LiteralPath $planPath -Raw | ConvertFrom-Json
 
-foreach ($field in @('version', 'title', 'targetSha', 'target', 'releaseNotes', 'knownWarnings', 'rollbackPlan', 'externalAction')) {
+foreach ($field in @('version', 'title', 'prerelease', 'targetSha', 'target', 'releaseNotes', 'knownWarnings', 'rollbackPlan', 'externalAction')) {
     $property = $plan.PSObject.Properties[$field]
     Assert-True -Condition ($null -ne $property -and $null -ne $property.Value) -Message "Release plan is missing '$field'."
 }
 Assert-True -Condition ([string]$plan.version -ceq $Version) -Message "Release plan version '$($plan.version)' does not match '$Version'."
+Assert-True -Condition ($plan.prerelease -is [bool]) -Message 'Release plan prerelease must be a Boolean.'
+Assert-True -Condition (($Version -match '-rc\.\d+$') -eq [bool]$plan.prerelease) -Message "Release plan prerelease does not match version '$Version'."
 Assert-True -Condition ([string]$plan.targetSha -match '^[0-9a-f]{40}$') -Message 'Release plan targetSha must be a full lowercase Git SHA.'
 Assert-True -Condition (@($plan.releaseNotes).Count -gt 0) -Message 'Release plan must contain release notes.'
 Assert-True -Condition (@($plan.knownWarnings).Count -gt 0) -Message 'Release plan must contain known warnings.'
@@ -78,7 +80,7 @@ $checksumPath = Join-Path $OutputDirectory $checksumName
 $manifestPath = Join-Path $OutputDirectory $manifestName
 $notesPath = Join-Path $OutputDirectory $notesName
 
-$tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) "sdd-rc-package-$([guid]::NewGuid().ToString('N'))"
+$tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) "sdd-release-package-$([guid]::NewGuid().ToString('N'))"
 try {
     New-Item -ItemType Directory -Path $tempRoot | Out-Null
     $rawZip = Join-Path $tempRoot 'source.zip'
@@ -113,6 +115,7 @@ try {
         schemaVersion = 1
         version = [string]$plan.version
         title = [string]$plan.title
+        prerelease = [bool]$plan.prerelease
         targetSha = [string]$plan.targetSha
         target = [string]$plan.target
         artifact = $artifactName
@@ -158,9 +161,9 @@ try {
     $notes += @('', '## Rollback', '', [string]$plan.rollbackPlan)
     $notes | Set-Content -LiteralPath $notesPath -Encoding UTF8
 
-    [Console]::WriteLine("Release candidate package: $artifactPath")
+    [Console]::WriteLine("Release package: $artifactPath")
     [Console]::WriteLine("SHA-256: $sha256")
-    [Console]::WriteLine('Release candidate package gate: PASS')
+    [Console]::WriteLine('Release package gate: PASS')
 }
 finally {
     if (Test-Path -LiteralPath $tempRoot) {

@@ -2,15 +2,18 @@
 
 ## 1. Document Status
 
-This document is the implementation plan and decision record for a private,
-global OpenCode framework used through OpenChamber.
+This document is the implementation plan and decision record for a personal,
+global OpenCode framework used through OpenChamber. The source repository and
+reviewed source-release assets are public; the installed runtime and its
+credentials, active configuration, state, and backups remain private.
 
 - Owner: personal OpenCode installation
 - Framework source workspace: `D:\Projects\SDD`
 - Reference repositories: `D:\Projects\Docs`
 - Target OpenCode config: `C:\Users\quang\.config\opencode`
 - Target OpenChamber config: `C:\Users\quang\.config\openchamber`
-- Distribution target: none; this is not a public project
+- Distribution target: public GitHub source releases only; no npm package,
+  marketplace extension, hosted service, or multi-user runtime
 - Plan status: Phases 2 and 6 are source-complete. Phases 3 and 4 are active
   and runtime-verified. Phase 5 is active and was revalidated with its
   preflight and live structured-attachment OCR smoke on 2026-08-05; it still
@@ -20,11 +23,12 @@ global OpenCode framework used through OpenChamber.
   source-complete; its offline gate covers all 21 required scenarios but is a
   source-policy regression guard rather than live model-compliance evidence.
   The runtime records cited above are historical active-global evidence for
-  the immutable candidate completed on 2026-08-08; the current PR head is
-  described as **source + isolated managed-runtime verified only**. The
-  active-global hash/apply/runtime verification has not been re-run for the
-  current PR head and remains a required residual gate; no global write has
-  been performed against the current PR head.
+  the immutable candidate completed on 2026-08-08. A later read-only preflight
+  on clean commit `e5bb0ed775a6c1340089a0f299c6699ac533bf20` passed CI and
+  reported `NO_APPLY_REQUIRED`, all 14 managed targets `MATCH`, and Phase 5
+  `MATCH`. This refreshes target/hash readiness but does not replace
+  provider-backed research/OCR or manual disabled-MCP behavior evidence for a
+  new full rollout certification. No global write was required.
 
 Phase 12 global rollout is **complete** as of 2026-08-08 for immutable
 candidate `b75043d6097d12ac52c5bbbc3224f316c3243961`. It recorded clean-source
@@ -32,6 +36,16 @@ and CI evidence, a no-drift diff preview, provider-backed research checks,
 fresh/existing-project smoke tests, a file-level rollback/reapply drill, and
 sanitized active-version/checksum evidence. See `PHASE-12-GLOBAL-ROLLOUT.md`
 for the completion record and its stated limitations.
+
+Current evidence is tracked in four distinct classes:
+
+- Source/CI: source contracts and Windows CI for the exact candidate SHA.
+- Isolated managed runtime: plugin initialization and runtime contracts under a
+  temporary redirected home.
+- Active target/hash readiness: read-only comparison of the actual managed
+  targets and Phase 5 package identity.
+- Provider/manual behavior: provider-backed research/OCR and temporary
+  disabled-MCP behavior checks, required only by the applicable rollout gate.
 
 This file is the source of truth for framework implementation. If a later
 decision changes the architecture, model routing, safety boundary, or workflow,
@@ -64,7 +78,7 @@ The framework must:
 
 The first version will not:
 
-- become a public framework, marketplace package, or multi-user product;
+- become an npm/marketplace package, hosted service, or multi-user product;
 - modify OpenChamber source code;
 - create a new general-purpose workflow engine;
 - install OpenSpec and Spec Kit as competing workflow systems;
@@ -730,8 +744,10 @@ warnings, and draft rollback steps. Its terminal state is `ready for release`.
 It must stop before publish, deploy, tag, push, merge, purchase, production
 mutation, or post-release archive. After the user explicitly approves the exact
 version, notes, target, warnings, rollback plan, and external action, that exact
-action runs outside the Goal boundary; archive follows only after success,
-post-release smoke, and fresh strict validation.
+action runs outside the Goal boundary. Release-applicable archive follows only
+after success, post-release smoke, and fresh strict validation. A genuine
+no-external-release change may archive only after focused verification, strict
+validation, and an explicit `releaseApplicable: false` record with a reason.
 
 The agent must not:
 
@@ -1180,15 +1196,15 @@ Complete when:
 
 Objective: make the framework guide the user at the right moment.
 
-Status: source-only complete. The Orchestrator now contains explicit
+Status: runtime-verified. The Orchestrator contains explicit
 conditional advice for Focus Mode, Session Goals, worktrees, and MultiRun.
 `docs/openchamber-operating-guide.md`, advisory fixtures, and an offline
 evaluator document and test the user-operating contract. The runtime
 verifier hash-compares the active global Orchestrator prompt with the
-reviewed Phase 8 source before checking the required rule substrings. The
-prompt still requires the normal controlled global apply and restart before
-it is active in the managed runtime. The managed-runtime verification is a
-required residual gate and has not been re-run in this update. See
+reviewed Phase 8 source before checking the required rule substrings. Active
+target/hash readiness was refreshed on clean commit `e5bb0ed...` and the
+target matched, so no reapply was required. Provider/manual behavior evidence
+remains a separate rollout concern. See
 `PHASE-8-OPENCHAMBER-OPERATING-GUIDE.md`.
 
 Tasks:
@@ -1209,14 +1225,13 @@ Complete when:
 
 Objective: support user-guided design without generic AI UI.
 
-Status: source-only complete. The framework now defines
+Status: runtime-verified. The framework defines
 `PRODUCT.md`/`DESIGN.md`/surface-brief authority, contextual Impeccable and
 Taste usage, required desktop/mobile/browser/accessibility evidence, fresh
 screenshot review, and explicit human visual approval. The offline evaluator
-rejects synthetic-score proof. The source prompts and skill still require
-the normal controlled global apply and restart before they are active in
-the managed runtime. The managed-runtime verification is a required
-residual gate and has not been re-run in this update. See
+rejects synthetic-score proof. Active target/hash readiness was refreshed on
+clean commit `e5bb0ed...`; the Phase 9 targets matched and no reapply was
+required. This does not prove the rendered UI of an arbitrary project. See
 `PHASE-9-UI-QUALITY-LAYER.md`.
 
 Tasks:
@@ -1237,16 +1252,16 @@ Complete when:
 
 Objective: prove that deliverables, not only source code, work.
 
-Status: source-complete. The framework provides a project-local package
+Status: runtime-verified. The framework provides a project-local package
 contract, deterministic clean-install fixture, checksum and delivered-content
 checks, verification/release templates, explicit approval gating for external
 actions, and strict post-release OpenSpec archive rules. The offline
 evaluator and source contract pass; the historic 2026-08-04 record of the
 controlled global activation and managed-runtime verification is retained for
-provenance. The managed-runtime verification has not been re-run in this
-update and remains a required residual gate before relying on runtime
-evidence. The framework does not release any project; every external release
-remains a separately approved operation. See
+provenance. Active target/hash readiness was refreshed on clean commit
+`e5bb0ed...`; the Phase 10 targets matched and no reapply was required. The
+framework does not release any project; every external release remains a
+separately approved operation. See
 `PHASE-10-PACKAGING-AND-RELEASE.md`.
 
 Tasks:
@@ -1256,7 +1271,9 @@ Tasks:
 - [x] add checksum and secret/file-content checks;
 - [x] add verification and release templates;
 - [x] enforce user approval before external release actions;
-- [x] archive OpenSpec changes after successful release.
+- [x] archive release-applicable changes after successful release, and genuine
+  no-external-release changes after focused verification, strict validation,
+  and `releaseApplicable: false` evidence.
 
 Complete when:
 
@@ -1320,6 +1337,12 @@ and rollback/reapply evidence. The checklist below remains the required
 procedure for any future candidate rollout; prior evidence must not be reused
 for a changed candidate.
 
+On 2026-08-13, clean commit `e5bb0ed775a6c1340089a0f299c6699ac533bf20`
+passed CI run `31651664360`; its read-only global readiness preflight reported
+`NO_APPLY_REQUIRED`, 14/14 targets `MATCH`, Phase 5 `MATCH`, zero drift, and
+zero absent targets. This is a no-write target/readiness refresh, not a new full
+provider/manual rollout certification.
+
 #### Execution Checklist
 
 Run this checklist in order for one immutable candidate revision. Do not use a
@@ -1335,11 +1358,14 @@ item only with its command output, exit code, date, and relevant artifact path.
    `Test-ExecutionVerification.ps1`,
    `Test-OpenChamberOperatingGuide.ps1`, `Test-UIQualityLayer.ps1`,
    `Test-ObserverAttachmentRegression.ps1`,
+   `Test-GlobalApplyReadinessRegression.ps1`,
+   `Test-ExecutionVerificationApply.ps1`,
    `Test-CiWindowsOnlyRegression.ps1`, and
    `Test-EvaluationFailureDrills.ps1`. Then run the isolated temporary gates:
    `Test-ObserverAttachmentPreflight.ps1`,
    `Test-PackagingRelease.ps1`, and
-   `Test-OpenSpecProjectTemplate.ps1`. These gates must not modify global
+   `Test-OpenSpecProjectTemplate.ps1`, plus `Test-OpenSpecLifecycle.ps1` when
+   validating local/store lifecycle and archive branches. These gates must not modify global
    OpenCode or OpenChamber configuration; the package and Observer negative
    gates create and remove only their own temporary fixtures, while the OpenSpec
    fixture may retrieve the pinned CLI through `npx`.
@@ -1353,7 +1379,8 @@ item only with its command output, exit code, date, and relevant artifact path.
    identity, MCP/auth state without credentials, framework-owned target paths,
    and current SHA-256 values. Compare each reviewed source with its named
    target and classify it as `MATCH`, `DRIFT`, or `ABSENT`. A `MATCH` target is
-   not reapplied. For every `DRIFT` or `ABSENT` target, record the owner,
+   not reapplied. An `ABSENT` required target is `BLOCKED` under the current
+   preflight contract. For every supported `DRIFT` target, record the owner,
    approved apply script, planned backup location, expected after hash, focused
    verifier, rollback action, restart requirement, and side effect. Never add
    CPA GUI-managed `opencode.json`, OpenChamber state, credentials, sessions,
@@ -1471,9 +1498,10 @@ created or changed by this framework, and preserve unrelated user changes.
 
 The final design decisions are:
 
-1. The framework is private and installed globally for one personal OpenCode
-   environment.
-2. `D:\Projects\SDD` is the private source, evaluation, and rollback workspace.
+1. The framework targets one private personal OpenCode environment; its source
+   repository and reviewed source-release assets may be public.
+2. `D:\Projects\SDD` is the source, evaluation, and rollback-contract
+   workspace. Secret runtime state and protected backups stay outside it.
 3. OpenChamber is the control plane.
 4. oh-my-opencode-slim provides specialist orchestration after lean prompt
    changes.
@@ -1490,8 +1518,9 @@ The final design decisions are:
 13. Superpowers is mined for selected mechanisms but not installed globally.
 14. One focused search batch, two concurrent subagents, one normal review, and
     one scoped re-review are the default upper bounds.
-15. Observer is initially conditional on media-routing needs and must be
-    permission-enforced before activation.
+15. Observer is enabled only through the reviewed M3 structured-image route,
+    remains read-only, and must be revalidated after the pinned slim package is
+    reinstalled or upgraded.
 16. The agent advises when to use Focus Mode, Session Goals, worktrees, or
     neither, but the user controls activation and external actions.
 17. The user approves product intent, material UI direction, material plan
@@ -1503,7 +1532,9 @@ The final design decisions are:
 
 Phase 12 is complete for candidate
 `b75043d6097d12ac52c5bbbc3224f316c3243961`. For any future framework candidate
-or managed-runtime change, begin a new Phase 12 rollout at checklist item 1;
-do not reuse this completion evidence or perform a global write, restart,
-provider call, or rollback drill before the new candidate reaches the explicit
-approval checkpoint at item 5.
+or managed-runtime change, first run the deterministic read-only readiness
+preflight. If it returns `NO_APPLY_REQUIRED`, do not run apply or rollback. If a
+new full rollout certification is required, begin at checklist item 1 and do
+not reuse provider/manual, smoke, approval, or rollback evidence from another
+SHA. Do not perform a global write, restart, provider call, or rollback drill
+before the candidate reaches the explicit approval checkpoint at item 5.

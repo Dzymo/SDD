@@ -8,6 +8,9 @@
 ## Delivery
 
 - Intended version:
+- Release type / prerelease Boolean:
+- Immutable target SHA or source revision:
+- Promotion relationship to any accepted RC:
 - Package/build command:
 - Expected artifact path or runtime entry point:
 - Version inspection command:

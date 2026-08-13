@@ -22,6 +22,18 @@
 |---|---|---|
 | | | |
 
+## Release Applicability
+
+- releaseApplicable: `true` / `false`
+- Reason:
+- Indicators inspected:
+- External action required:
+
+`false` is valid only when the actual proposal, design, tasks, package contract,
+and recorded results contain no package, deploy, publish, tag, push, merge, or
+other external-write requirement. A reason is required. Never use `false` to
+bypass approval or a release-applicable archive gate.
+
 ## Package Evidence
 
 | Gate | Command or evidence | Exit code/result |

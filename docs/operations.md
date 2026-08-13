@@ -35,10 +35,9 @@ Phase 10 adds project-local package and release evidence. Complete the copied
 or rollback commands. See `docs/packaging-and-release.md`. This phase does not
 perform an external release action or apply global configuration without a
 separate explicit user approval. Its offline source evaluator and source
-contracts are complete; the historic 2026-08-04 record of the controlled
-activation and managed-runtime verification is retained for provenance, and
-the managed-runtime verification is a required residual gate that has not
-been re-run in this update.
+contracts are complete; the historic controlled activation and runtime
+verification remain provenance. A later clean-SHA readiness preflight found the
+active Phase 10 targets matched reviewed source, so no reapply was required.
 
 ## Future Configuration Lifecycle
 
@@ -82,6 +81,32 @@ An apply operation requires all of the following before any write:
 No blanket directory copy, `git reset`, `git checkout`, or OpenChamber runtime
 restore is permitted as an apply or rollback operation.
 
+## Global Apply Readiness
+
+Before any backup, persistent global write, or OpenChamber restart, run the
+deterministic read-only preflight from a clean candidate:
+
+```powershell
+PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-GlobalApplyReadiness.ps1 -Text
+```
+
+| Verdict | Required action |
+|---|---|
+| `NO_APPLY_REQUIRED` | All managed targets match. Do not run an apply or rollback script. |
+| `READY_FOR_GLOBAL_APPLY` | Only supported drift exists and write preconditions are satisfied. Continue only with the approved target set, backup, verifier, restart, and rollback plan. |
+| `BLOCKED` | Stop and resolve the exact reported cause before reassessment. |
+
+A required target classified `ABSENT` is always `BLOCKED` under the current
+implementation. Absence is not a bootstrap or apply-ready state. The report also
+records `applyPreconditionSatisfied`; active OpenChamber/CPA GUI/OpenCode
+processes can make it false even when the target verdict is a no-op.
+
+Use `-OutputPath <existing-parent>\preflight.json` only when a sanitized JSON
+record is needed. The parent directory must already exist. Without
+`-OutputPath`, the script creates no report file. This preflight proves current
+target/hash readiness; it does not replace provider-backed research/OCR,
+manual disabled-MCP behavior, post-apply runtime verification, or approval.
+
 ## Routine Check
 
 Run this from the repository root after a skeleton or source-layout change:
@@ -120,12 +145,13 @@ targets if any write or manifest step fails. Restart OpenChamber, then run:
 PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-ExecutionVerificationRuntime.ps1
 ```
 
-The runtime step is a required residual gate for Phase 7 and has not been
-re-run in this update. The runtime verifier hash-compares the active global
+The runtime verifier hash-compares the active global
 Orchestrator, Fixer, and Oracle prompts and the systematic-debugging and
 verification-before-completion skills against their reviewed sources and
 checks the Phase 7 prompt rules; a hash mismatch is a fail-closed condition
 that means a manual edit drifted an active target from the reviewed source.
+The later clean-SHA readiness preflight found these targets matched; rerun the
+runtime verifier after any actual Phase 7 apply or relevant runtime change.
 
 Validate the Phase 8 OpenChamber operating-guide source contracts:
 
@@ -151,9 +177,9 @@ Orchestrator prompt. It is read-only and does not arm a Goal or create a
 worktree. The runtime verifier hash-compares the active global Orchestrator
 prompt with the reviewed Phase 8 source before checking the required rule
 substrings; a hash mismatch is a fail-closed condition that means a manual
-edit drifted the active prompt from the reviewed source. The runtime step
-is a required residual gate for Phase 8 and has not been re-run in this
-update.
+edit drifted the active prompt from the reviewed source. The later clean-SHA
+readiness preflight found this target matched; rerun the verifier after an
+actual prompt apply or managed runtime change.
 
 Validate the Phase 11 evaluation and failure drills:
 
@@ -197,12 +223,12 @@ OpenChamber, then verify the effective managed runtime with:
 PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-UIQualityLayerRuntime.ps1
 ```
 
-The runtime step is a required residual gate for Phase 9 and has not been
-re-run in this update. The runtime verifier hash-compares the active global
+The runtime verifier hash-compares the active global
 Designer/Observer prompts and the `ui-quality` skill against their reviewed
 sources and checks the Phase 9 prompt rules; a hash mismatch is a fail-closed
 condition that means a manual edit drifted an active target from the reviewed
-source.
+source. The later clean-SHA readiness preflight found these targets matched;
+rerun the verifier after an actual Phase 9 apply or relevant runtime change.
 
 Validate the Phase 10 package and release source contracts:
 
@@ -231,12 +257,13 @@ hash check, and never performs a release. Restart OpenChamber, then run:
 PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-PackagingReleaseRuntime.ps1
 ```
 
-The runtime step is a required residual gate for Phase 10 and has not been
-re-run in this update. The runtime verifier hash-compares the active global
+The runtime verifier hash-compares the active global
 Orchestrator prompt and the `package-and-release` skill against their
 reviewed sources and checks the Phase 10 prompt rules; a hash mismatch is a
 fail-closed condition that means a manual edit drifted an active target
-from the reviewed source.
+from the reviewed source. The later clean-SHA readiness preflight found these
+targets matched; rerun the verifier after an actual Phase 10 apply or relevant
+runtime change.
 
 Use the controlled activation script only after OpenChamber and CPA GUI have
 stopped:
@@ -276,9 +303,9 @@ Do not use the shell `opencode` wrapper as proof for this check: the managed
 OpenChamber binary is the active runtime. The runtime verifier inspects the
 read-only agents' permission denials for `edit`, `bash`, `task`, and
 `external_directory` equivalently across Explorer, Librarian, Oracle, and
-Observer. The runtime step is a required residual gate for Phase 4 and has
-not been re-run in this update; the last re-run was on 2026-08-02 before
-Observer was added to the verifier.
+Observer. Later active-runtime evidence and the clean-SHA readiness refresh
+cover the current reviewed targets, including Observer. Rerun this verifier
+after a plugin/preset apply or relevant managed runtime change.
 
 Validate the offline Observer attachment regression contract before a pull
 request or source change:
@@ -349,20 +376,26 @@ npx --yes @fission-ai/openspec@1.5.0 validate <change-name> --strict --no-intera
 ```
 
 For a completed change on Windows, the adapted `/opsx-archive` prompt invokes
-`openspec archive <change-name>` directly and does not create archive folders
-manually. See the Phase 6 end-to-end validation record for the core-profile
-limitations and their workarounds.
+one of four portable forms: local/store multiplied by synced/unsynced. A synced
+change uses `--skip-specs --yes`; an unsynced change uses `--yes`, so the delta
+is applied exactly once. It does not create archive folders manually. The
+release-applicable branch requires approved successful release evidence; a
+genuine no-external-release branch requires focused verification, strict
+validation, and `releaseApplicable: false` with a reason.
 
-## Pull Request Validation
+## CI Validation
 
-`.github/workflows/research-config.yml` runs the research schema, agent-layer,
-execution/verification, OpenChamber operating-guide, UI-quality layer, package
-and release fixture, evaluation and failure drills, Observer attachment regression, Observer OCR preflight
-negative suite, copied OpenSpec bootstrap
-preflight with `@fission-ai/openspec@1.5.0`, and framework source-safety
-verifiers on Windows for every pull request. The bootstrap job installs the
-exact CLI, asserts its version, copies `templates\project` into a fresh
-runner-temporary directory, then runs the copied preflight script.
+`.github/workflows/research-config.yml` runs on pull requests, pushes to `main`,
+and manual dispatch. Its Windows gates include the Phase 11 failure drills,
+Phase 12 rollback regression, global-readiness regression, research schema,
+agent layer, execution/verification source and apply regression, OpenChamber
+operating guide, UI quality, packaging/release, release-plan behavior,
+OpenSpec project template and local/store lifecycle, Observer attachment and
+negative preflight fixtures, Windows-only workflow regression, framework
+source-safety, and isolated managed-runtime smoke. The bootstrap job installs
+the exact `@fission-ai/openspec@1.5.0` CLI, asserts its version, copies
+`templates\project` into a fresh runner-temporary directory, then runs the
+copied preflight script.
 
 The pull-request workflow also installs pinned `opencode-ai` and slim packages
 under `RUNNER_TEMP`, applies the reviewed package hash chain, and runs
@@ -373,13 +406,29 @@ does not read or write active global targets. Provider-backed
 `Test-ResearchRuntime.ps1`, full Observer OCR, and post-apply verification of
 the actual global configuration remain local Phase 12 gates rather than hosted
 CI jobs. Phase 12 global rollout is **complete** for candidate
-`b75043d6097d12ac52c5bbbc3224f316c3243961`; its managed-runtime and
-provider-backed evidence is recorded in `PHASE-12-GLOBAL-ROLLOUT.md`. A future
-framework candidate or managed-runtime change requires a new local Phase 12
-evidence run before its approved global write. The current PR head is
-source-verified and isolated managed-runtime-verified only; the active-global
-hash/apply/runtime verification has not been re-run against the current PR
-head, and no global write has been performed for the current PR head.
+`b75043d6097d12ac52c5bbbc3224f316c3243961`; its provider-backed, project-smoke,
+and rollback evidence is recorded in `PHASE-12-GLOBAL-ROLLOUT.md`. Clean commit
+`e5bb0ed775a6c1340089a0f299c6699ac533bf20` later passed CI run
+`31651664360` and its real preflight returned `NO_APPLY_REQUIRED` with all 14
+targets and Phase 5 matching. A future candidate must run the preflight again;
+only a candidate needing a new full rollout certification must repeat the
+applicable provider/manual, smoke, approval, apply, and rollback gates.
+
+## Repository Release Workflow
+
+The manual release workflow packages the immutable target named by an approved
+release plan and verifies the published assets:
+
+```powershell
+gh workflow run release-candidate.yml -f version=<approved-version>
+```
+
+Dispatching this workflow is an external write. Run it only after explicit
+approval of the exact version, final notes, target, warnings, rollback plan, and
+external action. The workflow supports RC and stable releases through the
+Boolean `prerelease`, downloads and verifies published assets, and removes only
+the release/tag created by the failed run. It does not replace the approval
+record or authorize a different target/version.
 
 The `main` branch requires the `Validate research MCP schema (Windows)` check
 before merge. Branch protection also requires branches to be current before

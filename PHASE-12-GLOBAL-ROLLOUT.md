@@ -1,22 +1,27 @@
 # Phase 12 Global Rollout
 
 Date: 2026-08-08
+Last updated: 2026-08-13
 
 ## Status
 
-Phase 12 is **complete**. This document retains the execution runbook and the
-sanitized completion evidence for candidate
-`b75043d6097d12ac52c5bbbc3224f316c3243961`.
+Phase 12 is **complete** for candidate
+`b75043d6097d12ac52c5bbbc3224f316c3243961`. This document retains that
+historical execution evidence and the current runbook. A later read-only
+preflight on clean commit `e5bb0ed775a6c1340089a0f299c6699ac533bf20`
+reported `NO_APPLY_REQUIRED`, 14/14 managed targets `MATCH`, and Phase 5
+`MATCH`; CI run `31651664360` passed on the same SHA. No apply or rollback was
+required for that later candidate.
 
 The rollout applies one immutable, CI-validated framework candidate to the
 personal managed environment. It does not publish, deploy, tag, push, merge,
 modify OpenChamber state, or perform a project release. The completion
 evidence in this file is historical active-global evidence for that immutable
-candidate and its earlier Phase 8 activations; it must not be reused for any
-later PR head. The current PR head is source-verified and isolated
-managed-runtime-verified only; the active-global hash/apply/runtime
-verification has not been re-run against the current PR head, and no global
-write has been performed for the current PR head.
+candidate and its earlier Phase 8 activations; it must not be reused as
+provider-backed, rollback, or project-smoke evidence for a later SHA. The
+`e5bb0ed...` preflight refreshes target/hash readiness only. Provider-backed
+research/OCR and manual disabled-MCP checks remain separate residual gates for
+any new full rollout certification.
 
 ## Safety Boundary
 
@@ -26,7 +31,10 @@ write has been performed for the current PR head.
 - Do not include credentials, auth files, OpenChamber settings, sessions,
   Goals, relay data, Electron state, CPA GUI-managed `opencode.json`, or whole
   backup directories in the source repository or rollout record.
-- `MATCH` targets are no-ops. Apply only reviewed `DRIFT` or `ABSENT` targets.
+- `MATCH` targets are no-ops. Apply only reviewed, supported `DRIFT` targets.
+- Under the current preflight contract, every required `ABSENT` target is
+  `BLOCKED`. Absence needs a separate reviewed bootstrap/apply contract and
+  regression before it can become apply-ready.
 - Never manually merge JSON or copy a directory tree into global configuration.
 - A failed runtime verifier is a rollback trigger. Do not rerun an apply script
   blindly.
@@ -56,6 +64,28 @@ Record a pre-apply manifest that contains only sanitized metadata:
 | Active state | MCP/auth state without values, framework-owned target paths, and current SHA-256 values. |
 | Diff decision | `MATCH`, `DRIFT`, or `ABSENT` for every framework-owned target. |
 | Apply decision | Owner, approved script, backup location, expected after hash, verifier, restart need, and rollback action for each non-match. |
+
+Run the read-only preflight before any backup, persistent write, or restart.
+It reports candidate SHA, worktree state, active OpenChamber/CPA GUI/OpenCode
+processes, the Phase 5 package hash, semantic managed-config comparisons, file
+hashes, drift classification, and a fail-closed verdict:
+
+```powershell
+PowerShell -ExecutionPolicy Bypass -File .\scripts\Test-GlobalApplyReadiness.ps1 -Text
+```
+
+`NO_APPLY_REQUIRED` means every managed target already matches and no apply
+script should run. `READY_FOR_GLOBAL_APPLY` means supported drift exists and all
+write preconditions are satisfied. `BLOCKED` is a stop condition; required
+`ABSENT` targets are always blocked by the current implementation. Use
+`-OutputPath <existing-parent>\preflight.json` when a sanitized machine-readable
+record is required; without `-OutputPath`, the script writes no file and emits
+the JSON report to standard output unless `-Text` is selected.
+
+Use only a fresh operation-specific backup manifest whose complete target set is
+framework-allowlisted and matches the approved write set. Never reuse a mixed
+staging/global manifest or a manifest containing custom temporary targets as a
+Phase 12 rollback basis.
 
 The independent pre-apply comparison is the authoritative dry-run. Do not treat
 an apply script's `-WhatIf` behavior as the complete preview, and do not use
@@ -153,7 +183,7 @@ reviewed owner and apply mechanism.
 Close OpenChamber and CPA GUI before applying anything. Confirm no process named
 `openchamber`, `cpa`, or `opencode` remains. Recompute approved source and
 target hashes immediately before each apply. Execute only the rows that are
-approved and remain `DRIFT` or `ABSENT`.
+approved and remain supported `DRIFT`. Stop on `ABSENT`.
 
 | Changed layer | Reviewed command | Required post-restart verifier |
 |---|---|---|
@@ -404,6 +434,17 @@ Phase 12 may be marked **complete** only when every row is satisfied. The final
 rollout record must include the candidate SHA, command outputs and exit codes,
 CI URL, versions, hashes, manifests, apply/no-op decisions, project smoke
 results, rollback/reapply results, approvals, and remaining limitations.
+
+### Later Readiness Refresh
+
+On 2026-08-13, clean commit
+`e5bb0ed775a6c1340089a0f299c6699ac533bf20` passed
+[Research Configuration run 31651664360](https://github.com/Dzymo/SDD/actions/runs/31651664360).
+The final real preflight on that SHA reported `NO_APPLY_REQUIRED`, all 14
+managed targets `MATCH`, Phase 5 `MATCH`, zero drift, and zero absent targets.
+Active processes made write preconditions false, but no write was required.
+This is target/readiness evidence, not a replacement for provider-backed or
+manual behavior gates in a new full rollout certification.
 
 ## Completion Evidence
 
